@@ -14,7 +14,7 @@ optdepends=('power-profiles-daemon: modos de rendimiento (o tuned-ppd)'
 provides=("$_pkgname")
 conflicts=("$_pkgname")
 install=vortice.install
-source=("git+https://github.com/bernaljeanp/vortice.git")
+source=("$_pkgname::git+https://github.com/bernaljeanp/vortice.git")
 sha256sums=('SKIP')
 
 pkgver() {
