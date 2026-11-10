@@ -1,0 +1,19 @@
+post_install() {
+  systemd-hwdb update >/dev/null 2>&1 || true
+  udevadm trigger --action=change --subsystem-match=input >/dev/null 2>&1 || true
+  echo ">> Para ventiladores, batería y luces persistentes, activa el servicio:"
+  echo ">>   sudo systemctl enable --now vortice-helper"
+}
+
+post_upgrade() {
+  systemd-hwdb update >/dev/null 2>&1 || true
+  systemctl try-restart vortice-helper.service >/dev/null 2>&1 || true
+}
+
+pre_remove() {
+  systemctl disable --now vortice-helper.service >/dev/null 2>&1 || true
+}
+
+post_remove() {
+  systemd-hwdb update >/dev/null 2>&1 || true
+}

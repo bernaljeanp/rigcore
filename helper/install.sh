@@ -71,7 +71,8 @@ awk -v blocks="$BLOCKS" '{ if ($0 ~ /@ADMIN_POLICIES@/) printf "%s", blocks; els
     "$SRC/io.github.vortice.Helper.conf" > "$TMP"
 install -o root -g root -m 0644 "$TMP" "$POLICY"
 rm -f "$TMP"
-install -o root -g root -m 0644 "$SRC/vortice-helper.service" "$UNIT"
+sed "s|@LIBEXECDIR@|$LIBEXEC|g" "$SRC/vortice-helper.service" > "$UNIT"
+chown root:root "$UNIT"; chmod 0644 "$UNIT"
 
 # Teclas especiales de Alienware (F6 Boost, F7 Sigilo): solo en equipos Alienware;
 # la regla limita además el modelo, así que en otros no cambia nada.

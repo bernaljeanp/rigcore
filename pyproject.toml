@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vortice"
+version = "0.1.0"
+description = "Centro de control para portátiles gaming en Linux: temperaturas, ventiladores, modos, batería, luces y perfiles por juego"
+readme = "README.md"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "bernaljeanp" }]
+keywords = ["linux", "laptop", "gaming", "fan-control", "rgb", "alienware", "kde"]
+classifiers = [
+  "Environment :: X11 Applications :: Qt",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: System :: Hardware",
+]
+# La distro suele aportar PySide6 (python3-pyside6 / pyside6); con pip se instala esta.
+dependencies = ["PySide6-Essentials>=6.6"]
+
+[project.urls]
+Homepage = "https://github.com/bernaljeanp/vortice"
+Issues = "https://github.com/bernaljeanp/vortice/issues"
+
+[project.scripts]
+vortice = "vortice.app:main"
+vortice-agent = "vortice.agent:main"
+
+[tool.setuptools]
+packages = ["vortice"]
+
+[tool.setuptools.package-data]
+vortice = ["qml/*", "fonts/*", "shaders/*"]

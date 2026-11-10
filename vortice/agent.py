@@ -265,5 +265,9 @@ class Agent:
             time.sleep(INTERVAL)
 
 
-if __name__ == "__main__":
+def main():
     Agent().run()
+
+
+if __name__ == "__main__":
+    main()

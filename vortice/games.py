@@ -149,7 +149,12 @@ def agent_active() -> bool:
 
 
 def install_agent() -> tuple[bool, str]:
-    """Instala y arranca el agente como servicio de usuario (sin root)."""
+    """Instala y arranca el agente como servicio de usuario (sin root).
+    Si un paquete de la distro ya trae la unidad, solo se activa."""
+    for packaged in ("/usr/lib/systemd/user", "/usr/local/lib/systemd/user"):
+        if os.path.exists(f"{packaged}/{AGENT_UNIT}"):
+            _systemctl("daemon-reload")
+            return _systemctl("enable", "--now", AGENT_UNIT)
     unit_dir = Path(os.path.expanduser("~/.config/systemd/user"))
     unit_dir.mkdir(parents=True, exist_ok=True)
     script = Path(agent.__file__).resolve()

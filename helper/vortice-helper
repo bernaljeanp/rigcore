@@ -28,7 +28,7 @@ import time
 from gi.repository import Gio, GLib
 
 # Módulo de luces compartido con la interfaz. Se instala junto a este archivo en
-# /usr/local/libexec/vortice (propiedad de root); -I no añade esa carpeta sola.
+# su carpeta de instalación (propiedad de root); -I no añade esa carpeta sola.
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import fancurve  # noqa: E402
 import fans as fanmod  # noqa: E402

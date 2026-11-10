@@ -1,0 +1,38 @@
+# Maintainer: bernaljeanp <316348178+bernaljeanp@users.noreply.github.com>
+pkgname=vortice-git
+_pkgname=vortice
+pkgver=0.1.0.r0.g0000000
+pkgrel=1
+pkgdesc="Centro de control para portátiles gaming: temperaturas, ventiladores, modos, batería, luces y perfiles por juego"
+arch=('any')
+url="https://github.com/bernaljeanp/vortice"
+license=('GPL-3.0-only')
+depends=('python' 'pyside6' 'qt6-declarative' 'qt6-svg' 'python-gobject' 'systemd')
+makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'qt6-shadertools')
+optdepends=('power-profiles-daemon: modos de rendimiento (o tuned-ppd)'
+            'nvidia-utils: lecturas de la gráfica NVIDIA')
+provides=("$_pkgname")
+conflicts=("$_pkgname")
+install=vortice.install
+source=("git+https://github.com/bernaljeanp/vortice.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$_pkgname"
+  printf "%s.r%s.g%s" "$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')" \
+    "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+  cd "$_pkgname"
+  # Shaders compilados con el Qt de la distro (un .qsb más nuevo puede no cargar en un Qt más antiguo).
+  QSB=/usr/lib/qt6/bin/qsb sh tools/build_shaders.sh
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$_pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  sh packaging/install-files.sh "$pkgdir" /usr/lib/vortice
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

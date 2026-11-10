@@ -1,11 +1,11 @@
 [Unit]
 Description=Vórtice - servicio de control de hardware
-Documentation=file:///usr/local/libexec/vortice/vortice-helper
+Documentation=https://github.com/bernaljeanp/vortice
 
 [Service]
 Type=dbus
 BusName=io.github.vortice.Helper
-ExecStart=/usr/bin/python3 -I /usr/local/libexec/vortice/vortice-helper
+ExecStart=/usr/bin/python3 -I @LIBEXECDIR@/vortice-helper
 Restart=on-failure
 
 # Aislamiento: sin red, sin /home, sistema en solo lectura (salvo /sys, /proc, /dev).

@@ -95,6 +95,17 @@ def panel_text_color() -> QColor:
     return QApplication.palette().windowText().color()
 
 
+def launcher() -> str:
+    """Orden para lanzar Vórtice: el script del repositorio si se ejecuta desde
+    el código fuente; si no, el comando instalado."""
+    import shutil
+
+    dev = HERE.parent / "vortice.sh"
+    if dev.exists():
+        return str(dev.resolve())
+    return shutil.which("vortice") or "vortice"
+
+
 def tray_icon() -> QIcon:
     """Icono monocromo pintado con el color del panel, a varios tamaños.
     (Se pinta aquí en vez de depender de que Plasma lo recoloree desde su caché.)"""
@@ -349,12 +360,11 @@ def send_to_running(cmd: str, timeout: float = 1.5, sock: Path = SOCKET) -> str 
 def set_autostart(on: bool) -> None:
     if on:
         AUTOSTART.parent.mkdir(parents=True, exist_ok=True)
-        launcher = (HERE.parent / "vortice.sh").resolve()
         AUTOSTART.write_text(f"""[Desktop Entry]
 Type=Application
 Name=Vórtice
 Comment=Centro de control del portátil (bandeja)
-Exec={launcher} --bandeja
+Exec={launcher()} --bandeja
 Icon=vortice
 X-GNOME-Autostart-enabled=true
 X-KDE-autostart-after=panel
@@ -373,14 +383,14 @@ SHORTCUTS_FILE = Path(os.path.expanduser("~/.local/share/applications/vortice-te
 
 def install_key_shortcuts() -> bool:
     """Atajos globales vía archivo .desktop con X-KDE-Shortcuts (los lee kglobalaccel)."""
-    launcher = (HERE.parent / "vortice.sh").resolve()
+    cmd = launcher()
     names = {"lights": "Ciclar brillo de las luces", "stealth": "Modo sigilo", "boost": "Alternar modo Rendimiento"}
     body = f"""[Desktop Entry]
 Type=Application
 Name=Vórtice (teclas)
 Comment=Teclas especiales del portátil: F6 Boost, F7 Sigilo, F9 Luces
 Icon=vortice
-Exec={launcher} --accion show
+Exec={cmd} --accion show
 NoDisplay=true
 StartupNotify=false
 X-KDE-StartupNotify=false
@@ -390,7 +400,7 @@ Actions={";".join(KEY_SHORTCUTS)};
         body += f"""
 [Desktop Action {action}]
 Name={names[action]}
-Exec={launcher} --accion {action}
+Exec={cmd} --accion {action}
 X-KDE-Shortcuts={key}
 """
     try:
