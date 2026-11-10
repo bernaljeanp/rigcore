@@ -4,7 +4,7 @@
 Uso (necesita root para leer /dev/input):
     pkexec /usr/bin/python3 -I tools/scan_keys.py [segundos]
 Pulsa las teclas especiales (F6 Boost, F7 Sigilo, F9 Luces...) mientras corre.
-Solo lee el teclado interno y no guarda nada: imprime lo que ve y termina.
+Solo lee los teclados integrados del portátil y no guarda nada: imprime lo que ve y termina.
 """
 
 import glob
@@ -22,43 +22,58 @@ NAMES = {64: "F6", 65: "F7", 67: "F9", 187: "F17", 188: "F18", 189: "F19", 190: 
          0x1d9: "PERFORMANCE"}
 
 
-def internal_keyboard():
+# Dispositivos integrados del portátil que pueden enviar teclas especiales.
+INTERNAL = ("AT Translated Set 2 keyboard", "Dell WMI hotkeys", "Alienware WMI hotkeys",
+            "Dell Privacy Driver", "Intel HID events", "Intel HID 5 button array")
+
+
+def internal_devices():
+    out = {}
     for ev in sorted(glob.glob("/sys/class/input/event*")):
         try:
             with open(f"{ev}/device/name") as f:
-                if f.read().strip() == "AT Translated Set 2 keyboard":
-                    return "/dev/input/" + os.path.basename(ev)
+                name = f.read().strip()
         except OSError:
-            pass
-    return None
+            continue
+        if name in INTERNAL or "WMI" in name:
+            out["/dev/input/" + os.path.basename(ev)] = name
+    return out
 
 
 def main():
     secs = float(sys.argv[1]) if len(sys.argv) > 1 else 15
-    dev = internal_keyboard()
-    if not dev:
-        sys.exit("No se encontró el teclado interno.")
-    print(f"Leyendo {dev} durante {secs:.0f} s. Pulsa F6, F7 y F9 (una vez cada una)...", flush=True)
-    fd = os.open(dev, os.O_RDONLY | os.O_NONBLOCK)
-    end, scan, seen = time.time() + secs, None, []
+    devs = internal_devices()
+    if not devs:
+        sys.exit("No se encontraron dispositivos de teclado integrados.")
+    print(f"Escuchando durante {secs:.0f} s: " + ", ".join(sorted(set(devs.values()))), flush=True)
+    print("Pulsa F6, F7 y F9 (una vez cada una)...", flush=True)
+    fds = {}
+    for path, name in devs.items():
+        try:
+            fds[os.open(path, os.O_RDONLY | os.O_NONBLOCK)] = name
+        except OSError:
+            pass
+    end, scans, seen = time.time() + secs, {}, []
     try:
         while time.time() < end:
-            if not select.select([fd], [], [], 0.2)[0]:
-                continue
-            data = os.read(fd, SIZE * 64)
-            for i in range(0, len(data) - SIZE + 1, SIZE):
-                _, _, typ, code, value = struct.unpack(FMT, data[i:i + SIZE])
-                if typ == EV_MSC and code == MSC_SCAN:
-                    scan = value
-                elif typ == EV_KEY and value == 1:
-                    name = NAMES.get(code, f"código {code}")
-                    line = f"tecla {name:12s} scancode {scan:#x}" if scan is not None else f"tecla {name}"
-                    if line not in seen:
-                        seen.append(line)
-                        print("  " + line, flush=True)
-                    scan = None
+            ready = select.select(list(fds), [], [], 0.2)[0]
+            for fd in ready:
+                data = os.read(fd, SIZE * 64)
+                for i in range(0, len(data) - SIZE + 1, SIZE):
+                    _, _, typ, code, value = struct.unpack(FMT, data[i:i + SIZE])
+                    if typ == EV_MSC and code == MSC_SCAN:
+                        scans[fd] = value
+                    elif typ == EV_KEY and value == 1:
+                        name = NAMES.get(code, f"código {code}")
+                        sc = scans.pop(fd, None)
+                        line = f"tecla {name:12s} scancode {sc:#x}" if sc is not None else f"tecla {name:12s}"
+                        line += f"   [{fds[fd]}]"
+                        if line not in seen:
+                            seen.append(line)
+                            print("  " + line, flush=True)
     finally:
-        os.close(fd)
+        for fd in fds:
+            os.close(fd)
     print("Listo." if seen else "No se pulsó ninguna tecla.")
 
 

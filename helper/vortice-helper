@@ -373,8 +373,11 @@ def on_call(conn, sender, path, iface, method, params, invocation):
                                          "solo administradores")
             return
         if method == "GetState":
+            # El driver no siempre devuelve el boost escrito al leerlo: se informa del
+            # valor que este servicio escribió (si lo hizo).
             state = {"fans": [{k: v for k, v in f.items() if k not in ("path", "temp_path")}
-                              | {"manual": CURVE.manual.get(i, 0)} for i, f in enumerate(fans())],
+                              | {"manual": CURVE.manual.get(i, 0), "boost": CURVE.written.get(i, f["boost"])}
+                              for i, f in enumerate(fans())],
                      "battery": battery(), "lights": LIGHTS.state(), "curve": CURVE.cfg}
             invocation.return_value(GLib.Variant("(s)", (json.dumps(state),)))
         elif method == "SetFanBoost":
@@ -436,8 +439,13 @@ def main():
         loop.quit()
         return GLib.SOURCE_REMOVE
 
-    GLib.unix_signal_add(GLib.PRIORITY_HIGH, signal.SIGTERM, stop)
-    GLib.unix_signal_add(GLib.PRIORITY_HIGH, signal.SIGINT, stop)
+    try:  # GLib >= 2.80 mueve las señales Unix a GLibUnix
+        from gi.repository import GLibUnix
+        add_signal = GLibUnix.signal_add
+    except ImportError:
+        add_signal = GLib.unix_signal_add
+    add_signal(GLib.PRIORITY_HIGH, signal.SIGTERM, stop)
+    add_signal(GLib.PRIORITY_HIGH, signal.SIGINT, stop)
     print("vortice-helper listo", flush=True)
     loop.run()
 
