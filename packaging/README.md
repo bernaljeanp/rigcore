@@ -5,6 +5,8 @@
 | AUR (`vortice-git`) | `arch/PKGBUILD`, `arch/vortice.install` | Arch, CachyOS, EndeavourOS, Garuda… |
 | COPR | `fedora/vortice.spec` | Fedora Workstation (y Bazzite/Silverblue por capas) |
 | Instalador universal | `../install.sh` | Cualquier distro, incluidas las inmutables |
+| Flatpak | `flatpak/io.github.bernaljeanp.Vortice.yml` | Flathub (y con ello Bazaar en Bazzite). Edición con sandbox: sin perfiles por juego ni teclas globales; el servicio se instala aparte |
+| AppImage | `appimage/build.sh` | Un archivo para cualquier distro, con todas las funciones |
 
 Los dos paquetes compilan los shaders con el Qt de la distro (`qsb`) y colocan los
 archivos de sistema con `install-files.sh`: servicio, política D-Bus (grupo `wheel`),
@@ -70,3 +72,26 @@ guardado en `~/.config/copr`.
   y el tarball de `git archive --prefix=vortice-0.1.0/` en `SOURCES/`.
 - **Arch:** `makepkg -f` en un contenedor Arch con las dependencias del `PKGBUILD`,
   cambiando `source` por `git+file:///ruta/al/repo#branch=main`.
+
+## Flatpak
+
+Construir e instalar localmente (necesita `org.flatpak.Builder` de Flathub):
+
+```sh
+flatpak run --filesystem=$PWD org.flatpak.Builder --user --install-deps-from=flathub \
+    --force-clean --install build/flatpak/build-dir packaging/flatpak/io.github.bernaljeanp.Vortice.yml
+flatpak run io.github.bernaljeanp.Vortice
+```
+
+Para Flathub: abrir un *pull request* en <https://github.com/flathub/flathub> con el
+manifiesto, cambiando la fuente `type: dir` por `type: git` con la URL del repositorio
+y el `tag`/`commit` de la versión. El AppStream (`.metainfo.xml`) ya pasa `appstreamcli validate`.
+
+## AppImage
+
+```sh
+packaging/appimage/build.sh      # -> build/appimage/Vortice-x86_64.AppImage
+```
+
+Descarga un Python portable (python-build-standalone) y `appimagetool`. El AppImage
+incluye el servicio: se instala desde *Ajustes → Instalar servicio*.

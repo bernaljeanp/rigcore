@@ -205,7 +205,8 @@ Rectangle {
                     Repeater {
                         model: [
                             { k: qsTr("Servicio de hardware"), v: page.helper.available ? qsTr("activo") : qsTr("no instalado"), ok: !!page.helper.available },
-                            { k: qsTr("Agente de juegos"), v: page.agent.alive ? qsTr("activo") : qsTr("detenido"), ok: !!page.agent.alive },
+                            { k: qsTr("Agente de juegos"), v: hw.inFlatpak ? qsTr("no disponible en Flatpak") : page.agent.alive ? qsTr("activo") : qsTr("detenido"),
+                              ok: hw.inFlatpak || !!page.agent.alive },
                             { k: qsTr("Controlador de luces"), v: (hw.lightsState || {}).available ? (hw.lightsState.device || qsTr("detectado")) : qsTr("no encontrado"),
                               ok: !!(hw.lightsState || {}).available },
                             { k: qsTr("Driver de plataforma"), v: hw.caps.vendor || "—", ok: !!hw.caps.vendor }

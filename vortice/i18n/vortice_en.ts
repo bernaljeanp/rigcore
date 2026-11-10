@@ -1184,47 +1184,52 @@
       <translation>stopped</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="209" />
+      <location filename="../qml/SettingsPage.qml" line="208" />
+      <source>no disponible en Flatpak</source>
+      <translation>not available in Flatpak</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="210" />
       <source>Controlador de luces</source>
       <translation>Lighting controller</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="209" />
+      <location filename="../qml/SettingsPage.qml" line="210" />
       <source>detectado</source>
       <translation>detected</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="209" />
+      <location filename="../qml/SettingsPage.qml" line="210" />
       <source>no encontrado</source>
       <translation>not found</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="211" />
+      <location filename="../qml/SettingsPage.qml" line="212" />
       <source>Driver de plataforma</source>
       <translation>Platform driver</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="238" />
+      <location filename="../qml/SettingsPage.qml" line="239" />
       <source>Instalando…</source>
       <translation>Installing…</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="239" />
+      <location filename="../qml/SettingsPage.qml" line="240" />
       <source>Actualizar servicio</source>
       <translation>Update service</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="239" />
+      <location filename="../qml/SettingsPage.qml" line="240" />
       <source>Instalar servicio</source>
       <translation>Install service</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="251" />
+      <location filename="../qml/SettingsPage.qml" line="252" />
       <source>Para ventiladores, batería y luces persistentes, instala el servicio de Vórtice fuera de Flatpak: con el instalador universal (./install.sh) o el paquete de tu distro.</source>
       <translation>For fans, battery and persistent lighting, install the Vórtice service outside Flatpak: with the universal installer (./install.sh) or your distro's package.</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="258" />
+      <location filename="../qml/SettingsPage.qml" line="259" />
       <source>Vórtice · software libre (GPL-3.0)
 </source>
       <translation>Vórtice · free software (GPL-3.0)
