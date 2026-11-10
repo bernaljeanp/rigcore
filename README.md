@@ -15,7 +15,12 @@
 </p>
 
 > **Estado: beta.** Probado a fondo en un Alienware 16X Aurora con Bazzite (KDE Plasma, Wayland).
-> Si tienes otro portátil, tu informe es lo que más ayuda al proyecto (ver *Contribuir*).
+> El soporte de otras marcas sigue la documentación del kernel y de los proyectos de cada marca y
+> está probado con sysfs simulados, pero no en esos equipos: tu informe es lo que más ayuda (ver *Contribuir*).
+
+**Seguridad en el control manual:** en los ventiladores con velocidad manual (ThinkPad, Dell, HP
+Victus S), Vórtice fuerza el máximo a partir de 90 °C, devuelve el control al firmware con el valor 0
+y siempre al detener el servicio.
 
 ## Por qué Vórtice
 
@@ -60,8 +65,8 @@ que el kernel añade soporte para un portátil, Vórtice lo aprovecha.
 | Temperatura de CPU | Cualquier Intel o AMD |
 | Gráfica | NVIDIA, AMD, Intel |
 | Leer ventiladores | La mayoría de portátiles con driver en el kernel |
-| Boost y curvas de ventilador | Alienware / Dell G (`alienware-wmi`). ASUS, HP y ThinkPad: en desarrollo |
-| Límite de batería | Dell / Alienware (`dell-wmi-sysman`) e interfaz estándar `charge_control_*` |
+| Control de ventiladores y curvas | **Alienware / Dell G** (boost sobre el firmware) · **ThinkPad** (manual, con `thinkpad_acpi fan_control=1`) · **ASUS** (automático/máximo y curva guardada en el firmware) · **HP Omen/Victus** (automático/máximo; manual en Victus S) · **MSI** con msi-ec (Cooler Boost) · **Acer Predator/Nitro** con Linuwu-Sense · otros Dell y sobremesas (`pwmN` estándar) |
+| Límite de batería | Dell / Alienware (`dell-wmi-sysman`), interfaz estándar `charge_control_*` (ThinkPad, ASUS, Framework, MSI…), **Lenovo** (modo conservación) y **Acer** (límite al 80 %) |
 | Luces del teclado | Alienware / Dell G (AW-ELC) |
 | Teclas especiales | Alienware 16X Aurora (otros modelos: aporta tus códigos con `tools/scan_keys.py`) |
 | Modos de rendimiento | Distros con `power-profiles-daemon` o `tuned-ppd` (si usas TLP, Vórtice lo indica) |
@@ -121,6 +126,7 @@ Estructura:
 vortice/hardware.py   detección y lectura de sensores (interfaces estándar)
 vortice/gpu.py        NVIDIA / AMD / Intel
 vortice/lights.py     controlador de luces AW-ELC
+vortice/fans.py       control de ventiladores por marca (boost, pwm, auto/máximo...)
 vortice/fancurve.py   curvas de ventilador
 vortice/agent.py      agente de perfiles por juego (servicio de usuario)
 vortice/games.py      biblioteca de juegos y configuración
@@ -143,4 +149,8 @@ y adjunta la salida.
 [GPL-3.0](LICENSE). Iconos de interfaz derivados de [Lucide](https://lucide.dev) (ISC).
 Fuentes IBM Plex Sans Condensed e IBM Plex Mono (SIL Open Font License).
 Protocolo de luces AW-ELC documentado por [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT).
+Interfaces de otras marcas estudiadas en la documentación del kernel y en
+[msi-ec](https://github.com/BeardOverflow/msi-ec), [Linuwu-Sense](https://github.com/0x7375646F/Linuwu-Sense),
+[LenovoLegionLinux](https://github.com/johnfanv2/LenovoLegionLinux) y [asusctl](https://gitlab.com/asus-linux/asusctl)
+(sin copiar su código).
 Las carátulas de juegos que aparecen en las capturas pertenecen a sus respectivos dueños.

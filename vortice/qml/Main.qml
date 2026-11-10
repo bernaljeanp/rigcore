@@ -213,6 +213,7 @@ ApplicationWindow {
                                     boost: fanSlot.hIndex >= 0 ? win.helper.fans[fanSlot.hIndex].boost
                                                                : (fanSlot.f.boost === undefined ? null : fanSlot.f.boost)
                                     canBoost: win.service && fanSlot.hIndex >= 0
+                                    kind: fanSlot.hIndex >= 0 ? (win.helper.fans[fanSlot.hIndex].kind || "boost") : "boost"
                                     onBoostRequested: v => hw.setFanBoost(fanSlot.hIndex, v)
                                 }
                             }

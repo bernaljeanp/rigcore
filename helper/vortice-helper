@@ -31,6 +31,7 @@ from gi.repository import Gio, GLib
 # /usr/local/libexec/vortice (propiedad de root); -I no añade esa carpeta sola.
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import fancurve  # noqa: E402
+import fans as fanmod  # noqa: E402
 import lights  # noqa: E402
 
 BUS_NAME = "io.github.vortice.Helper"
@@ -69,7 +70,7 @@ XML = f"""
   </interface>
 </node>
 """
-VERSION = 4
+VERSION = 5
 STATE_DIR = os.environ.get("STATE_DIRECTORY", "/var/lib/vortice")
 LIGHTS_FILE = os.path.join(STATE_DIR, "lights.json")
 CURVE_FILE = os.path.join(STATE_DIR, "fancurve.json")
@@ -101,32 +102,13 @@ def _write(path, value):
 
 
 def fans():
-    """Ventiladores con boost, en orden estable."""
+    """Ventiladores controlables (multimarca, ver fans.py), en orden estable."""
     out = []
-    for path in sorted(glob.glob("/sys/class/hwmon/hwmon*/fan*_boost")):
-        base = path[: -len("_boost")]
-        label = _read(base + "_label") or os.path.basename(base)
-        out.append({
-            "label": label,
-            "path": path,
-            "boost": int(_read(path) or 0),
-            "rpm": int(_read(base + "_input") or 0),
-            "temp_path": _temp_for(os.path.dirname(path), label),
-        })
+    for f in fanmod.detect():
+        raw = _read(f["input"]) if f.get("input") else None
+        f["rpm"] = int(raw) if raw and raw.isdigit() else 0
+        out.append(f)
     return out
-
-
-def _temp_for(hwmon, fan_label):
-    """Sensor de temperatura del mismo driver cuyo nombre coincide con el del
-    ventilador ("CPU Fan" -> "CPU"); si no, el paquete de la CPU."""
-    word = fan_label.split()[0].lower()
-    for lbl in sorted(glob.glob(f"{hwmon}/temp*_label")):
-        if (_read(lbl) or "").lower() == word:
-            return lbl.replace("_label", "_input")
-    for hw in glob.glob("/sys/class/hwmon/hwmon*"):
-        if _read(f"{hw}/name") in ("coretemp", "k10temp"):
-            return f"{hw}/temp1_input"
-    return None
 
 
 # Dos backends de batería: firmware Dell (dell-wmi-sysman) y el estándar
@@ -140,6 +122,19 @@ def _std_battery():
     for bat in sorted(glob.glob("/sys/class/power_supply/BAT*")):
         if os.path.exists(f"{bat}/charge_control_end_threshold"):
             return bat
+    return None
+
+
+def _lenovo_conservation():
+    hits = glob.glob("/sys/bus/platform/drivers/ideapad_acpi/*/conservation_mode")
+    return hits[0] if hits else None
+
+
+def _acer_limiter():
+    for sense in ("predator_sense", "nitro_sense"):
+        p = f"/sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/{sense}/battery_limiter"
+        if os.path.exists(p):
+            return p
     return None
 
 
@@ -168,6 +163,13 @@ def battery():
             "startRange": [0, 99] if has_start else None,
             "stopRange": [1, 100],
         }
+    # Interruptores de firmware sin umbrales: Lenovo (~60 %) y Acer (80 %).
+    for backend, path, on_mode in (("lenovo", _lenovo_conservation(), "Conservation"),
+                                   ("acer", _acer_limiter(), "Limit80")):
+        if path:
+            return {"backend": backend, "mode": on_mode if _read(path) == "1" else "Standard",
+                    "modes": ["Standard", on_mode], "start": None, "stop": None,
+                    "startRange": None, "stopRange": None}
     return None
 
 
@@ -205,7 +207,7 @@ def set_fan_boost(index, value):
     if index >= len(fl):
         raise Refused("ventilador inexistente")
     if not 0 <= value <= 255:
-        raise Refused("el boost debe estar entre 0 y 255")
+        raise Refused("el valor debe estar entre 0 y 255")
     CURVE.manual[index] = value
     CURVE.apply_one(fl, index)
 
@@ -213,14 +215,31 @@ def set_fan_boost(index, value):
 class Curve:
     def __init__(self):
         self.cfg = fancurve.default()
-        self.manual = {}            # índice -> boost manual (0-255)
+        self.manual = {}            # índice -> refuerzo manual (0-255)
         self.states = {}            # índice -> FanState
-        self.written = {}           # índice -> último valor escrito
+        self.written = {}           # índice -> último valor pedido
+        self.applied = {}           # índice -> descripción de lo aplicado
+        self.ctrl = fanmod.Controller()
+        self.asus = fanmod.asus_curve_paths()
         try:
             with open(CURVE_FILE) as f:
                 self.cfg = fancurve.validate(json.load(f))
         except (OSError, ValueError, TypeError, KeyError, IndexError):
             pass
+        self.sync_hardware_curve()
+
+    def sync_hardware_curve(self):
+        """ASUS guarda la curva en el firmware: se escribe allí al guardarla."""
+        if not self.asus:
+            return
+        try:
+            if self.cfg["enabled"]:
+                curves = list(self.cfg["fans"].values())
+                fanmod.apply_asus_curve(self.asus, {n: curves[min(n - 1, len(curves) - 1)] for n in self.asus})
+            else:
+                fanmod.disable_asus_curve(self.asus)
+        except OSError as e:
+            print(f"curva ASUS: {e}", flush=True)
 
     def save(self, cfg):
         try:
@@ -232,30 +251,42 @@ class Curve:
         with open(tmp, "w") as f:
             json.dump(self.cfg, f)
         os.replace(tmp, CURVE_FILE)
+        self.sync_hardware_curve()
         self.tick()
 
-    def curve_value(self, fan, index):
-        """Boost (0-255) que pide la curva para este ventilador, o 0."""
-        if not self.cfg["enabled"]:
-            return 0, None
+    def temp(self, fan):
+        raw = _read(fan["temp"]) if fan.get("temp") else None
+        return int(raw) / 1000 if raw and raw.lstrip("-").isdigit() else None
+
+    def curve_value(self, fan, index, temp):
+        """Refuerzo (0-255) que pide la curva por software, o 0."""
+        if not self.cfg["enabled"] or temp is None:
+            return 0
+        if self.asus and fan["kind"] == "mode":
+            return 0   # la curva la aplica el firmware de ASUS
         pts = self.cfg["fans"].get(fan["label"])
         if pts is None and self.cfg["fans"]:
             pts = next(iter(self.cfg["fans"].values()))   # curva compartida
-        raw = _read(fan["temp_path"]) if fan.get("temp_path") else None
-        if pts is None or raw is None:
-            return 0, None
-        temp = int(raw) / 1000
+        if pts is None:
+            return 0
         pct = self.states.setdefault(index, fancurve.FanState()).step(pts, temp)
-        return round(pct * 2.55), temp
+        return round(pct * 2.55)
 
     def apply_one(self, fl, index):
         fan = fl[index]
-        curve, temp = self.curve_value(fan, index)
+        temp = self.temp(fan)
+        curve = self.curve_value(fan, index, temp)
         value = max(curve, self.manual.get(index, 0))
-        if self.written.get(index) != value:
-            _write(fan["path"], value)
-            self.written[index] = value
-        fan["curve"], fan["temp"] = curve, temp
+        # En pwm manual se reevalúa la seguridad por temperatura en cada ciclo.
+        if self.written.get(index) != value or (fan["kind"] == "pwm" and value > 0):
+            try:
+                desc = self.ctrl.apply(index, fan, value, temp)
+            except OSError as e:
+                raise Refused(f"el firmware rechazó el valor ({e})") from e
+            if self.applied.get(index) != desc:
+                print(f"{fan['label']} ({fan['driver']}): {desc}", flush=True)
+            self.written[index], self.applied[index] = value, desc
+        fan["curve"], fan["temp_now"] = curve, temp
 
     def tick(self):
         try:
@@ -294,6 +325,11 @@ def set_charge(mode, start, stop):
                 _write(f"{e_attr}/current_value", stop)
                 _write(f"{s_attr}/current_value", start)
         _write(f"{_dell_attr('PrimaryBattChargeCfg')}/current_value", mode)
+        return
+
+    if b["backend"] in ("lenovo", "acer"):
+        path = _lenovo_conservation() if b["backend"] == "lenovo" else _acer_limiter()
+        _write(path, 0 if mode == "Standard" else 1)
         return
 
     bat = _std_battery()
@@ -365,12 +401,12 @@ LIGHTS = Lights()
 
 
 def reset_fans():
-    for f in fans():
-        try:
-            _write(f["path"], 0)
-        except Refused:
-            pass
+    """Todo vuelve al firmware (al detener el servicio)."""
+    for f in fanmod.detect():
+        fanmod.Controller.reset(f)
     if CURVE:
+        if CURVE.asus:
+            fanmod.disable_asus_curve(CURVE.asus)
         CURVE.written.clear()
 
 
@@ -407,9 +443,13 @@ def on_call(conn, sender, path, iface, method, params, invocation):
         if method == "GetState":
             # El driver no siempre devuelve el boost escrito al leerlo: se informa del
             # valor que este servicio escribió (si lo hizo).
-            state = {"fans": [{k: v for k, v in f.items() if k not in ("path", "temp_path")}
-                              | {"manual": CURVE.manual.get(i, 0), "boost": CURVE.written.get(i, f["boost"])}
-                              for i, f in enumerate(fans())],
+            fl = fans()
+            state = {"fans": [{"label": f["label"], "driver": f["driver"], "kind": f["kind"],
+                               "levels": fanmod.levels(f["kind"]), "rpm": f["rpm"],
+                               "temp": CURVE.temp(f), "manual": CURVE.manual.get(i, 0),
+                               "boost": CURVE.written.get(i, fanmod.read_value(f) or 0)}
+                              for i, f in enumerate(fl)],
+                     "hardwareCurve": bool(CURVE.asus),
                      "battery": battery(), "lights": LIGHTS.state(), "curve": CURVE.cfg,
                      "bios": bios_options()}
             invocation.return_value(GLib.Variant("(s)", (json.dumps(state),)))

@@ -23,7 +23,8 @@ Section {
         : status === "Discharging" ? "Usando batería" : status
 
     readonly property var modeNames: ({ "Adaptive": "Adaptativa", "Standard": "Estándar",
-        "Express": "Rápida", "PrimAcUse": "Siempre enchufado", "Custom": "Personalizada" })
+        "Express": "Rápida", "PrimAcUse": "Siempre enchufado", "Custom": "Personalizada",
+        "Conservation": "Conservación", "Limit80": "Hasta 80 %" })
     readonly property var stopAt: service && service.mode === "Custom" ? service.stop
                                 : (limit !== null && limit !== undefined ? limit : null)
     readonly property string summary: service

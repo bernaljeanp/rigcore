@@ -313,9 +313,11 @@ Rectangle {
                     Text {
                         Layout.fillWidth: true
                         Layout.margins: T.pad
-                        text: page.service
-                              ? "Si un perfil de juego pide más boost, se usa el mayor de los dos. Al detener el servicio, los ventiladores vuelven a automático."
-                              : "Puedes preparar la curva ahora; se aplicará cuando instales el servicio de Vórtice."
+                        text: !page.service
+                              ? "Puedes preparar la curva ahora; se aplicará cuando instales el servicio de Vórtice."
+                              : (hw.helper || {}).hardwareCurve
+                              ? "Este equipo guarda la curva en su firmware: Vórtice la escribe allí al guardarla y funciona aunque el servicio se detenga."
+                              : "Si un perfil de juego pide más refuerzo, se usa el mayor de los dos. Al detener el servicio, los ventiladores vuelven a automático."
                         color: page.service ? T.ink3 : T.amber
                         wrapMode: Text.WordWrap
                         font { family: T.sans; pixelSize: 13 }

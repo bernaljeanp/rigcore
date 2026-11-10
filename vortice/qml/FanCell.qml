@@ -12,6 +12,8 @@ Item {
     property real maxRpm: 5400
     property var boost: null          // 0-255 según el kernel
     property bool canBoost: false
+    property string kind: "boost"     // boost | pwm | mode | toggle | acer (ver fans.py)
+    readonly property bool onOff: kind === "mode" || kind === "toggle"
     signal boostRequested(int value)
 
     readonly property real frac: Math.min(1, rpm / Math.max(maxRpm, 1))
@@ -109,20 +111,32 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             Text {
-                text: "Boost"
+                // Alienware suma sobre el firmware ("boost"); otros fijan una velocidad.
+                text: fc.onOff ? "Velocidad" : fc.kind === "boost" ? "Boost" : "Velocidad mínima"
                 color: T.ink2
                 font { family: T.sans; pixelSize: 13; weight: Font.Medium }
             }
             Item { Layout.fillWidth: true }
             Text {
                 text: !fc.canBoost ? "requiere servicio"
+                      : fc.onOff ? (fc.boosted ? "máximo" : "auto")
                       : fader.value === 0 ? "auto" : Math.round(fader.value) + " %"
-                color: fader.value > 0 && fc.canBoost ? T.amber : T.ink3
+                color: (fc.onOff ? fc.boosted : fader.value > 0) && fc.canBoost ? T.amber : T.ink3
                 font { family: T.mono; pixelSize: 11 }
             }
         }
+        // Ventiladores con solo automático / máximo (ASUS, HP Omen, MSI).
+        Toggle {
+            visible: fc.onOff
+            enabled: fc.canBoost
+            opacity: enabled ? 1 : 0.35
+            label: "Máximo"
+            checked: fc.boosted
+            onToggled: on => fc.boostRequested(on ? 255 : 0)
+        }
         Fader {
             id: fader
+            visible: !fc.onOff
             Layout.fillWidth: true
             enabled: fc.canBoost
             from: 0; to: 100; stepSize: 5

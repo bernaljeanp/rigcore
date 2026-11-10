@@ -40,6 +40,7 @@ install -d -o root -g root -m 0755 "$LIBEXEC"
 install -o root -g root -m 0755 "$SRC/vortice-helper" "$LIBEXEC/vortice-helper"
 install -o root -g root -m 0644 "$SRC/../vortice/lights.py" "$LIBEXEC/lights.py"
 install -o root -g root -m 0644 "$SRC/../vortice/fancurve.py" "$LIBEXEC/fancurve.py"
+install -o root -g root -m 0644 "$SRC/../vortice/fans.py" "$LIBEXEC/fans.py"
 
 # Zenit (instalación independiente) también controla las luces: si está, se retira
 # con la misma comprobación que usa su propio desinstalador. Sus preferencias

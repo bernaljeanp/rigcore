@@ -14,7 +14,9 @@ Popup {
         "Standard":  ["Estándar", "Carga completa a ritmo normal"],
         "Express":   ["Rápida", "Carga más deprisa; desgasta más la batería"],
         "PrimAcUse": ["Siempre enchufado", "Para equipos que casi nunca usan la batería"],
-        "Custom":    ["Personalizada", "Tú eliges cuándo empieza y cuándo para"]
+        "Custom":    ["Personalizada", "Tú eliges cuándo empieza y cuándo para"],
+        "Conservation": ["Conservación", "Lenovo: mantiene la batería en torno al 60 %"],
+        "Limit80":   ["Limitar al 80 %", "Acer: deja de cargar al 80 %"]
     })
     property string mode: ""
     property int start: 50
