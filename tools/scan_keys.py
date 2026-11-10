@@ -40,7 +40,29 @@ def internal_devices():
     return out
 
 
+def show_map(scancodes):
+    """Pregunta al kernel (EVIOCGKEYCODE) qué tecla tiene asignada cada scancode."""
+    import fcntl
+    EVIOCGKEYCODE = (2 << 30) | (8 << 16) | (ord("E") << 8) | 0x04
+    names = {v: k for k, v in {"F23": 193, "F24": 194, "PROG3": 202, "PROG4": 203, "F20": 190,
+                               "F18": 188, "PERFORMANCE": 0x2bd}.items()}
+    for path, name in internal_devices().items():
+        if name != "AT Translated Set 2 keyboard":
+            continue
+        fd = os.open(path, os.O_RDONLY)
+        try:
+            for sc in scancodes:
+                buf = struct.pack("II", sc, 0)
+                code = struct.unpack("II", fcntl.ioctl(fd, EVIOCGKEYCODE, buf))[1]
+                print(f"  scancode {sc:#x} -> {names.get(code, code)}")
+        finally:
+            os.close(fd)
+
+
 def main():
+    if "--mapa" in sys.argv:
+        show_map([0x68, 0x69, 0x6b])
+        return
     secs = float(sys.argv[1]) if len(sys.argv) > 1 else 15
     devs = internal_devices()
     if not devs:

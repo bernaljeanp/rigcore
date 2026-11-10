@@ -15,6 +15,7 @@ reload_keys() {
     systemd-hwdb update
     # Reaplica el mapa de teclas a los teclados integrados sin reiniciar.
     udevadm trigger --action=change --subsystem-match=input --property-match=ID_INPUT_KEYBOARD=1 || true
+    udevadm settle --timeout=10 || true
 }
 
 if [ "${1:-}" = "--uninstall" ]; then

@@ -362,10 +362,10 @@ X-KDE-autostart-after=panel
 
 
 # ---- teclas Alienware como atajos globales de KDE ------------------------------
-# F9 (luces) llega como XF86Launch9. F7 (sigilo, F20 = "silenciar micrófono") y
-# F6 (boost, KEY_PERFORMANCE sin símbolo XKB) se reasignan con la regla hwdb del
-# servicio a KEY_PROG3 (XF86Launch3) y KEY_PROG4 (XF86Launch4).
-KEY_SHORTCUTS = {"lights": "Launch (9)", "stealth": "Launch (3)", "boost": "Launch (4)"}
+# F9 (luces) llega como XF86Launch9. F6 (boost, KEY_PERFORMANCE sin símbolo XKB)
+# y F7 (sigilo, F20 = "silenciar micrófono") se reasignan con la regla hwdb del
+# servicio a F23 y F24, que XKB y Qt traducen sin ambigüedad.
+KEY_SHORTCUTS = {"lights": "Launch (9)", "stealth": "F24", "boost": "F23"}
 SHORTCUTS_FILE = Path(os.path.expanduser("~/.local/share/applications/vortice-teclas.desktop"))
 
 
@@ -380,6 +380,8 @@ Comment=Teclas especiales del portátil: F6 Boost, F7 Sigilo, F9 Luces
 Icon=vortice
 Exec={launcher} --accion show
 NoDisplay=true
+StartupNotify=false
+X-KDE-StartupNotify=false
 Actions={";".join(KEY_SHORTCUTS)};
 """
     for action, key in KEY_SHORTCUTS.items():
@@ -399,7 +401,7 @@ X-KDE-Shortcuts={key}
         return False
 
 
-_QT_KEYS = {"Launch (3)": 0x010000A5, "Launch (4)": 0x010000A6, "Launch (8)": 0x010000AA, "Launch (9)": 0x010000AB}
+_QT_KEYS = {"F23": 0x01000036, "F24": 0x01000037, "Launch (9)": 0x010000AB}
 
 
 def apply_key_shortcuts() -> None:
