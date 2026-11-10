@@ -100,17 +100,26 @@ def process_games(cfg: dict) -> list[dict]:
 
 # ------------------------------------------------------------ configuración
 
+def _seed_known(cfg: dict) -> bool:
+    """Añade una sola vez los juegos conocidos que estén instalados (p. ej. Sober)."""
+    if cfg.get("seeded"):
+        return False
+    for proc, (label, flatpak_id) in KNOWN_PROCESSES.items():
+        if _flatpak_icon(flatpak_id) or os.path.isdir(f"/var/lib/flatpak/app/{flatpak_id}"):
+            cfg.setdefault("processes", {}).setdefault(proc, label)
+    cfg["seeded"] = True
+    return True
+
+
 def load_config() -> dict:
     try:
         with open(agent.CONFIG) as f:
-            return {**agent.DEFAULT_CONFIG, **json.load(f)}
+            cfg = {**agent.DEFAULT_CONFIG, **json.load(f)}
     except (OSError, ValueError):
         cfg = json.loads(json.dumps(agent.DEFAULT_CONFIG))
-        # Primera vez: añade juegos conocidos que estén instalados (p. ej. Sober).
-        for proc, (label, flatpak_id) in KNOWN_PROCESSES.items():
-            if _flatpak_icon(flatpak_id) or os.path.isdir(f"/var/lib/flatpak/app/{flatpak_id}"):
-                cfg["processes"][proc] = label
-        return cfg
+    if _seed_known(cfg):
+        save_config(cfg)   # el agente lo recarga solo (vigila la fecha del archivo)
+    return cfg
 
 
 def save_config(cfg: dict) -> None:
