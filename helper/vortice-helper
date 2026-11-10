@@ -7,6 +7,7 @@ validación estricta:
   - SetFanBoost(index u, value u)     -> boost 0-255 de un ventilador
   - SetCharge(mode s, start u, stop u)-> modo/umbrales de carga de la batería
   - SetFanCurve(json s)               -> curvas temperatura->boost (se aplican cada 2 s)
+  - SetBiosOption(name s, value s)    -> SOLO opciones de una lista blanca (bloqueo de Fn)
   - SetLights(effect s, color s, brightness u) -> luces AW-ELC (se guardan y se
     reaplican al arrancar, al reanudar tras suspender y si el USB se reconecta)
 
@@ -52,6 +53,10 @@ XML = f"""
       <arg type="u" direction="in" name="start"/>
       <arg type="u" direction="in" name="stop"/>
     </method>
+    <method name="SetBiosOption">
+      <arg type="s" direction="in" name="name"/>
+      <arg type="s" direction="in" name="value"/>
+    </method>
     <method name="SetFanCurve">
       <arg type="s" direction="in" name="json"/>
     </method>
@@ -64,7 +69,7 @@ XML = f"""
   </interface>
 </node>
 """
-VERSION = 3
+VERSION = 4
 STATE_DIR = os.environ.get("STATE_DIRECTORY", "/var/lib/vortice")
 LIGHTS_FILE = os.path.join(STATE_DIR, "lights.json")
 CURVE_FILE = os.path.join(STATE_DIR, "fancurve.json")
@@ -164,6 +169,33 @@ def battery():
             "stopRange": [1, 100],
         }
     return None
+
+
+# Opciones de la BIOS que Vórtice puede cambiar. Nada fuera de esta lista.
+BIOS_OPTIONS = {
+    "FnLock": ("Disabled", "Enabled"),                    # permitir Fn+Esc
+    "FnLockMode": ("DisableStandard", "EnableSecondary"),  # F1-F12 / funciones especiales primero
+}
+
+
+def bios_options():
+    out = {}
+    for name, allowed in BIOS_OPTIONS.items():
+        attr = _dell_attr(name)
+        if attr:
+            out[name] = {"value": _read(f"{attr}/current_value"), "allowed": list(allowed)}
+    return out
+
+
+def set_bios_option(name, value):
+    if name not in BIOS_OPTIONS:
+        raise Refused("opción no permitida")
+    if value not in BIOS_OPTIONS[name]:
+        raise Refused(f"valor no válido para {name}")
+    attr = _dell_attr(name)
+    if not attr:
+        raise Refused("este equipo no tiene esa opción")
+    _write(f"{attr}/current_value", value)
 
 
 def set_fan_boost(index, value):
@@ -378,13 +410,17 @@ def on_call(conn, sender, path, iface, method, params, invocation):
             state = {"fans": [{k: v for k, v in f.items() if k not in ("path", "temp_path")}
                               | {"manual": CURVE.manual.get(i, 0), "boost": CURVE.written.get(i, f["boost"])}
                               for i, f in enumerate(fans())],
-                     "battery": battery(), "lights": LIGHTS.state(), "curve": CURVE.cfg}
+                     "battery": battery(), "lights": LIGHTS.state(), "curve": CURVE.cfg,
+                     "bios": bios_options()}
             invocation.return_value(GLib.Variant("(s)", (json.dumps(state),)))
         elif method == "SetFanBoost":
             set_fan_boost(*params.unpack())
             invocation.return_value(None)
         elif method == "SetCharge":
             set_charge(*params.unpack())
+            invocation.return_value(None)
+        elif method == "SetBiosOption":
+            set_bios_option(*params.unpack())
             invocation.return_value(None)
         elif method == "SetFanCurve":
             try:

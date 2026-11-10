@@ -24,7 +24,7 @@ Rectangle {
                 { icon: Icons.gamepad,   name: "Perfiles por juego", page: 1 },
                 { icon: Icons.fan,       name: "Curvas de ventilador", page: 3 },
                 { icon: Icons.sparkles,  name: "Iluminación", page: 2 },
-                { icon: Icons.sliders,   name: "Ajustes · pronto" }
+                { icon: Icons.sliders,   name: "Ajustes", page: 4 }
             ]
             delegate: Item {
                 id: nav

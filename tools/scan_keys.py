@@ -17,7 +17,7 @@ import time
 EV_KEY, EV_MSC, MSC_SCAN = 0x01, 0x04, 0x04
 FMT = "llHHi"
 SIZE = struct.calcsize(FMT)
-NAMES = {64: "F6", 65: "F7", 67: "F9", 187: "F17", 188: "F18", 189: "F19", 190: "F20",
+NAMES = {64: "F6", 65: "F7", 67: "F9", 187: "F17", 188: "F18", 189: "F19", 190: "F20", 193: "F23", 194: "F24",
          148: "PROG1", 149: "PROG2", 202: "PROG3", 203: "PROG4", 248: "MICMUTE",
          0x1d9: "PERFORMANCE"}
 
@@ -85,10 +85,11 @@ def main():
                     _, _, typ, code, value = struct.unpack(FMT, data[i:i + SIZE])
                     if typ == EV_MSC and code == MSC_SCAN:
                         scans[fd] = value
-                    elif typ == EV_KEY and value == 1:
+                    elif typ == EV_KEY and value in (0, 1):
                         name = NAMES.get(code, f"código {code}")
                         sc = scans.pop(fd, None)
-                        line = f"tecla {name:12s} scancode {sc:#x}" if sc is not None else f"tecla {name:12s}"
+                        estado = "pulsada" if value == 1 else "soltada"
+                        line = f"tecla {name:12s} {estado:8s} scancode {sc:#x}" if sc is not None else f"tecla {name:12s} {estado}"
                         line += f"   [{fds[fd]}]"
                         if line not in seen:
                             seen.append(line)

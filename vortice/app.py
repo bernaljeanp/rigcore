@@ -415,6 +415,27 @@ class Backend(QObject):
         else:
             self.helperChanged.emit()
 
+    # ---- ajustes ----------------------------------------------------------------
+    settingsChanged = Signal()
+
+    @Slot(str, str)
+    def setBiosOption(self, name: str, value: str) -> None:
+        msg = {"EnableSecondary": "Funciones especiales primero (sin Fn)",
+               "DisableStandard": "Teclas F1–F12 primero (especiales con Fn)",
+               "Enabled": "Fn+Esc activado", "Disabled": "Fn+Esc desactivado"}.get(value, "Guardado en la BIOS")
+        self._helper_write("SetBiosOption", "ss", (name, value), msg)
+
+    @Property(bool, notify=settingsChanged)
+    def autostart(self) -> bool:
+        from .tray import AUTOSTART
+        return AUTOSTART.exists()
+
+    @Slot(bool)
+    def setAutostart(self, on: bool) -> None:
+        from .tray import set_autostart
+        set_autostart(on)
+        self.settingsChanged.emit()
+
     @Slot(bool)
     def setVisible(self, visible: bool) -> None:
         """Minimizada: menos lecturas (cada 5 s) y nada que animar."""
