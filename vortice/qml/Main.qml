@@ -148,6 +148,7 @@ ApplicationWindow {
                             + (hw.caps.gpuKind ? " · " + hw.caps.gpuName : "")
                     temp: win.gpu.temp || 0
                     asleep: !!win.gpu.asleep
+                    noSensor: !!win.st.t && !!hw.caps.gpuKind && !win.gpu.asleep && (win.gpu.temp === undefined || win.gpu.temp === null)
                     notice: hw.caps.gpuKind ? "" : "No se detectó una gráfica compatible"
                     noticeText: "Vórtice lee gráficas NVIDIA (con su driver), AMD e Intel."
                     noticeIcon: Icons.gpu

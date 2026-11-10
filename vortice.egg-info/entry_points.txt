@@ -1,3 +1,0 @@
-[console_scripts]
-vortice = vortice.app:main
-vortice-agent = vortice.agent:main

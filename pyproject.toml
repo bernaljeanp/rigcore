@@ -19,7 +19,9 @@ classifiers = [
   "Topic :: System :: Hardware",
 ]
 # La distro suele aportar PySide6 (python3-pyside6 / pyside6); con pip se instala esta.
-dependencies = ["PySide6-Essentials>=6.6"]
+# Con pip se usa PySide6 >= 6.12 (los shaders del repositorio se compilan con esa versión);
+# los paquetes de distro recompilan los shaders con su propio Qt.
+dependencies = ["PySide6-Essentials>=6.12"]
 
 [project.urls]
 Homepage = "https://github.com/bernaljeanp/vortice"
@@ -30,7 +32,10 @@ vortice = "vortice.app:main"
 vortice-agent = "vortice.agent:main"
 
 [tool.setuptools]
-packages = ["vortice"]
+# qml/, fonts/ y shaders/ son solo datos, pero setuptools quiere verlas declaradas.
+packages = ["vortice", "vortice.qml", "vortice.fonts", "vortice.shaders"]
 
 [tool.setuptools.package-data]
-vortice = ["qml/*", "fonts/*", "shaders/*"]
+"vortice.qml" = ["*"]
+"vortice.fonts" = ["*"]
+"vortice.shaders" = ["*"]

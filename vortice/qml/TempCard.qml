@@ -8,11 +8,12 @@ Section {
     property real temp: 0
     property var metrics: []        // [{label, value, unit}]
     property bool asleep: false     // gráfica dedicada apagada (modo híbrido)
+    property bool noSensor: false   // el driver no informa de temperatura (p. ej. Intel integrada)
     property string notice: ""
     property string noticeText: ""
     property string noticeIcon: ""
 
-    readonly property string level: asleep ? "En reposo" : temp >= 92 ? "Crítica"
+    readonly property string level: asleep ? "En reposo" : noSensor ? "Sin sensor" : temp >= 92 ? "Crítica"
                                   : temp >= 82 ? "Alta" : temp >= 55 ? "Normal" : "Fría"
 
     Notice {
@@ -41,7 +42,7 @@ Section {
                 width: Math.min(parent.width - 20, parent.height * 1.1)
                 height: width
                 value: tc.temp
-                dim: tc.asleep
+                dim: tc.asleep || tc.noSensor
             }
 
             Column {
@@ -53,12 +54,12 @@ Section {
                     spacing: 2
                     Text {
                         id: big
-                        text: tc.asleep ? "—" : Math.round(gauge.shown)
-                        color: tc.asleep ? T.ink3 : gauge.animTint
+                        text: tc.asleep || tc.noSensor ? "—" : Math.round(gauge.shown)
+                        color: tc.asleep || tc.noSensor ? T.ink3 : gauge.animTint
                         font { family: T.mono; pixelSize: Math.max(46, gauge.width * 0.17); weight: Font.Light }
                     }
                     Text {
-                        visible: !tc.asleep
+                        visible: !tc.asleep && !tc.noSensor
                         text: "°C"
                         color: T.ink2
                         y: big.height * 0.18
@@ -68,7 +69,7 @@ Section {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: tc.level
-                    color: tc.asleep ? T.ink3 : (tc.temp >= 82 ? gauge.animTint : T.ink2)
+                    color: tc.asleep || tc.noSensor ? T.ink3 : (tc.temp >= 82 ? gauge.animTint : T.ink2)
                     font { family: T.sans; pixelSize: 12; weight: Font.Medium; letterSpacing: 0.9; capitalization: Font.AllUppercase }
                 }
             }
