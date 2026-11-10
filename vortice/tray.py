@@ -401,7 +401,13 @@ X-KDE-Shortcuts={key}
         return False
 
 
-_QT_KEYS = {"F23": 0x01000036, "F24": 0x01000037, "Launch (9)": 0x010000AB}
+def _qt_key_code(name: str) -> int | None:
+    """Código Qt de una tecla a partir de su nombre ("F23", "Launch (9)"). Se
+    calcula con Qt en lugar de una tabla a mano: un error ahí capturaba F7/F8."""
+    from PySide6.QtGui import QKeySequence
+
+    seq = QKeySequence.fromString(name, QKeySequence.SequenceFormat.PortableText)
+    return seq[0].toCombined() if seq.count() == 1 else None
 
 
 def apply_key_shortcuts() -> None:
@@ -412,7 +418,7 @@ def apply_key_shortcuts() -> None:
     subprocess.run(["kbuildsycoca6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
     names = {"lights": "Ciclar brillo de las luces", "stealth": "Modo sigilo", "boost": "Alternar modo Rendimiento"}
     for action, key in KEY_SHORTCUTS.items():
-        code = _QT_KEYS.get(key)
+        code = _qt_key_code(key)
         if code is None:
             continue
         subprocess.run(["busctl", "--user", "call", "org.kde.kglobalaccel", "/kglobalaccel",
