@@ -6,6 +6,7 @@ validación estricta:
   - GetState()                        -> JSON con ventiladores y batería
   - SetFanBoost(index u, value u)     -> boost 0-255 de un ventilador
   - SetCharge(mode s, start u, stop u)-> modo/umbrales de carga de la batería
+  - SetFanCurve(json s)               -> curvas temperatura->boost (se aplican cada 2 s)
   - SetLights(effect s, color s, brightness u) -> luces AW-ELC (se guardan y se
     reaplican al arrancar, al reanudar tras suspender y si el USB se reconecta)
 
@@ -28,6 +29,7 @@ from gi.repository import Gio, GLib
 # Módulo de luces compartido con la interfaz. Se instala junto a este archivo en
 # /usr/local/libexec/vortice (propiedad de root); -I no añade esa carpeta sola.
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import fancurve  # noqa: E402
 import lights  # noqa: E402
 
 BUS_NAME = "io.github.vortice.Helper"
@@ -50,6 +52,9 @@ XML = f"""
       <arg type="u" direction="in" name="start"/>
       <arg type="u" direction="in" name="stop"/>
     </method>
+    <method name="SetFanCurve">
+      <arg type="s" direction="in" name="json"/>
+    </method>
     <method name="SetLights">
       <arg type="s" direction="in" name="effect"/>
       <arg type="s" direction="in" name="color"/>
@@ -59,9 +64,10 @@ XML = f"""
   </interface>
 </node>
 """
-VERSION = 2
+VERSION = 3
 STATE_DIR = os.environ.get("STATE_DIRECTORY", "/var/lib/vortice")
 LIGHTS_FILE = os.path.join(STATE_DIR, "lights.json")
+CURVE_FILE = os.path.join(STATE_DIR, "fancurve.json")
 
 
 class Refused(Exception):
@@ -94,13 +100,28 @@ def fans():
     out = []
     for path in sorted(glob.glob("/sys/class/hwmon/hwmon*/fan*_boost")):
         base = path[: -len("_boost")]
+        label = _read(base + "_label") or os.path.basename(base)
         out.append({
-            "label": _read(base + "_label") or os.path.basename(base),
+            "label": label,
             "path": path,
             "boost": int(_read(path) or 0),
             "rpm": int(_read(base + "_input") or 0),
+            "temp_path": _temp_for(os.path.dirname(path), label),
         })
     return out
+
+
+def _temp_for(hwmon, fan_label):
+    """Sensor de temperatura del mismo driver cuyo nombre coincide con el del
+    ventilador ("CPU Fan" -> "CPU"); si no, el paquete de la CPU."""
+    word = fan_label.split()[0].lower()
+    for lbl in sorted(glob.glob(f"{hwmon}/temp*_label")):
+        if (_read(lbl) or "").lower() == word:
+            return lbl.replace("_label", "_input")
+    for hw in glob.glob("/sys/class/hwmon/hwmon*"):
+        if _read(f"{hw}/name") in ("coretemp", "k10temp"):
+            return f"{hw}/temp1_input"
+    return None
 
 
 # Dos backends de batería: firmware Dell (dell-wmi-sysman) y el estándar
@@ -146,12 +167,75 @@ def battery():
 
 
 def set_fan_boost(index, value):
+    """Boost manual (interfaz o perfil de juego). Con curva activa actúa como
+    mínimo: el ventilador usa el mayor de los dos."""
     fl = fans()
     if index >= len(fl):
         raise Refused("ventilador inexistente")
     if not 0 <= value <= 255:
         raise Refused("el boost debe estar entre 0 y 255")
-    _write(fl[index]["path"], value)
+    CURVE.manual[index] = value
+    CURVE.apply_one(fl, index)
+
+
+class Curve:
+    def __init__(self):
+        self.cfg = fancurve.default()
+        self.manual = {}            # índice -> boost manual (0-255)
+        self.states = {}            # índice -> FanState
+        self.written = {}           # índice -> último valor escrito
+        try:
+            with open(CURVE_FILE) as f:
+                self.cfg = fancurve.validate(json.load(f))
+        except (OSError, ValueError, TypeError, KeyError, IndexError):
+            pass
+
+    def save(self, cfg):
+        try:
+            self.cfg = fancurve.validate(cfg)
+        except (ValueError, TypeError, KeyError, IndexError) as e:
+            raise Refused(str(e)) from e
+        os.makedirs(STATE_DIR, exist_ok=True)
+        tmp = CURVE_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(self.cfg, f)
+        os.replace(tmp, CURVE_FILE)
+        self.tick()
+
+    def curve_value(self, fan, index):
+        """Boost (0-255) que pide la curva para este ventilador, o 0."""
+        if not self.cfg["enabled"]:
+            return 0, None
+        pts = self.cfg["fans"].get(fan["label"])
+        if pts is None and self.cfg["fans"]:
+            pts = next(iter(self.cfg["fans"].values()))   # curva compartida
+        raw = _read(fan["temp_path"]) if fan.get("temp_path") else None
+        if pts is None or raw is None:
+            return 0, None
+        temp = int(raw) / 1000
+        pct = self.states.setdefault(index, fancurve.FanState()).step(pts, temp)
+        return round(pct * 2.55), temp
+
+    def apply_one(self, fl, index):
+        fan = fl[index]
+        curve, temp = self.curve_value(fan, index)
+        value = max(curve, self.manual.get(index, 0))
+        if self.written.get(index) != value:
+            _write(fan["path"], value)
+            self.written[index] = value
+        fan["curve"], fan["temp"] = curve, temp
+
+    def tick(self):
+        try:
+            fl = fans()
+            for i in range(len(fl)):
+                self.apply_one(fl, i)
+        except Refused as e:
+            print(f"curva: {e}", flush=True)
+        return True
+
+
+CURVE = None  # se crea en main() (después de definir todo)
 
 
 def set_charge(mode, start, stop):
@@ -254,6 +338,8 @@ def reset_fans():
             _write(f["path"], 0)
         except Refused:
             pass
+    if CURVE:
+        CURVE.written.clear()
 
 
 # ------------------------------------------------------------------ D-Bus --
@@ -287,14 +373,22 @@ def on_call(conn, sender, path, iface, method, params, invocation):
                                          "solo administradores")
             return
         if method == "GetState":
-            state = {"fans": [{k: v for k, v in f.items() if k != "path"} for f in fans()],
-                     "battery": battery(), "lights": LIGHTS.state()}
+            state = {"fans": [{k: v for k, v in f.items() if k not in ("path", "temp_path")}
+                              | {"manual": CURVE.manual.get(i, 0)} for i, f in enumerate(fans())],
+                     "battery": battery(), "lights": LIGHTS.state(), "curve": CURVE.cfg}
             invocation.return_value(GLib.Variant("(s)", (json.dumps(state),)))
         elif method == "SetFanBoost":
             set_fan_boost(*params.unpack())
             invocation.return_value(None)
         elif method == "SetCharge":
             set_charge(*params.unpack())
+            invocation.return_value(None)
+        elif method == "SetFanCurve":
+            try:
+                cfg = json.loads(params.unpack()[0])
+            except ValueError as e:
+                raise Refused("JSON no válido") from e
+            CURVE.save(cfg)
             invocation.return_value(None)
         elif method == "SetLights":
             LIGHTS.set(*params.unpack())
@@ -313,6 +407,8 @@ def on_get_property(conn, sender, path, iface, prop):
 
 
 def main():
+    global CURVE
+    CURVE = Curve()
     loop = GLib.MainLoop()
     node = Gio.DBusNodeInfo.new_for_xml(XML)
 
@@ -328,6 +424,8 @@ def main():
 
     # Al arrancar (el USB puede tardar) y si el dispositivo se reconecta: comprobación barata cada 10 s.
     GLib.timeout_add_seconds(10, lambda: LIGHTS.reapply("dispositivo nuevo") or True)
+    # Curva de ventiladores: cada 2 s (lectura de dos sensores; no escribe si no cambia).
+    GLib.timeout_add_seconds(2, CURVE.tick)
     GLib.timeout_add_seconds(3, lambda: LIGHTS.reapply("arranque") or False)
 
     Gio.bus_own_name(Gio.BusType.SYSTEM, BUS_NAME, Gio.BusNameOwnerFlags.NONE,

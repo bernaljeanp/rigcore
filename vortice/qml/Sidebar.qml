@@ -22,7 +22,7 @@ Rectangle {
             model: [
                 { icon: Icons.dashboard, name: "Panel", page: 0 },
                 { icon: Icons.gamepad,   name: "Perfiles por juego", page: 1 },
-                { icon: Icons.fan,       name: "Curvas de ventilador · pronto" },
+                { icon: Icons.fan,       name: "Curvas de ventilador", page: 3 },
                 { icon: Icons.sparkles,  name: "Iluminación", page: 2 },
                 { icon: Icons.sliders,   name: "Ajustes · pronto" }
             ]

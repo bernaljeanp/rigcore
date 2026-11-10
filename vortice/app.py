@@ -12,7 +12,7 @@ from pathlib import Path
 from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
 from PySide6.QtGui import QFontDatabase, QIcon
 
-from . import games, hardware, lights
+from . import fancurve, games, hardware, lights
 
 HERE = Path(__file__).resolve().parent
 HISTORY = 90  # segundos de historial para las gráficas
@@ -372,6 +372,49 @@ class Backend(QObject):
             self._lights_pending = (effect, color.upper(), int(brightness))
             self._lights_cv.notify()
 
+    # ---- curvas de ventilador -------------------------------------------------
+    CURVE_CFG = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")),
+                             "vortice", "fancurve.json")
+
+    def _local_curve(self) -> dict:
+        try:
+            with open(self.CURVE_CFG) as f:
+                return fancurve.validate(json.load(f))
+        except (OSError, ValueError, TypeError, KeyError, IndexError):
+            return fancurve.default()
+
+    @Property("QVariantMap", notify=statsChanged)
+    def fanCurve(self) -> dict:
+        cfg = self._helper.get("curve") if self._helper.get("available") else None
+        cfg = cfg or self._local_curve()
+        live = {f["label"]: {"temp": f.get("temp"), "curve": f.get("curve", 0), "manual": f.get("manual", 0),
+                             "boost": f.get("boost", 0)} for f in self._helper.get("fans", [])}
+        if not live:  # sin servicio: temperaturas del panel para orientarse
+            st = self._stats or {}
+            for f in st.get("fans", []):
+                src = st.get("gpu" if f["label"].startswith("GPU") else "cpu") or {}
+                live[f["label"]] = {"temp": src.get("temp"), "boost": f.get("boost") or 0}
+        return {**cfg, "presets": fancurve.PRESETS, "live": live,
+                "applied": bool(self._helper.get("available"))}
+
+    @Slot(str)
+    def setFanCurve(self, payload: str) -> None:
+        try:
+            cfg = fancurve.validate(json.loads(payload))
+        except (ValueError, TypeError, KeyError, IndexError) as e:
+            self.notify.emit(f"Curva no válida: {e}", False)
+            return
+        os.makedirs(os.path.dirname(self.CURVE_CFG), exist_ok=True)
+        with open(self.CURVE_CFG, "w") as f:
+            json.dump(cfg, f)
+        if self._helper.get("available"):
+            self._helper["curve"] = cfg          # respuesta inmediata en la interfaz
+            self.helperChanged.emit()
+            self._helper_write("SetFanCurve", "s", (json.dumps(cfg),),
+                               "Curva activada" if cfg["enabled"] else "Curva guardada")
+        else:
+            self.helperChanged.emit()
+
     @Slot(bool)
     def setVisible(self, visible: bool) -> None:
         """Minimizada: menos lecturas (cada 5 s) y nada que animar."""
@@ -460,6 +503,8 @@ def main() -> int:
         return app.exec()
 
     # ---- proceso de la ventana ----
+    from PySide6.QtQuick import QQuickWindow  # noqa: F401  (tipa la ventana raíz)
+
     for f in sorted((HERE / "fonts").glob("*.ttf")):
         QFontDatabase.addApplicationFont(str(f))
     page = int(argv[argv.index("--pagina") + 1]) if "--pagina" in argv else int(os.environ.get("VORTICE_PAGE", "0"))
@@ -482,11 +527,11 @@ def main() -> int:
     # Desarrollo: VORTICE_SHOT=ruta.png [VORTICE_SHOT_DELAY=s] captura y sale.
     shot = os.environ.get("VORTICE_SHOT")
     if shot:
-        from PySide6.QtQuick import QQuickWindow  # noqa: F401  (tipa la ventana)
-
         def grab() -> None:
-            win.grabWindow().save(shot)
-            app.quit()
+            try:
+                win.grabWindow().save(shot)
+            finally:
+                app.quit()
 
         QTimer.singleShot(int(float(os.environ.get("VORTICE_SHOT_DELAY", "3")) * 1000), grab)
     rc = app.exec()
