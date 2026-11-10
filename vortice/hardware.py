@@ -49,6 +49,7 @@ class Fan:
 class Capabilities:
     vendor_driver: str = ""
     cpu_name: str = ""
+    model: str = ""             # p. ej. "Alienware 16X Aurora"
     gpu_name: str = ""
     gpu_kind: str = ""
     gpu_discrete: bool = False
@@ -78,6 +79,14 @@ SIMULATE = set(filter(None, os.environ.get("VORTICE_SIMULATE", "").split(",")))
 
 def detect() -> Capabilities:
     caps = Capabilities(cpu_name=_cpu_name())
+    vendor = _read("/sys/class/dmi/id/sys_vendor") or ""
+    product = _read("/sys/class/dmi/id/product_name") or ""
+    # "Alienware 16X Aurora AC16251": quita el código de modelo final si va en mayúsculas+cifras.
+    parts = product.split()
+    if len(parts) > 1 and any(ch.isdigit() for ch in parts[-1]) and parts[-1].isupper():
+        parts = parts[:-1]
+    product = " ".join(parts)
+    caps.model = product if product.lower().startswith(vendor.lower()) else f"{vendor} {product}".strip()
 
     for hw in sorted(glob.glob(f"{SYS}/hwmon/hwmon*")):
         name = _read(f"{hw}/name") or ""
@@ -157,6 +166,23 @@ def _ppd_call(action: str, value: str = "") -> str | None:
 
 def get_profile() -> str | None:
     return _ppd_call("get")
+
+
+def get_profile_details(caps: "Capabilities") -> dict:
+    """Qué hay debajo del modo: perfil de tuned (si existe) y modo del firmware."""
+    out = {}
+    if caps.platform_profile:
+        out["firmware"] = _read(f"{caps.platform_profile}/profile") or ""
+        out["firmwareDriver"] = _read(f"{caps.platform_profile}/name") or ""
+    try:
+        r = subprocess.run(["busctl", "--system", "call", "com.redhat.tuned", "/Tuned",
+                            "com.redhat.tuned.control", "active_profile"],
+                           capture_output=True, text=True, timeout=3)
+        if r.returncode == 0:
+            out["tuned"] = r.stdout.strip().split(" ", 1)[-1].strip('"')
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return out
 
 
 def set_profile(name: str) -> bool:

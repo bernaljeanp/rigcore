@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "Theme.js" as T
 import "Icons.js" as Icons
 
 ApplicationWindow {
@@ -11,7 +12,7 @@ ApplicationWindow {
     minimumHeight: 760
     visible: true
     title: "Vórtice"
-    color: "#08090D"
+    color: T.rule   // el color de fondo hace de líneas divisorias entre zonas
     onVisibilityChanged: (v) => hw.setVisible(v !== Window.Minimized && v !== Window.Hidden)
 
     readonly property var st: hw.stats || ({})
@@ -22,107 +23,90 @@ ApplicationWindow {
     readonly property var hist: st.history || ({ cpu: [], gpu: [] })
     readonly property var helper: hw.helper || ({ available: false })
     readonly property bool service: !!helper.available
+
     function helperFanIndex(label) {
         var fl = helper.fans || []
         for (var i = 0; i < fl.length; i++) if (fl[i].label === label) return i
         return -1
     }
+    function n(v, d) { return (v === undefined || v === null) ? "—" : Number(v).toFixed(d || 0) }
+    readonly property var profileNames: ({ "power-saver": "Silencioso", "balanced": "Equilibrado", "performance": "Rendimiento" })
 
-    readonly property var accents: ({
-        "power-saver": ["#2FD3B0", "#38BDF8"],
-        "balanced":    ["#8C7CFF", "#38BDF8"],
-        "performance": ["#FF6B3D", "#C026D3"]
-    })
-    property color accent: (accents[hw.profile] || accents["balanced"])[0]
-    property color accent2: (accents[hw.profile] || accents["balanced"])[1]
-    Behavior on accent { ColorAnimation { duration: 700 } }
-    Behavior on accent2 { ColorAnimation { duration: 700 } }
-
-    function n(v, d) { return (v === undefined || v === null) ? "–" : Number(v).toFixed(d || 0) }
-    readonly property string profileName: ({ "power-saver": "Silencioso", "balanced": "Equilibrado",
-                                             "performance": "Rendimiento" })[hw.profile] || "—"
-
-    Background { anchors.fill: parent; accent: win.accent; second: win.accent2 }
+    // Atajos 1, 2, 3 para cambiar de modo.
+    Shortcut { sequence: "1"; enabled: hw.caps.profiles; onActivated: hw.setProfile("power-saver") }
+    Shortcut { sequence: "2"; enabled: hw.caps.profiles; onActivated: hw.setProfile("balanced") }
+    Shortcut { sequence: "3"; enabled: hw.caps.profiles; onActivated: hw.setProfile("performance") }
 
     RowLayout {
         anchors.fill: parent
-        spacing: 0
+        spacing: 1
 
-        Sidebar { Layout.fillHeight: true; accent: win.accent }
+        Sidebar { Layout.fillHeight: true }
 
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.margins: 30
-            Layout.topMargin: 26
-            spacing: 22
+            spacing: 1
 
             // ---------- Cabecera ----------
-            RowLayout {
+            Rectangle {
                 Layout.fillWidth: true
-                spacing: 14
-                Column {
-                    spacing: 4
+                Layout.preferredHeight: 64
+                color: T.bg
+                RowLayout {
+                    anchors { fill: parent; leftMargin: T.pad; rightMargin: 0 }
+                    spacing: 0
                     Text {
-                        text: "Panel de control"
-                        color: "#F5F6FA"
-                        font { family: "Space Grotesk"; pixelSize: 30; weight: Font.Medium; letterSpacing: -0.5 }
+                        text: "Vórtice"
+                        color: T.ink
+                        font { family: T.sans; pixelSize: 20; weight: Font.DemiBold }
                     }
                     Text {
-                        text: hw.caps.cpuName + "  ·  " + hw.caps.gpuName + "  ·  " + hw.caps.vendor
-                        color: "#7E849A"
-                        font { family: "Inter"; pixelSize: 13 }
+                        Layout.leftMargin: 14
+                        text: hw.caps.model
+                        color: T.ink2
+                        font { family: T.sans; pixelSize: 14 }
                     }
-                }
-                Item { Layout.fillWidth: true }
+                    Item { Layout.fillWidth: true }
 
-                component Chip: Rectangle {
-                    id: chip
-                    property string label
-                    property string icon
-                    property color dot: "transparent"
-                    property color tint: "#C9CDDB"
-                    implicitHeight: 36; radius: 18
-                    implicitWidth: chipRow.implicitWidth + 28
-                    color: Qt.rgba(1, 1, 1, 0.04)
-                    border.color: Qt.rgba(1, 1, 1, 0.08)
-                    Row {
-                        id: chipRow
-                        anchors.centerIn: parent
-                        spacing: 8
-                        Rectangle {
-                            visible: chip.dot.a > 0
-                            width: 8; height: 8; radius: 4
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: chip.dot
-                        }
-                        Icon {
-                            visible: chip.icon !== ""
-                            path: chip.icon; size: 15; color: chip.tint
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: chip.label
-                            color: "#DADDE8"
-                            anchors.verticalCenter: parent.verticalCenter
-                            font { family: "Inter"; pixelSize: 13; weight: Font.Medium }
+                    component Status: Item {
+                        id: stt
+                        property string label
+                        property string value
+                        property color tint: T.ink
+                        Layout.fillHeight: true
+                        implicitWidth: col.implicitWidth + 2 * T.pad
+                        Rectangle { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: 1; color: T.rule }
+                        Column {
+                            id: col
+                            anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
+                            spacing: 2
+                            Text {
+                                text: stt.label
+                                color: T.ink3
+                                font { family: T.sans; pixelSize: 10; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase }
+                            }
+                            Text {
+                                text: stt.value
+                                color: stt.tint
+                                font { family: T.mono; pixelSize: 13 }
+                            }
                         }
                     }
-                }
 
-                Chip {
-                    label: win.service ? "Servicio activo" : "Servicio no instalado"
-                    icon: win.service ? Icons.zap : Icons.lock
-                    tint: win.service ? "#4ADE80" : "#F59E0B"
-                    visible: true
+                    Status { label: "Corriente"; value: win.st.ac ? "enchufado" : "batería" }
+                    Status {
+                        label: "Servicio"
+                        value: win.service ? "activo" : "no instalado"
+                        tint: win.service ? T.ink : T.amber
+                    }
+                    Status {
+                        visible: hw.caps.profiles
+                        label: "Modo"
+                        value: (win.profileNames[hw.profile] || "—").toLowerCase()
+                        tint: hw.profile === "performance" ? T.amber : T.ink
+                    }
                 }
-                Chip { label: "En vivo"; dot: "#4ADE80" }
-                Chip {
-                    label: win.st.ac ? "Enchufado" : "Batería"
-                    icon: win.st.ac ? Icons.plug : Icons.battery
-                    tint: "#4ADE80"
-                }
-                Chip { visible: hw.caps.profiles; label: win.profileName; icon: Icons.zap; tint: win.accent }
             }
 
             // ---------- Fila principal ----------
@@ -130,15 +114,13 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredHeight: 5
-                spacing: 18
+                spacing: 1
 
                 TempCard {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    title: "Procesador"
-                    icon: Icons.cpu
-                    accent: "#38BDF8"
-                    chip: hw.caps.cpuName
+                    label: "CPU"
+                    source: "coretemp · " + hw.caps.cpuName
                     temp: win.cpu.temp || 0
                     metrics: [
                         { label: "Uso", value: win.n(win.cpu.util), unit: "%" },
@@ -148,27 +130,28 @@ ApplicationWindow {
                 TempCard {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    title: "Gráfica"
-                    icon: Icons.gpu
-                    accent: "#C084FC"
-                    chip: hw.caps.gpuName
+                    label: "GPU"
+                    source: (hw.caps.gpuKind === "nvidia" ? "nvml" : hw.caps.gpuKind === "amd" ? "amdgpu" : hw.caps.gpuKind)
+                            + (hw.caps.gpuKind ? " · " + hw.caps.gpuName : "")
                     temp: win.gpu.temp || 0
                     asleep: !!win.gpu.asleep
                     notice: hw.caps.gpuKind ? "" : "No se detectó una gráfica compatible"
                     noticeText: "Vórtice lee gráficas NVIDIA (con su driver), AMD e Intel."
+                    noticeIcon: Icons.gpu
                     metrics: [
                         { label: "Uso", value: win.n(win.gpu.util), unit: "%" },
-                        { label: "Consumo", value: win.n(win.gpu.power), unit: win.gpu.power_limit ? "/ " + win.n(win.gpu.power_limit) + " W" : "W" },
+                        { label: "Consumo", value: win.n(win.gpu.power),
+                          unit: win.gpu.power_limit ? "/ " + win.n(win.gpu.power_limit) + " W" : "W" },
                         { label: "Reloj", value: win.n(win.gpu.clock), unit: "MHz" }
                     ]
                 }
                 ProfileCard {
-                    Layout.preferredWidth: 360
+                    Layout.preferredWidth: 340
                     Layout.fillHeight: true
                     current: hw.profile
                     available: hw.caps.profiles
                     manager: hw.caps.profileManager
-                    accent: win.accent
+                    details: hw.profileDetails
                     onPicked: name => hw.setProfile(name)
                 }
             }
@@ -178,7 +161,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredHeight: 3
-                spacing: 18
+                spacing: 1
 
                 HistoryCard {
                     Layout.fillWidth: true
@@ -186,48 +169,54 @@ ApplicationWindow {
                     cpu: win.hist.cpu
                     gpu: win.hist.gpu
                 }
-                Card {
-                    visible: hw.caps.fanCount === 0
-                    Layout.preferredWidth: 418
+
+                Section {
+                    Layout.preferredWidth: hw.caps.fanCount > 0 ? 220 * hw.caps.fanCount + 1 : 420
                     Layout.fillHeight: true
+                    pad: 0
                     Notice {
                         anchors.fill: parent
+                        visible: hw.caps.fanCount === 0
                         icon: Icons.fan
                         title: "Ventiladores no expuestos"
                         text: "Este equipo no informa de sus ventiladores al kernel. Si tu modelo tiene un driver de la comunidad, Vórtice los mostrará al instalarlo."
                     }
-                }
-                Repeater {
-                    // Modelo numérico estable: las tarjetas no se recrean cada segundo.
-                    model: hw.caps.fanCount
-                    FanCard {
-                        required property int index
-                        readonly property var f: win.fans[index] || ({})
-                        Layout.preferredWidth: 200
-                        Layout.fillHeight: true
-                        label: (f.label || "").replace("CPU Fan", "VENTILADOR CPU").replace("GPU Fan", "VENTILADOR GPU")
-                        rpm: f.rpm || 0
-                        maxRpm: f.max || 5400
-                        readonly property int hIndex: win.helperFanIndex(f.label)
-                        boost: hIndex >= 0 ? win.helper.fans[hIndex].boost : (f.boost === undefined ? null : f.boost)
-                        canBoost: win.service && hIndex >= 0
-                        onBoostRequested: v => hw.setFanBoost(hIndex, v)
-                    }
-                }
-                Card {
-                    visible: !hw.caps.hasBattery
-                    Layout.preferredWidth: 260
-                    Layout.fillHeight: true
-                    Notice {
+                    Row {
                         anchors.fill: parent
-                        icon: Icons.plug
-                        title: "Sin batería"
-                        text: "Equipo de escritorio o batería no detectada."
+                        Repeater {
+                            model: hw.caps.fanCount
+                            Item {
+                                id: fanSlot
+                                required property int index
+                                readonly property var f: win.fans[index] || ({})
+                                readonly property int hIndex: win.helperFanIndex(f.label)
+                                width: 220; height: parent.height
+                                Rectangle { visible: fanSlot.index > 0; width: 1; height: parent.height; color: T.rule }
+                                FanCell {
+                                    anchors { fill: parent; margins: T.pad; topMargin: 16 }
+                                    label: (fanSlot.f.label || "").replace("CPU Fan", "Ventilador CPU").replace("GPU Fan", "Ventilador GPU")
+                                    rpm: fanSlot.f.rpm || 0
+                                    maxRpm: fanSlot.f.max || 5400
+                                    boost: fanSlot.hIndex >= 0 ? win.helper.fans[fanSlot.hIndex].boost
+                                                               : (fanSlot.f.boost === undefined ? null : fanSlot.f.boost)
+                                    canBoost: win.service && fanSlot.hIndex >= 0
+                                    onBoostRequested: v => hw.setFanBoost(fanSlot.hIndex, v)
+                                }
+                            }
+                        }
                     }
+                }
+
+                Section {
+                    visible: !hw.caps.hasBattery
+                    Layout.preferredWidth: 340
+                    Layout.fillHeight: true
+                    label: "Batería"
+                    Notice { anchors.fill: parent; icon: Icons.plug; title: "Sin batería"; text: "Equipo de escritorio o batería no detectada." }
                 }
                 BatteryCard {
                     visible: hw.caps.hasBattery
-                    Layout.preferredWidth: 260
+                    Layout.preferredWidth: 340
                     Layout.fillHeight: true
                     capacity: win.bat.capacity || 0
                     status: win.bat.status || ""
@@ -247,33 +236,24 @@ ApplicationWindow {
         onApply: (mode, start, stop) => hw.setCharge(mode, start, stop)
     }
 
-    // Aviso flotante.
+    // Aviso inferior: barra sobria con marca de estado.
     Rectangle {
         id: toast
         property bool ok: true
-        property alias text: toastText.text
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: shown ? parent.height - height - 28 : parent.height + 10
         property bool shown: false
-        Behavior on y { NumberAnimation { duration: 380; easing.type: Easing.OutExpo } }
-        width: toastRow.implicitWidth + 36; height: 46; radius: 23
-        color: "#16171F"
-        border.color: ok ? Qt.rgba(0.29, 0.87, 0.5, 0.45) : Qt.rgba(0.97, 0.44, 0.44, 0.5)
-        Row {
-            id: toastRow
-            anchors.centerIn: parent
-            spacing: 10
-            Rectangle {
-                width: 8; height: 8; radius: 4
-                anchors.verticalCenter: parent.verticalCenter
-                color: toast.ok ? "#4ADE80" : "#F87171"
-            }
-            Text {
-                id: toastText
-                color: "#E8EAF2"
-                anchors.verticalCenter: parent.verticalCenter
-                font { family: "Inter"; pixelSize: 13; weight: Font.Medium }
-            }
+        property alias text: toastText.text
+        x: 60 + 1 + T.pad
+        y: shown ? parent.height - height - T.pad : parent.height + 8
+        Behavior on y { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+        width: toastText.implicitWidth + 2 * T.pad + 3; height: 42
+        color: T.bgRaised
+        border.color: T.ruleHi
+        Rectangle { width: 3; height: parent.height; color: toast.ok ? T.ok : T.red }
+        Text {
+            id: toastText
+            anchors { left: parent.left; leftMargin: T.pad + 3; verticalCenter: parent.verticalCenter }
+            color: T.ink
+            font { family: T.sans; pixelSize: 14 }
         }
         Timer { id: toastTimer; interval: 3200; onTriggered: toast.shown = false }
         Connections {

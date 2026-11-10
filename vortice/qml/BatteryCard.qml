@@ -1,129 +1,127 @@
 import QtQuick
 import QtQuick.Layouts
+import "Theme.js" as T
 import "Icons.js" as Icons
 
-Card {
+Section {
     id: bc
-    title: "Batería"
-    icon: Icons.battery
-    accent: "#4ADE80"
-    pad: 20
+    label: "Batería"
 
     property int capacity: 0
     property string status: ""
     property bool ac: false
     property var limit: null
     property bool firmwareLimit: false
-    property var service: null        // estado de batería desde el servicio
+    property var service: null
     signal configure()
 
-    readonly property var modeNames: ({ "Adaptive": "Adaptativa", "Standard": "Estándar",
-        "Express": "Rápida", "PrimAcUse": "Siempre enchufado", "Custom": "Personalizada" })
-    readonly property string summary: service
-        ? (service.mode === "Custom" && service.stop
-            ? (service.start ? service.start + " – " + service.stop + " %" : "Hasta " + service.stop + " %")
-            : (modeNames[service.mode] || service.mode || "—"))
-        : firmwareLimit ? "En la BIOS · requiere servicio" : "No disponible"
+    source: firmwareLimit ? "dell-wmi-sysman" : (limit !== null && limit !== undefined ? "power_supply" : "")
 
     readonly property string statusText: status === "Charging" ? "Cargando"
         : status === "Full" ? "Completa"
-        : status === "Not charging" ? "En pausa · límite de carga"
+        : status === "Not charging" ? "En pausa por el límite"
         : status === "Discharging" ? "Usando batería" : status
+
+    readonly property var modeNames: ({ "Adaptive": "Adaptativa", "Standard": "Estándar",
+        "Express": "Rápida", "PrimAcUse": "Siempre enchufado", "Custom": "Personalizada" })
+    readonly property var stopAt: service && service.mode === "Custom" ? service.stop
+                                : (limit !== null && limit !== undefined ? limit : null)
+    readonly property string summary: service
+        ? (service.mode === "Custom" && service.stop
+            ? (service.start ? service.start + "–" + service.stop + " %" : "hasta " + service.stop + " %")
+            : (modeNames[service.mode] || service.mode || "—"))
+        : firmwareLimit ? "en la BIOS" : "no disponible"
 
     property real shown: capacity
     Behavior on shown { NumberAnimation { duration: 700; easing.type: Easing.OutCubic } }
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 12
+        anchors.bottomMargin: -bc.pad
+        spacing: 0
 
         Row {
             spacing: 4
             Text {
                 id: pct
                 text: Math.round(bc.shown)
-                color: "#F5F6FA"
-                font { family: "Space Grotesk"; pixelSize: 46; weight: Font.Medium }
+                color: T.ink
+                font { family: T.mono; pixelSize: 48; weight: Font.Light }
             }
             Text {
                 text: "%"
-                color: "#7E849A"
+                color: T.ink2
                 anchors.baseline: pct.baseline
-                font { family: "Space Grotesk"; pixelSize: 18; weight: Font.Medium }
+                font { family: T.mono; pixelSize: 15 }
             }
         }
-
-        RowLayout {
-            spacing: 8
-            Icon { path: bc.ac ? Icons.plug : Icons.battery; size: 14; color: "#4ADE80" }
-            Text {
-                text: bc.statusText
-                color: "#B4B9CB"
-                font { family: "Inter"; pixelSize: 12; weight: Font.Medium }
-            }
+        Text {
+            text: (bc.ac ? "Enchufado · " : "") + bc.statusText
+            color: T.ink2
+            font { family: T.sans; pixelSize: 13 }
         }
 
-        // Barra segmentada.
+        Item { Layout.preferredHeight: 18 }
+
+        // Barra de carga con marca del límite.
         Item {
             Layout.fillWidth: true
-            height: 14
-            Row {
-                id: segs
-                anchors.fill: parent
-                spacing: 3
-                Repeater {
-                    model: 20
-                    Rectangle {
-                        required property int index
-                        width: (segs.width - 19 * segs.spacing) / 20
-                        height: segs.height
-                        radius: 3
-                        readonly property bool on: (index + 1) * 5 <= bc.shown + 0.01
-                        color: on ? Qt.hsla(0.36 - (19 - index) * 0.004, 0.75, 0.55, 1)
-                                  : Qt.rgba(1, 1, 1, 0.06)
-                        Behavior on color { ColorAnimation { duration: 300 } }
-                    }
-                }
+            height: 34
+            Rectangle { id: bar; y: 6; width: parent.width; height: 8; color: T.rule }
+            Rectangle { y: 6; height: 8; width: bar.width * bc.shown / 100; color: T.ink }
+            Rectangle {
+                visible: bc.stopAt !== null
+                x: bar.width * (bc.stopAt || 0) / 100 - 1
+                y: 0; width: 2; height: 20
+                color: T.amber
+            }
+            Text {
+                visible: bc.stopAt !== null
+                x: Math.min(bar.width * (bc.stopAt || 0) / 100 - width / 2, bar.width - width)
+                y: 22
+                text: "límite " + bc.stopAt
+                color: T.amber
+                font { family: T.mono; pixelSize: 10 }
             }
         }
 
         Item { Layout.fillHeight: true }
 
-        Rectangle {
-            id: chargeBtn
+        // Fila de configuración (abre el panel de carga).
+        Item {
+            id: cfg
             Layout.fillWidth: true
-            height: 50; radius: 14
+            Layout.leftMargin: -bc.pad
+            Layout.rightMargin: -bc.pad
+            Layout.preferredHeight: 56
             readonly property bool live: bc.service !== null && bc.service !== undefined
-            color: live && ch.hovered ? Qt.rgba(0.29, 0.87, 0.5, 0.1) : Qt.rgba(1, 1, 1, 0.03)
-            border.color: live && ch.hovered ? Qt.rgba(0.29, 0.87, 0.5, 0.4) : Qt.rgba(1, 1, 1, 0.06)
-            Behavior on color { ColorAnimation { duration: 160 } }
+            Rectangle { anchors.fill: parent; color: cfg.live && ch.hovered ? T.bgRaised : "transparent" }
+            Rectangle { anchors { left: parent.left; right: parent.right; top: parent.top } height: 1; color: T.rule }
             RowLayout {
-                anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+                anchors { fill: parent; leftMargin: T.pad; rightMargin: T.pad }
                 spacing: 10
-                Icon { path: chargeBtn.live ? Icons.sliders : Icons.lock; size: 14
-                       color: chargeBtn.live ? "#4ADE80" : "#7E849A" }
                 Column {
                     Layout.fillWidth: true
+                    spacing: 2
                     Text {
                         text: "Límite de carga"
-                        color: "#DADDE8"
-                        font { family: "Inter"; pixelSize: 12; weight: Font.DemiBold }
+                        color: T.ink
+                        font { family: T.sans; pixelSize: 14; weight: Font.Medium }
                     }
                     Text {
-                        text: bc.summary
-                        color: "#7E849A"
-                        font { family: "Inter"; pixelSize: 11 }
+                        text: bc.summary + (cfg.live ? "" : " · requiere servicio")
+                        color: T.ink3
+                        font { family: T.mono; pixelSize: 11 }
                     }
                 }
-                Text {
-                    visible: chargeBtn.live
-                    text: "›"
-                    color: "#9A9FB4"
-                    font { family: "Inter"; pixelSize: 20 }
+                Icon {
+                    path: cfg.live ? "M9 18l6-6-6-6" : Icons.lock
+                    size: 16; stroke: 1.6
+                    color: cfg.live ? T.ink2 : T.ink3
                 }
             }
-            HoverHandler { id: ch; cursorShape: chargeBtn.live ? Qt.PointingHandCursor : Qt.ArrowCursor }
-            TapHandler { enabled: chargeBtn.live; onTapped: bc.configure() }
+            HoverHandler { id: ch; cursorShape: cfg.live ? Qt.PointingHandCursor : Qt.ArrowCursor }
+            TapHandler { enabled: cfg.live; onTapped: bc.configure() }
         }
     }
 }

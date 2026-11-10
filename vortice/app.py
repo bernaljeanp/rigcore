@@ -21,6 +21,8 @@ class Backend(QObject):
     statsChanged = Signal()
     profileChanged = Signal()
     _profileReady = Signal(str)
+    detailsChanged = Signal()
+    _detailsReady = Signal("QVariantMap")
 
     def __init__(self) -> None:
         super().__init__()
@@ -30,6 +32,8 @@ class Backend(QObject):
         self._hist = {"cpu": [], "gpu": []}
         self._profile = hardware.get_profile() or ""
         self._profileReady.connect(self._apply_profile)
+        self._details: dict = {}
+        self._detailsReady.connect(self._apply_details)
 
         self.timer = QTimer(self, interval=1000, timeout=self._tick)
         self.timer.start()
@@ -38,6 +42,7 @@ class Backend(QObject):
         # El perfil puede cambiarse desde fuera (KDE, modo-juego-auto).
         self.ptimer = QTimer(self, interval=3000, timeout=self._poll_profile)
         self.ptimer.start()
+        self._poll_profile()
         self._init_helper()
 
     # ---- datos ------------------------------------------------------------
@@ -52,10 +57,20 @@ class Backend(QObject):
         self.statsChanged.emit()
 
     def _poll_profile(self) -> None:
-        threading.Thread(
-            target=lambda: self._profileReady.emit(hardware.get_profile() or ""),
-            daemon=True,
-        ).start()
+        def work() -> None:
+            self._profileReady.emit(hardware.get_profile() or "")
+            self._detailsReady.emit(hardware.get_profile_details(self._caps))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _apply_details(self, d: dict) -> None:
+        if d != self._details:
+            self._details = d
+            self.detailsChanged.emit()
+
+    @Property("QVariantMap", notify=detailsChanged)
+    def profileDetails(self) -> dict:
+        return self._details
 
     def _apply_profile(self, p: str) -> None:
         if p and p != self._profile:
@@ -84,6 +99,7 @@ class Backend(QObject):
             "chargeLimit": bool(c.charge_threshold),
             "firmwareBattery": c.firmware_battery,
             "hostname": os.uname().nodename,
+            "model": c.model,
         }
 
     @Property(str, notify=profileChanged)
@@ -161,8 +177,8 @@ def main() -> int:
     app.setDesktopFileName("vortice")
     app.setWindowIcon(QIcon(str(HERE / "qml" / "icon.svg")))
 
-    for f in ("Inter.ttf", "SpaceGrotesk.ttf", "JetBrainsMono.ttf"):
-        QFontDatabase.addApplicationFont(str(HERE / "fonts" / f))
+    for f in sorted((HERE / "fonts").glob("*.ttf")):
+        QFontDatabase.addApplicationFont(str(f))
 
     backend = Backend()
     engine = QQmlApplicationEngine()

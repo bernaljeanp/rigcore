@@ -1,19 +1,17 @@
 import QtQuick
-import QtQuick.Layouts
-import "Icons.js" as Icons
+import "Theme.js" as T
 
-// Historial térmico de los últimos 90 s, con áreas en degradado.
-Card {
+// Historial térmico de 90 s: líneas finas sobre rejilla, como un registrador.
+Section {
     id: hc
-    title: "Historial térmico"
-    icon: Icons.thermo
-    accent: "#F472B6"
+    label: "Historial"
+    source: "90 s"
 
     property var cpu: []
     property var gpu: []
     readonly property var series: [
-        { name: "CPU", data: cpu, color: "#38BDF8" },
-        { name: "GPU", data: gpu, color: "#C084FC" }
+        { name: "CPU", data: cpu, color: T.ink },
+        { name: "GPU", data: gpu, color: T.steel }
     ]
     onCpuChanged: chart.requestPaint()
 
@@ -23,11 +21,14 @@ Card {
             Row {
                 required property var modelData
                 spacing: 6
-                Rectangle { width: 14; height: 3; radius: 2; color: modelData.color; anchors.verticalCenter: parent.verticalCenter }
+                Rectangle { width: 12; height: 2; color: modelData.color; anchors.verticalCenter: parent.verticalCenter }
                 Text {
-                    text: modelData.name
-                    color: "#9A9FB4"
-                    font { family: "Inter"; pixelSize: 11; weight: Font.Medium }
+                    text: {
+                        var d = modelData.data, v = d && d.length ? d[d.length - 1] : null
+                        return modelData.name + (v === null || v === undefined ? "" : "  " + Math.round(v) + "°")
+                    }
+                    color: T.ink2
+                    font { family: T.mono; pixelSize: 11 }
                 }
             }
         }
@@ -40,80 +41,52 @@ Card {
         onWidthChanged: requestPaint()
         onHeightChanged: requestPaint()
 
-        readonly property real lo: 25
+        readonly property real lo: 30
         readonly property real hi: 100
         readonly property int span: 90
-
-        function hex2rgba(h, a) {
-            var c = Qt.color(h)
-            return "rgba(" + Math.round(c.r * 255) + "," + Math.round(c.g * 255) + ","
-                   + Math.round(c.b * 255) + "," + a + ")"
-        }
 
         onPaint: {
             var ctx = getContext("2d")
             ctx.reset()
-            var left = 34, bottom = height - 6, top = 6
+            var left = 30, bottom = height - 16, top = 4
             var w = width - left, h = bottom - top
             function Y(v) { return bottom - (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * h }
             function X(i) { return left + w * i / (span - 1) }
 
-            // Rejilla.
-            ctx.font = "10px 'JetBrains Mono'"
+            ctx.font = "11px '" + T.mono + "'"
             ctx.textBaseline = "middle"
+            ctx.lineWidth = 1
             ;[40, 60, 80, 100].forEach(function (v) {
-                var y = Y(v)
-                ctx.strokeStyle = "rgba(255,255,255,0.05)"
-                ctx.lineWidth = 1
-                ctx.setLineDash([3, 5])
+                var y = Math.round(Y(v)) + 0.5
+                ctx.strokeStyle = v === 80 ? "rgba(255,176,32,0.22)" : T.rule
                 ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(width, y); ctx.stroke()
-                ctx.setLineDash([])
-                ctx.fillStyle = "rgba(160,166,190,0.55)"
-                ctx.fillText(v + "°", 0, y)
+                ctx.fillStyle = T.ink3
+                ctx.fillText(v, 0, y)
+            })
+            // Eje de tiempo.
+            ctx.textBaseline = "alphabetic"
+            ;[[0, "-90 s"], [45, "-45 s"], [89, "ahora"]].forEach(function (p) {
+                var x = X(p[0])
+                ctx.fillStyle = T.ink3
+                var tw = ctx.measureText(p[1]).width
+                ctx.fillText(p[1], Math.min(Math.max(x - tw / 2, left), width - tw), height - 2)
             })
 
             hc.series.forEach(function (s) {
                 var d = s.data
                 if (!d || d.length < 2) return
                 var off = span - d.length
-                // Tramos continuos: un null (sin lectura) corta la línea.
-                var segs = [], cur = []
+                ctx.strokeStyle = s.color
+                ctx.lineWidth = 1.5
+                ctx.lineJoin = "round"
+                ctx.beginPath()
+                var pen = false
                 for (var i = 0; i < d.length; i++) {
-                    if (d[i] === null || d[i] === undefined) { if (cur.length) segs.push(cur); cur = [] }
-                    else cur.push(i)
+                    if (d[i] === null || d[i] === undefined) { pen = false; continue }
+                    var x = X(off + i), y = Y(d[i])
+                    if (pen) ctx.lineTo(x, y); else { ctx.moveTo(x, y); pen = true }
                 }
-                if (cur.length) segs.push(cur)
-
-                segs.forEach(function (seg) {
-                    if (seg.length < 2) return
-                    function trace() {
-                        ctx.moveTo(X(off + seg[0]), Y(d[seg[0]]))
-                        for (var k = 1; k < seg.length; k++) {
-                            var a = seg[k - 1], b = seg[k]
-                            var x0 = X(off + a), x1 = X(off + b), mx = (x0 + x1) / 2
-                            ctx.bezierCurveTo(mx, Y(d[a]), mx, Y(d[b]), x1, Y(d[b]))
-                        }
-                    }
-                    var g = ctx.createLinearGradient(0, top, 0, bottom)
-                    g.addColorStop(0, hex2rgba(s.color, 0.28))
-                    g.addColorStop(1, hex2rgba(s.color, 0.0))
-                    ctx.beginPath(); trace()
-                    ctx.lineTo(X(off + seg[seg.length - 1]), bottom); ctx.lineTo(X(off + seg[0]), bottom)
-                    ctx.closePath()
-                    ctx.fillStyle = g; ctx.fill()
-
-                    ctx.beginPath(); trace()
-                    ctx.strokeStyle = hex2rgba(s.color, 0.18); ctx.lineWidth = 7; ctx.stroke()
-                    ctx.strokeStyle = s.color; ctx.lineWidth = 2.2; ctx.stroke()
-                })
-
-                var last = d[d.length - 1]
-                if (last === null || last === undefined) return
-                var lx = X(span - 1), ly = Y(last)
-                ctx.fillStyle = hex2rgba(s.color, 0.25)
-                ctx.beginPath(); ctx.arc(lx - 4, ly, 7, 0, Math.PI * 2); ctx.fill()
-                ctx.fillStyle = "#FFFFFF"
-                ctx.beginPath(); ctx.arc(lx - 4, ly, 3, 0, Math.PI * 2); ctx.fill()
+                ctx.stroke()
             })
         }
     }

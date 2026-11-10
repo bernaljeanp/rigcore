@@ -53,27 +53,10 @@ for i, p in enumerate(parts):
         parts[i] = p[::-1]
 silhouette = " ".join(to_d(p) for p in parts + [hub])
 
+# Estilo "Instrumento": ámbar sólido (el color de señal de la app), ojo en grafito.
+AMBER, GRAPHITE = "#FFB020", "#121315"
 print(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="70" y1="40" x2="440" y2="480">
-      <stop offset="0" stop-color="#FFA23D"/>
-      <stop offset="0.45" stop-color="#F0386B"/>
-      <stop offset="1" stop-color="#7C3AED"/>
-    </linearGradient>
-    <linearGradient id="sheen" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="300">
-      <stop offset="0" stop-color="#fff" stop-opacity="0.40"/>
-      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-    </linearGradient>
-    <radialGradient id="core" gradientUnits="userSpaceOnUse" cx="{C}" cy="{C}" r="{HUB}">
-      <stop offset="0.55" stop-color="#2A0B3D" stop-opacity="0.32"/>
-      <stop offset="1" stop-color="#2A0B3D" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-
-  <path fill-rule="nonzero" fill="url(#body)" d="{silhouette}"/>
-  <path fill-rule="nonzero" fill="url(#sheen)" d="{silhouette}"/>
-  <circle cx="{C}" cy="{C}" r="{HUB}" fill="url(#core)"/>
-
-  <circle cx="{C}" cy="{C}" r="{HUB - 26}" fill="none" stroke="#FFFFFF" stroke-width="16"/>
-  <circle cx="{C}" cy="{C}" r="26" fill="#FFFFFF"/>
+  <path fill-rule="nonzero" fill="{AMBER}" d="{silhouette}"/>
+  <circle cx="{C}" cy="{C}" r="{HUB - 26}" fill="none" stroke="{GRAPHITE}" stroke-width="18"/>
+  <circle cx="{C}" cy="{C}" r="24" fill="{GRAPHITE}"/>
 </svg>""")

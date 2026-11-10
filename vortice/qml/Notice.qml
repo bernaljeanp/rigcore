@@ -1,40 +1,38 @@
 import QtQuick
+import "Theme.js" as T
 
-// Aviso centrado para cuando una función no está disponible en este equipo.
+// Aviso para cuando una función no está disponible en este equipo.
 Item {
     id: n
     property string icon
     property string title
     property string text
-    property color tint: "#9A9FB4"
 
     Column {
         anchors.centerIn: parent
         width: Math.min(parent.width - 16, 300)
-        spacing: 10
-        Rectangle {
+        spacing: 8
+        Icon {
             anchors.horizontalCenter: parent.horizontalCenter
-            width: 52; height: 52; radius: 18
-            color: Qt.rgba(n.tint.r, n.tint.g, n.tint.b, 0.1)
-            border.color: Qt.rgba(n.tint.r, n.tint.g, n.tint.b, 0.25)
-            Icon { anchors.centerIn: parent; path: n.icon; size: 24; color: n.tint }
+            path: n.icon; size: 22; color: T.ink3; stroke: 1.5
         }
+        Item { width: 1; height: 4 }
         Text {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             text: n.title
-            color: "#E8EAF2"
+            color: T.ink
             wrapMode: Text.WordWrap
-            font { family: "Inter"; pixelSize: 15; weight: Font.DemiBold }
+            font { family: T.sans; pixelSize: 15; weight: Font.Medium }
         }
         Text {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             text: n.text
-            color: "#7E849A"
+            color: T.ink2
             wrapMode: Text.WordWrap
             lineHeight: 1.25
-            font { family: "Inter"; pixelSize: 12 }
+            font { family: T.sans; pixelSize: 13 }
         }
     }
 }

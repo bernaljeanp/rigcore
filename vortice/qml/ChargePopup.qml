@@ -1,20 +1,19 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
-import "Icons.js" as Icons
+import "Theme.js" as T
 
 // Panel de configuración de carga de la batería.
 Popup {
     id: pop
-    property var battery: null           // estado del servicio
+    property var battery: null
     signal apply(string mode, int start, int stop)
 
     readonly property var info: ({
         "Adaptive":  ["Adaptativa", "Ajusta la carga según cómo usas el equipo"],
         "Standard":  ["Estándar", "Carga completa a ritmo normal"],
-        "Express":   ["Rápida", "Carga más deprisa, desgasta más la batería"],
-        "PrimAcUse": ["Siempre enchufado", "Ideal si casi nunca usas la batería"],
+        "Express":   ["Rápida", "Carga más deprisa; desgasta más la batería"],
+        "PrimAcUse": ["Siempre enchufado", "Para equipos que casi nunca usan la batería"],
         "Custom":    ["Personalizada", "Tú eliges cuándo empieza y cuándo para"]
     })
     property string mode: ""
@@ -32,140 +31,81 @@ Popup {
     dim: true
     anchors.centerIn: Overlay.overlay
     width: 460
-    padding: 26
+    padding: 0
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    Overlay.modal: Rectangle { color: Qt.rgba(0.04, 0.04, 0.05, 0.72) }
 
-    Overlay.modal: Rectangle { color: Qt.rgba(0.02, 0.02, 0.04, 0.6) }
+    enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 140 } }
+    exit: Transition { NumberAnimation { property: "opacity"; to: 0; duration: 100 } }
 
-    enter: Transition {
-        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200 }
-        NumberAnimation { property: "scale"; from: 0.94; to: 1; duration: 260; easing.type: Easing.OutBack }
-    }
-    exit: Transition { NumberAnimation { property: "opacity"; to: 0; duration: 150 } }
-
-    background: Rectangle {
-        radius: 26
-        color: "#12131A"
-        border.color: Qt.rgba(1, 1, 1, 0.1)
-        Rectangle {
-            anchors { fill: parent; margins: 1 }
-            radius: 25
-            gradient: Gradient {
-                GradientStop { position: 0; color: Qt.rgba(0.29, 0.87, 0.5, 0.08) }
-                GradientStop { position: 0.4; color: "transparent" }
-            }
-        }
-        layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: 1; shadowOpacity: 0.7; shadowVerticalOffset: 18 }
-    }
+    background: Rectangle { color: T.bg; border.color: T.ruleHi; radius: 2 }
 
     contentItem: ColumnLayout {
-        spacing: 16
-
-        RowLayout {
-            spacing: 12
-            Rectangle {
-                width: 38; height: 38; radius: 12
-                color: Qt.rgba(0.29, 0.87, 0.5, 0.14)
-                border.color: Qt.rgba(0.29, 0.87, 0.5, 0.3)
-                Icon { anchors.centerIn: parent; path: Icons.battery; size: 18; color: "#4ADE80" }
-            }
-            Column {
-                Layout.fillWidth: true
-                Text {
-                    text: "Carga de la batería"
-                    color: "#F5F6FA"
-                    font { family: "Space Grotesk"; pixelSize: 20; weight: Font.Medium }
-                }
-                Text {
-                    text: "Se guarda en el firmware: se mantiene aunque apagues o cambies de sistema"
-                    color: "#7E849A"
-                    width: parent.width
-                    wrapMode: Text.WordWrap
-                    font { family: "Inter"; pixelSize: 12 }
-                }
-            }
-        }
+        spacing: 0
 
         Column {
             Layout.fillWidth: true
-            spacing: 6
-            Repeater {
-                model: pop.battery ? pop.battery.modes : []
-                delegate: Rectangle {
-                    id: opt
-                    required property string modelData
-                    readonly property bool active: pop.mode === modelData
-                    width: parent.width; height: 54; radius: 15
-                    color: active ? Qt.rgba(0.29, 0.87, 0.5, 0.12)
-                         : oh.hovered ? Qt.rgba(1, 1, 1, 0.04) : Qt.rgba(1, 1, 1, 0.02)
-                    border.color: active ? Qt.rgba(0.29, 0.87, 0.5, 0.45) : Qt.rgba(1, 1, 1, 0.05)
-                    Behavior on color { ColorAnimation { duration: 160 } }
-                    RowLayout {
-                        anchors { fill: parent; leftMargin: 16; rightMargin: 16 }
-                        Column {
-                            Layout.fillWidth: true
-                            spacing: 2
-                            Text {
-                                text: (pop.info[opt.modelData] || [opt.modelData])[0]
-                                color: opt.active ? "#FFFFFF" : "#DADDE8"
-                                font { family: "Inter"; pixelSize: 14; weight: Font.DemiBold }
-                            }
-                            Text {
-                                text: (pop.info[opt.modelData] || ["", ""])[1]
-                                color: "#7E849A"
-                                font { family: "Inter"; pixelSize: 11 }
-                            }
-                        }
-                        Rectangle {
-                            width: 18; height: 18; radius: 9
-                            color: "transparent"
-                            border.width: 1.5
-                            border.color: opt.active ? "#4ADE80" : Qt.rgba(1, 1, 1, 0.18)
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: opt.active ? 8 : 0; height: width; radius: width / 2
-                                color: "#4ADE80"
-                                Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                            }
-                        }
-                    }
-                    HoverHandler { id: oh; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { onTapped: pop.mode = opt.modelData }
-                }
+            Layout.margins: T.pad
+            spacing: 4
+            Text {
+                text: "Carga de la batería"
+                color: T.ink
+                font { family: T.sans; pixelSize: 20; weight: Font.DemiBold }
+            }
+            Text {
+                width: parent.width
+                text: "Se guarda en el firmware: se mantiene aunque apagues o cambies de sistema."
+                color: T.ink2
+                wrapMode: Text.WordWrap
+                font { family: T.sans; pixelSize: 13 }
             }
         }
 
-        // Umbrales del modo personalizado.
+        Rectangle { Layout.fillWidth: true; height: 1; color: T.rule }
+        Repeater {
+            model: pop.battery ? pop.battery.modes : []
+            delegate: Item {
+                id: opt
+                required property string modelData
+                readonly property bool active: pop.mode === modelData
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                Rectangle { anchors.fill: parent; color: opt.active ? T.bgRaised : (oh.hovered ? Qt.rgba(1, 1, 1, 0.018) : "transparent") }
+                Rectangle { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: 3; color: T.amber; visible: opt.active }
+                Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: T.rule }
+                Column {
+                    anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
+                    spacing: 2
+                    Text {
+                        text: (pop.info[opt.modelData] || [opt.modelData])[0]
+                        color: opt.active ? T.ink : T.ink2
+                        font { family: T.sans; pixelSize: 15; weight: opt.active ? Font.DemiBold : Font.Medium }
+                    }
+                    Text {
+                        text: (pop.info[opt.modelData] || ["", ""])[1]
+                        color: T.ink3
+                        font { family: T.sans; pixelSize: 12 }
+                    }
+                }
+                HoverHandler { id: oh; cursorShape: Qt.PointingHandCursor }
+                TapHandler { onTapped: pop.mode = opt.modelData }
+            }
+        }
+
         ColumnLayout {
             Layout.fillWidth: true
-            visible: pop.mode === "Custom" && pop.battery && pop.battery.stop !== null
-            spacing: 4
+            Layout.margins: T.pad
+            visible: pop.mode === "Custom" && !!pop.battery && pop.battery.stop !== null
+            spacing: 6
             RowLayout {
                 Layout.fillWidth: true
-                Text {
-                    text: "Empieza a cargar al"
-                    color: "#9A9FB4"
-                    font { family: "Inter"; pixelSize: 12 }
-                }
-                Text {
-                    text: range.first + " %"
-                    color: "#4ADE80"
-                    font { family: "JetBrains Mono"; pixelSize: 12; weight: Font.DemiBold }
-                }
+                Text { text: "Empieza a cargar al"; color: T.ink2; font { family: T.sans; pixelSize: 13 } }
+                Text { text: range.first + " %"; color: T.ink; font { family: T.mono; pixelSize: 13 } }
                 Item { Layout.fillWidth: true }
-                Text {
-                    text: "Para al"
-                    color: "#9A9FB4"
-                    font { family: "Inter"; pixelSize: 12 }
-                }
-                Text {
-                    text: range.second + " %"
-                    color: "#22D3EE"
-                    font { family: "JetBrains Mono"; pixelSize: 12; weight: Font.DemiBold }
-                }
+                Text { text: "Para al"; color: T.ink2; font { family: T.sans; pixelSize: 13 } }
+                Text { text: range.second + " %"; color: T.amber; font { family: T.mono; pixelSize: 13 } }
             }
-            RangeGlowSlider {
+            RangeFader {
                 id: range
                 Layout.fillWidth: true
                 from: 50; to: 100
@@ -179,42 +119,38 @@ Popup {
                 onSecondChanged: pop.stop = second
             }
             Text {
-                text: "Recomendado para alargar la vida de la batería: 50 – 80 %"
-                color: "#6E7489"
-                font { family: "Inter"; pixelSize: 11 }
+                text: "Para alargar la vida de la batería: 50–80 %"
+                color: T.ink3
+                font { family: T.mono; pixelSize: 11 }
             }
         }
 
+        Rectangle { Layout.fillWidth: true; height: 1; color: T.rule }
         RowLayout {
             Layout.fillWidth: true
-            Layout.topMargin: 4
-            spacing: 10
+            Layout.margins: 16
+            spacing: 8
             Item { Layout.fillWidth: true }
             component Btn: Rectangle {
                 id: b
                 property string label
                 property bool primary: false
                 signal clicked()
-                implicitWidth: bt.implicitWidth + 36; implicitHeight: 42; radius: 14
-                color: primary ? (bh.hovered ? "#5BE590" : "#4ADE80") : (bh.hovered ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.04))
-                border.color: primary ? "transparent" : Qt.rgba(1, 1, 1, 0.08)
-                Behavior on color { ColorAnimation { duration: 140 } }
+                implicitWidth: bt.implicitWidth + 32; implicitHeight: 38; radius: 2
+                color: primary ? (bh.hovered ? "#FFC04D" : T.amber) : (bh.hovered ? T.bgRaised : "transparent")
+                border.color: primary ? "transparent" : T.ruleHi
                 Text {
                     id: bt
                     anchors.centerIn: parent
                     text: b.label
-                    color: b.primary ? "#06240F" : "#DADDE8"
-                    font { family: "Inter"; pixelSize: 13; weight: Font.DemiBold }
+                    color: b.primary ? "#1A1406" : T.ink
+                    font { family: T.sans; pixelSize: 14; weight: Font.DemiBold }
                 }
                 HoverHandler { id: bh; cursorShape: Qt.PointingHandCursor }
                 TapHandler { onTapped: b.clicked() }
             }
             Btn { label: "Cancelar"; onClicked: pop.close() }
-            Btn {
-                label: "Aplicar"
-                primary: true
-                onClicked: { pop.apply(pop.mode, pop.start, pop.stop); pop.close() }
-            }
+            Btn { label: "Aplicar"; primary: true; onClicked: { pop.apply(pop.mode, pop.start, pop.stop); pop.close() } }
         }
     }
 }

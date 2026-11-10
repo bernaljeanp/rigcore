@@ -1,51 +1,34 @@
 import QtQuick
 import QtQuick.Layouts
-import "Icons.js" as Icons
+import "Theme.js" as T
 
-// Tarjeta principal de un procesador: temperatura en el indicador y métricas.
-Card {
+// Sección de un procesador: temperatura en el indicador y lecturas debajo.
+Section {
     id: tc
-    property string chip: ""
     property real temp: 0
-    property var metrics: []   // [{label, value, unit}]
+    property var metrics: []        // [{label, value, unit}]
     property bool asleep: false     // gráfica dedicada apagada (modo híbrido)
-    property string notice: ""      // título del aviso si no hay datos
+    property string notice: ""
     property string noticeText: ""
+    property string noticeIcon: ""
 
-    // Paleta térmica: frío → templado → caliente.
-    readonly property var heat: asleep ? ["#4B5165", "#6E7489"]
-                              : temp < 55 ? ["#2DD4BF", "#38BDF8"]
-                              : temp < 75 ? ["#818CF8", "#C084FC"]
-                              : temp < 88 ? ["#F59E0B", "#F97316"]
-                                          : ["#F97316", "#EF4444"]
-    readonly property string level: asleep ? "En reposo · ahorrando batería" : temp < 55 ? "Fresco" : temp < 75 ? "Normal"
-                                  : temp < 88 ? "Alto" : "Crítico"
-
-    headerRight: Rectangle {
-        visible: tc.notice === ""
-        height: 24; width: chipText.implicitWidth + 20; radius: 12
-        color: Qt.rgba(1, 1, 1, 0.05)
-        border.color: Qt.rgba(1, 1, 1, 0.08)
-        Text {
-            id: chipText
-            anchors.centerIn: parent
-            text: tc.chip
-            color: "#C9CDDB"
-            font { family: "JetBrains Mono"; pixelSize: 11; weight: Font.Medium }
-        }
-    }
+    readonly property string level: asleep ? "En reposo" : temp >= 92 ? "Crítica"
+                                  : temp >= 82 ? "Alta" : temp >= 55 ? "Normal" : "Fría"
 
     Notice {
         anchors.fill: parent
         visible: tc.notice !== ""
-        icon: tc.icon
+        icon: tc.noticeIcon
         title: tc.notice
         text: tc.noticeText
     }
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 6
+        anchors.bottomMargin: -tc.pad   // las lecturas tocan el borde inferior
+        anchors.leftMargin: -tc.pad
+        anchors.rightMargin: -tc.pad
+        spacing: 0
         visible: tc.notice === ""
 
         Item {
@@ -55,90 +38,84 @@ Card {
             ArcGauge {
                 id: gauge
                 anchors.centerIn: parent
-                width: Math.min(parent.width, parent.height * 1.12)
+                width: Math.min(parent.width - 20, parent.height * 1.1)
                 height: width
                 value: tc.temp
-                colorA: tc.heat[0]
-                colorB: tc.heat[1]
+                dim: tc.asleep
             }
 
             Column {
                 anchors.centerIn: gauge
-                anchors.verticalCenterOffset: -4
-                spacing: 2
+                anchors.verticalCenterOffset: 4
+                spacing: 4
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 2
                     Text {
                         id: big
-                        text: tc.asleep ? "–" : Math.round(gauge.shown)
-                        color: "#F5F6FA"
-                        font { family: "Space Grotesk"; pixelSize: Math.max(44, gauge.width * 0.2); weight: Font.Medium }
+                        text: tc.asleep ? "—" : Math.round(gauge.shown)
+                        color: tc.asleep ? T.ink3 : gauge.animTint
+                        font { family: T.mono; pixelSize: Math.max(46, gauge.width * 0.17); weight: Font.Light }
                     }
                     Text {
                         visible: !tc.asleep
                         text: "°C"
-                        color: "#7E849A"
-                        y: big.height * 0.16
-                        font { family: "Space Grotesk"; pixelSize: big.font.pixelSize * 0.32; weight: Font.Medium }
+                        color: T.ink2
+                        y: big.height * 0.18
+                        font { family: T.mono; pixelSize: 15 }
                     }
                 }
-                Rectangle {
+                Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    height: 22; width: stateRow.implicitWidth + 18; radius: 11
-                    color: Qt.rgba(1, 1, 1, 0.04)
-                    Row {
-                        id: stateRow
-                        anchors.centerIn: parent
-                        spacing: 6
-                        Rectangle {
-                            width: 6; height: 6; radius: 3
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: tc.heat[1]
-                            Behavior on color { ColorAnimation { duration: 600 } }
-                        }
-                        Text {
-                            text: tc.level
-                            color: "#B4B9CB"
-                            font { family: "Inter"; pixelSize: 11; weight: Font.Medium }
-                        }
-                    }
+                    text: tc.level
+                    color: tc.asleep ? T.ink3 : (tc.temp >= 82 ? gauge.animTint : T.ink2)
+                    font { family: T.sans; pixelSize: 12; weight: Font.Medium; letterSpacing: 0.9; capitalization: Font.AllUppercase }
                 }
             }
         }
 
-        // Métricas inferiores.
+        // Lecturas: celdas separadas por líneas, pegadas al borde inferior.
+        Rectangle { Layout.fillWidth: true; height: 1; color: T.rule }
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            Layout.fillHeight: false        // los layouts anidados se expanden por defecto
+            Layout.preferredHeight: 66
+            Layout.maximumHeight: 66
+            spacing: 0
             Repeater {
                 model: tc.metrics.length
-                delegate: Rectangle {
+                delegate: Item {
+                    id: cell
                     required property int index
-                    readonly property var modelData: tc.metrics[index] || ({})
+                    readonly property var m: tc.metrics[index] || ({})
                     Layout.fillWidth: true
-                    height: 62; radius: 16
-                    color: Qt.rgba(1, 1, 1, 0.028)
-                    border.color: Qt.rgba(1, 1, 1, 0.055)
+                    Layout.fillHeight: true
+                    Rectangle {
+                        visible: cell.index > 0
+                        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                        width: 1; color: T.rule
+                    }
                     Column {
-                        anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                        anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
                         spacing: 3
                         Text {
-                            text: modelData.label
-                            color: "#7E849A"
-                            font { family: "Inter"; pixelSize: 11; weight: Font.Medium }
+                            text: cell.m.label || ""
+                            color: T.ink3
+                            font { family: T.sans; pixelSize: 11; weight: Font.Medium; letterSpacing: 0.8; capitalization: Font.AllUppercase }
                         }
                         Row {
-                            spacing: 3
+                            spacing: 4
                             Text {
-                                text: modelData.value
-                                color: "#EDEFF5"
-                                font { family: "Space Grotesk"; pixelSize: 20; weight: Font.Medium }
+                                id: v
+                                text: cell.m.value || "—"
+                                color: T.ink
+                                font { family: T.mono; pixelSize: 20 }
                             }
                             Text {
-                                text: modelData.unit
-                                color: "#7E849A"
-                                anchors.baseline: parent.children[0].baseline
-                                font { family: "Inter"; pixelSize: 11; weight: Font.Medium }
+                                text: cell.m.unit || ""
+                                color: T.ink2
+                                anchors.baseline: v.baseline
+                                font { family: T.mono; pixelSize: 11 }
                             }
                         }
                     }

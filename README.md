@@ -6,8 +6,8 @@
 
 <p align="center">
   <b>El centro de control para portátiles gaming en Linux.</b><br>
-  Temperaturas, ventiladores, modos de rendimiento y batería — en una sola app,<br>
-  con un diseño cuidado y un consumo mínimo.
+  Temperaturas, ventiladores, modos de rendimiento y batería en una sola app,<br>
+  diseñada como un instrumento de medición y con un consumo mínimo.
 </p>
 
 <p align="center">
@@ -32,12 +32,12 @@ kernel añade soporte para un portátil, Vórtice lo aprovecha sin cambios.
 
 | | |
 |---|---|
-| 🌡️ **Temperaturas** | CPU (Intel / AMD) y gráfica, con historial de 90 s |
-| 🎮 **Gráficas** | NVIDIA (NVML), AMD (`amdgpu`) e Intel (`i915` / `xe`). En portátiles híbridos no despierta la gráfica dedicada si está en reposo |
-| ⚡ **Modos de rendimiento** | Silencioso · Equilibrado · Rendimiento, vía D-Bus. Respeta a `tuned` y a KDE/GNOME en lugar de pelearse con ellos |
-| 🌀 **Ventiladores** | RPM en vivo y *boost* manual (Alienware / Dell G por ahora) |
-| 🔋 **Batería** | Modos y umbrales de carga guardados en el firmware (Dell, ThinkPad, ASUS, Framework y otros con la interfaz estándar) |
-| 🪶 **Ligera** | Indicadores dibujados con shaders en la GPU: ~3 % de un núcleo con la ventana abierta, aún menos minimizada |
+| **Temperaturas** | CPU (Intel / AMD) y gráfica, con historial de 90 s |
+| **Gráficas** | NVIDIA (NVML), AMD (`amdgpu`) e Intel (`i915` / `xe`). En portátiles híbridos no despierta la gráfica dedicada si está en reposo |
+| **Modos de rendimiento** | Silencioso · Equilibrado · Rendimiento, vía D-Bus. Respeta a `tuned` y a KDE/GNOME en lugar de pelearse con ellos |
+| **Ventiladores** | RPM en vivo y *boost* manual (Alienware / Dell G por ahora) |
+| **Batería** | Modos y umbrales de carga guardados en el firmware (Dell, ThinkPad, ASUS, Framework y otros con la interfaz estándar) |
+| **Ligera** | Indicadores dibujados con shaders en la GPU: ~3 % de un núcleo con la ventana abierta, aún menos minimizada |
 
 ## Compatibilidad
 
@@ -114,4 +114,4 @@ y adjunta la salida.
 ## Licencia
 
 [GPL-3.0](LICENSE). Iconos de interfaz derivados de [Lucide](https://lucide.dev) (ISC).
-Fuentes Inter, Space Grotesk y JetBrains Mono (SIL Open Font License).
+Fuentes IBM Plex Sans Condensed e IBM Plex Mono (SIL Open Font License).
