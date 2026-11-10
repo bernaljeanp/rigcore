@@ -1,4 +1,6 @@
 %global forgeurl https://github.com/bernaljeanp/vortice
+# pyproject pide PySide6-Essentials (nombre de pip); Fedora lo da como python3-pyside6.
+%global __requires_exclude ^python3(\\.[0-9]+)?dist\\(pyside6-essentials\\)
 
 Name:           vortice
 Version:        0.1.0
@@ -35,11 +37,11 @@ que requieren privilegios.
 %autosetup -n %{name}-%{version}
 
 %generate_buildrequires
-%pyproject_buildrequires
+%pyproject_buildrequires -R
 
 %build
 # Shaders compilados con el Qt de la distro.
-QSB=%{_libdir}/qt6/bin/qsb sh tools/build_shaders.sh
+QSB=%{_bindir}/qsb-qt6 sh tools/build_shaders.sh
 %pyproject_wheel
 
 %install
