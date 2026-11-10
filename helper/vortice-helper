@@ -1,0 +1,261 @@
+#!/usr/bin/python3 -I
+"""Servicio privilegiado de Vórtice (corre como root bajo systemd).
+
+Expone por el bus de sistema un conjunto MÍNIMO de operaciones, todas con
+validación estricta:
+  - GetState()                        -> JSON con ventiladores y batería
+  - SetFanBoost(index u, value u)     -> boost 0-255 de un ventilador
+  - SetCharge(mode s, start u, stop u)-> modo/umbrales de carga de la batería
+
+Solo administradores (grupo wheel, sudo o admin, según la distro) o root pueden llamarlo: lo restringe la
+política de D-Bus y además se comprueba aquí con el UID real del llamante.
+Solo usa la biblioteca estándar y GLib (python3-gobject del sistema).
+"""
+
+import glob
+import grp
+import json
+import os
+import pwd
+import signal
+import sys
+
+from gi.repository import Gio, GLib
+
+BUS_NAME = "io.github.vortice.Helper"
+OBJ_PATH = "/io/github/vortice/Helper1"
+IFACE = "io.github.vortice.Helper1"
+# Grupo de administradores según la distro: wheel (Fedora, Arch), sudo (Debian,
+# Ubuntu, Mint), admin (Ubuntu antiguo).
+ADMIN_GROUPS = ("wheel", "sudo", "admin")
+
+XML = f"""
+<node>
+  <interface name="{IFACE}">
+    <method name="GetState"><arg type="s" direction="out" name="json"/></method>
+    <method name="SetFanBoost">
+      <arg type="u" direction="in" name="index"/>
+      <arg type="u" direction="in" name="value"/>
+    </method>
+    <method name="SetCharge">
+      <arg type="s" direction="in" name="mode"/>
+      <arg type="u" direction="in" name="start"/>
+      <arg type="u" direction="in" name="stop"/>
+    </method>
+    <property name="Version" type="u" access="read"/>
+  </interface>
+</node>
+"""
+VERSION = 1
+
+
+class Refused(Exception):
+    """Error que se devuelve tal cual al cliente."""
+
+
+# ------------------------------------------------------------------ sysfs --
+
+def _read(path):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def _write(path, value):
+    real = os.path.realpath(path)
+    if not real.startswith("/sys/"):
+        raise Refused("ruta fuera de /sys")
+    try:
+        with open(real, "w") as f:
+            f.write(str(value))
+    except OSError as e:
+        raise Refused(f"el firmware rechazó el valor ({e.strerror})") from e
+
+
+def fans():
+    """Ventiladores con boost, en orden estable."""
+    out = []
+    for path in sorted(glob.glob("/sys/class/hwmon/hwmon*/fan*_boost")):
+        base = path[: -len("_boost")]
+        out.append({
+            "label": _read(base + "_label") or os.path.basename(base),
+            "path": path,
+            "boost": int(_read(path) or 0),
+            "rpm": int(_read(base + "_input") or 0),
+        })
+    return out
+
+
+# Dos backends de batería: firmware Dell (dell-wmi-sysman) y el estándar
+# del kernel (charge_control_*_threshold, ThinkPad/ASUS/Framework...).
+def _dell_attr(name):
+    hits = glob.glob(f"/sys/class/firmware-attributes/*/attributes/{name}")
+    return hits[0] if hits else None
+
+
+def _std_battery():
+    for bat in sorted(glob.glob("/sys/class/power_supply/BAT*")):
+        if os.path.exists(f"{bat}/charge_control_end_threshold"):
+            return bat
+    return None
+
+
+def battery():
+    cfg = _dell_attr("PrimaryBattChargeCfg")
+    if cfg:
+        start, stop = _dell_attr("CustomChargeStart"), _dell_attr("CustomChargeStop")
+        return {
+            "backend": "dell",
+            "mode": _read(f"{cfg}/current_value"),
+            "modes": [m for m in (_read(f"{cfg}/possible_values") or "").split(";") if m],
+            "start": int(_read(f"{start}/current_value") or 0) if start else None,
+            "stop": int(_read(f"{stop}/current_value") or 0) if stop else None,
+            "startRange": [int(_read(f"{start}/min_value") or 50), int(_read(f"{start}/max_value") or 95)],
+            "stopRange": [int(_read(f"{stop}/min_value") or 55), int(_read(f"{stop}/max_value") or 100)],
+        }
+    bat = _std_battery()
+    if bat:
+        has_start = os.path.exists(f"{bat}/charge_control_start_threshold")
+        return {
+            "backend": "standard",
+            "mode": "Custom",
+            "modes": ["Custom"],
+            "start": int(_read(f"{bat}/charge_control_start_threshold") or 0) if has_start else None,
+            "stop": int(_read(f"{bat}/charge_control_end_threshold") or 100),
+            "startRange": [0, 99] if has_start else None,
+            "stopRange": [1, 100],
+        }
+    return None
+
+
+def set_fan_boost(index, value):
+    fl = fans()
+    if index >= len(fl):
+        raise Refused("ventilador inexistente")
+    if not 0 <= value <= 255:
+        raise Refused("el boost debe estar entre 0 y 255")
+    _write(fl[index]["path"], value)
+
+
+def set_charge(mode, start, stop):
+    b = battery()
+    if not b:
+        raise Refused("este equipo no expone control de carga")
+    if mode not in b["modes"]:
+        raise Refused(f"modo no válido: {mode}")
+
+    if b["backend"] == "dell":
+        if mode == "Custom":
+            lo1, hi1 = b["startRange"]
+            lo2, hi2 = b["stopRange"]
+            if not (lo1 <= start <= hi1 and lo2 <= stop <= hi2):
+                raise Refused(f"rangos: inicio {lo1}-{hi1}, fin {lo2}-{hi2}")
+            if stop - start < 5:
+                raise Refused("el fin debe ser al menos 5 puntos mayor que el inicio")
+            s_attr, e_attr = _dell_attr("CustomChargeStart"), _dell_attr("CustomChargeStop")
+            # Orden de escritura que nunca deja inicio >= fin a medio camino.
+            if start < (b["stop"] or 100):
+                _write(f"{s_attr}/current_value", start)
+                _write(f"{e_attr}/current_value", stop)
+            else:
+                _write(f"{e_attr}/current_value", stop)
+                _write(f"{s_attr}/current_value", start)
+        _write(f"{_dell_attr('PrimaryBattChargeCfg')}/current_value", mode)
+        return
+
+    bat = _std_battery()
+    if not 1 <= stop <= 100:
+        raise Refused("el fin debe estar entre 1 y 100")
+    if b["start"] is not None:
+        if not 0 <= start < stop:
+            raise Refused("el inicio debe ser menor que el fin")
+        _write(f"{bat}/charge_control_start_threshold", start)
+    _write(f"{bat}/charge_control_end_threshold", stop)
+
+
+def reset_fans():
+    for f in fans():
+        try:
+            _write(f["path"], 0)
+        except Refused:
+            pass
+
+
+# ------------------------------------------------------------------ D-Bus --
+
+def _authorized(conn, sender):
+    reply = conn.call_sync(
+        "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+        "GetConnectionUnixUser", GLib.Variant("(s)", (sender,)),
+        GLib.VariantType("(u)"), Gio.DBusCallFlags.NONE, -1, None)
+    uid = reply.unpack()[0]
+    if uid == 0:
+        return True
+    try:
+        user = pwd.getpwuid(uid)
+    except KeyError:
+        return False
+    member_of = set(os.getgrouplist(user.pw_name, user.pw_gid))
+    for name in ADMIN_GROUPS:
+        try:
+            if grp.getgrnam(name).gr_gid in member_of:
+                return True
+        except KeyError:
+            continue
+    return False
+
+
+def on_call(conn, sender, path, iface, method, params, invocation):
+    try:
+        if not _authorized(conn, sender):
+            invocation.return_dbus_error("org.freedesktop.DBus.Error.AccessDenied",
+                                         "solo administradores")
+            return
+        if method == "GetState":
+            state = {"fans": [{k: v for k, v in f.items() if k != "path"} for f in fans()],
+                     "battery": battery()}
+            invocation.return_value(GLib.Variant("(s)", (json.dumps(state),)))
+        elif method == "SetFanBoost":
+            set_fan_boost(*params.unpack())
+            invocation.return_value(None)
+        elif method == "SetCharge":
+            set_charge(*params.unpack())
+            invocation.return_value(None)
+        else:
+            invocation.return_dbus_error("org.freedesktop.DBus.Error.UnknownMethod", method)
+    except Refused as e:
+        invocation.return_dbus_error(f"{IFACE}.Refused", str(e))
+    except Exception as e:  # nunca tumbar el servicio por una llamada
+        print(f"error en {method}: {e!r}", file=sys.stderr, flush=True)
+        invocation.return_dbus_error(f"{IFACE}.Failed", "error interno")
+
+
+def on_get_property(conn, sender, path, iface, prop):
+    return GLib.Variant("u", VERSION) if prop == "Version" else None
+
+
+def main():
+    loop = GLib.MainLoop()
+    node = Gio.DBusNodeInfo.new_for_xml(XML)
+
+    def on_bus(conn, name):
+        conn.register_object(OBJ_PATH, node.interfaces[0], on_call, on_get_property, None)
+
+    Gio.bus_own_name(Gio.BusType.SYSTEM, BUS_NAME, Gio.BusNameOwnerFlags.NONE,
+                     on_bus, None, lambda *a: loop.quit())
+
+    def stop(*_):
+        reset_fans()  # al parar, los ventiladores vuelven a automático
+        loop.quit()
+        return GLib.SOURCE_REMOVE
+
+    GLib.unix_signal_add(GLib.PRIORITY_HIGH, signal.SIGTERM, stop)
+    GLib.unix_signal_add(GLib.PRIORITY_HIGH, signal.SIGINT, stop)
+    print("vortice-helper listo", flush=True)
+    loop.run()
+
+
+if __name__ == "__main__":
+    main()

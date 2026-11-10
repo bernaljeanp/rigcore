@@ -1,0 +1,32 @@
+[Unit]
+Description=Vórtice - servicio de control de hardware
+Documentation=file:///usr/local/libexec/vortice/vortice-helper
+
+[Service]
+Type=dbus
+BusName=io.github.vortice.Helper
+ExecStart=/usr/bin/python3 -I /usr/local/libexec/vortice/vortice-helper
+Restart=on-failure
+
+# Aislamiento: sin red, sin /home, sistema en solo lectura (salvo /sys, /proc, /dev).
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=CAP_DAC_OVERRIDE
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
