@@ -73,7 +73,7 @@ def _cpu_name() -> str:
     return "CPU"
 
 
-# Desarrollo: VORTICE_SIMULATE="no-gpu,gpu-asleep,no-ppd,tlp,no-fans,no-battery"
+# Desarrollo: VORTICE_SIMULATE="no-gpu,gpu-asleep,no-ppd,tlp,no-fans,no-battery,kbd-brightness"
 SIMULATE = set(filter(None, os.environ.get("VORTICE_SIMULATE", "").split(",")))
 
 

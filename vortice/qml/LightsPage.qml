@@ -89,7 +89,7 @@ Rectangle {
                     visible: !page.ls.available
                     icon: Icons.sparkles
                     title: "No se encontró un controlador de luces compatible"
-                    text: "Por ahora Vórtice controla el AW-ELC de Alienware / Dell G. Otras marcas llegarán con el tiempo."
+                    text: "Vórtice controla teclados Alienware (AW-ELC), ASUS TUF/ROG, Acer de 4 zonas (con Linuwu-Sense), RGB estándar y el brillo de cualquier teclado retroiluminado."
                 }
 
                 // Color mostrado (animado según el efecto, solo con la página visible).
@@ -183,12 +183,14 @@ Rectangle {
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: T.rule }
                     Repeater {
+                        // Solo los efectos que soporta este teclado.
                         model: [
-                            { id: "static",  name: "Fijo",     desc: "Un color constante" },
+                            { id: "static",  name: page.ls.hasColor !== false ? "Fijo" : "Encendido", desc: page.ls.hasColor !== false ? "Un color constante" : "Luz a un brillo fijo" },
                             { id: "breathe", name: "Respirar", desc: "El color se enciende y se apaga despacio" },
-                            { id: "aurora",  name: "Aurora",   desc: "Recorre verdes, azules y violetas" },
+                            { id: "aurora",  name: page.ls.kind === "acer4" ? "Onda" : page.ls.kind === "asus" ? "Ciclo de color" : "Aurora",
+                              desc: page.ls.kind === "awelc" ? "Recorre verdes, azules y violetas" : "Efecto de color del propio teclado" },
                             { id: "off",     name: "Apagado",  desc: "Sin luz" }
-                        ]
+                        ].filter(e => (page.ls.effects || ["static", "breathe", "aurora", "off"]).indexOf(e.id) >= 0)
                         delegate: Item {
                             id: opt
                             required property var modelData
@@ -210,11 +212,12 @@ Rectangle {
                         }
                     }
 
-                    // Color
+                    // Color (oculto si el teclado solo admite brillo)
                     ColumnLayout {
                         Layout.fillWidth: true
                         Layout.margins: T.pad
                         spacing: 12
+                        visible: page.ls.hasColor !== false
                         enabled: page.effect === "static" || page.effect === "breathe"
                         opacity: enabled ? 1 : 0.35
 

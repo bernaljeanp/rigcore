@@ -67,7 +67,7 @@ que el kernel añade soporte para un portátil, Vórtice lo aprovecha.
 | Leer ventiladores | La mayoría de portátiles con driver en el kernel |
 | Control de ventiladores y curvas | **Alienware / Dell G** (boost sobre el firmware) · **ThinkPad** (manual, con `thinkpad_acpi fan_control=1`) · **ASUS** (automático/máximo y curva guardada en el firmware) · **HP Omen/Victus** (automático/máximo; manual en Victus S) · **MSI** con msi-ec (Cooler Boost) · **Acer Predator/Nitro** con Linuwu-Sense · otros Dell y sobremesas (`pwmN` estándar) |
 | Límite de batería | Dell / Alienware (`dell-wmi-sysman`), interfaz estándar `charge_control_*` (ThinkPad, ASUS, Framework, MSI…), **Lenovo** (modo conservación) y **Acer** (límite al 80 %) |
-| Luces del teclado | Alienware / Dell G (AW-ELC) |
+| Luces del teclado | **Alienware / Dell G** (AW-ELC: color, respirar, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, respirar, ciclo) · **Acer Predator/Nitro** con Linuwu-Sense (4 zonas: color, respirar, onda) · teclados **RGB estándar** (LED multicolor: Tuxedo/Clevo, System76…) · **brillo** de cualquier teclado retroiluminado |
 | Teclas especiales | Alienware 16X Aurora (otros modelos: aporta tus códigos con `tools/scan_keys.py`) |
 | Modos de rendimiento | Distros con `power-profiles-daemon` o `tuned-ppd` (si usas TLP, Vórtice lo indica) |
 | Distros | Con systemd. Probado en Bazzite (Fedora) |

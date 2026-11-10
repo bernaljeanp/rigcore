@@ -1,10 +1,17 @@
-"""Luces Alienware: controlador AW-ELC por USB HID (hidraw).
+"""Luces del teclado para varias marcas.
 
-Protocolo documentado por alienfx-tools de T-Troll (MIT) y ya probado en este
-equipo por Zenit: reportes de salida de 34 bytes (byte 0 = id de reporte 0) y
-consulta de "ocupado" con HIDIOCGINPUT (byte 2 == 34).
+Tipos de controlador (ver detect()):
+  awelc       Alienware/Dell G: AW-ELC por USB HID (hidraw). Protocolo documentado
+              por alienfx-tools (MIT): reportes de 34 bytes, "ocupado" con HIDIOCGINPUT.
+  asus        ASUS TUF/ROG (asus-wmi): asus::kbd_backlight/kbd_rgb_mode
+              "cmd modo R G B velocidad" (cmd 0 = aplicar sin guardar en la BIOS).
+  acer4       Acer Predator/Nitro (Linuwu-Sense): four_zoned_kb/per_zone_mode y
+              four_zone_mode "modo,velocidad,brillo,dirección,R,G,B".
+  multicolor  LED multicolor estándar (*::kbd_backlight con multi_intensity).
+  brightness  Cualquier *::kbd_backlight: solo brillo.
 
 Solo biblioteca estándar: lo usan tanto la interfaz como el servicio root.
+`root` permite probar con un sysfs simulado.
 """
 
 from __future__ import annotations
@@ -146,4 +153,112 @@ def apply(effect: str, color: str, brightness: int, ctrl: dict | None = None) ->
                 wait_ready()
     finally:
         os.close(fd)
+    return {"effect": effect, "color": color.upper(), "brightness": int(brightness), "time": time.time()}
+
+
+
+# ---- otras marcas ----------------------------------------------------------------
+
+EFFECTS_BY_KIND = {
+    "awelc": ["static", "breathe", "aurora", "off"],
+    "asus": ["static", "breathe", "aurora", "off"],       # aurora = ciclo de color del firmware
+    "acer4": ["static", "breathe", "aurora", "off"],      # aurora = onda del firmware
+    "multicolor": ["static", "off"],
+    "brightness": ["static", "off"],
+}
+ASUS_MODES = {"static": 0, "breathe": 1, "aurora": 2}
+ACER_BASE = "sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/four_zoned_kb"
+
+
+def _r(path):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def _w(path, value):
+    with open(path, "w") as f:
+        f.write(str(value))
+
+
+def _kbd_leds(root):
+    return sorted(glob.glob(os.path.join(root, "sys/class/leds/*kbd_backlight*")))
+
+
+def detect(root: str = "/") -> dict | None:
+    """Controlador de luces del teclado más capaz que haya, o None."""
+    aw = find_controller(root)
+    if aw:
+        return {**aw, "kind": "awelc", "effects": EFFECTS_BY_KIND["awelc"], "color": True}
+    acer = os.path.join(root, ACER_BASE)
+    if os.path.exists(f"{acer}/per_zone_mode"):
+        return {"kind": "acer4", "name": "Acer 4 zonas", "path": acer, "sysfs": acer,
+                "effects": EFFECTS_BY_KIND["acer4"], "color": True}
+    for led in _kbd_leds(root):
+        name = os.path.basename(led)
+        mx = int(_r(f"{led}/max_brightness") or 0) or 1
+        base = {"name": name, "path": led, "sysfs": led, "max": mx}
+        if os.path.exists(f"{led}/kbd_rgb_mode"):
+            return {**base, "kind": "asus", "effects": EFFECTS_BY_KIND["asus"], "color": True}
+        if os.path.exists(f"{led}/multi_intensity"):
+            return {**base, "kind": "multicolor", "effects": EFFECTS_BY_KIND["multicolor"], "color": True}
+    for led in _kbd_leds(root):
+        mx = int(_r(f"{led}/max_brightness") or 0) or 1
+        return {"kind": "brightness", "name": os.path.basename(led), "path": led, "sysfs": led,
+                "max": mx, "effects": EFFECTS_BY_KIND["brightness"], "color": False}
+    return None
+
+
+def _files_for(ctrl):
+    k = ctrl["kind"]
+    if k == "awelc":
+        return [ctrl["path"]]
+    if k == "acer4":
+        return [f"{ctrl['path']}/per_zone_mode", f"{ctrl['path']}/four_zone_mode"]
+    if k == "asus":
+        return [f"{ctrl['path']}/kbd_rgb_mode", f"{ctrl['path']}/brightness"]
+    if k == "multicolor":
+        return [f"{ctrl['path']}/multi_intensity", f"{ctrl['path']}/brightness"]
+    return [f"{ctrl['path']}/brightness"]
+
+
+def can_write(ctrl: dict | None) -> bool:
+    """¿Puede este proceso aplicar luces sin el servicio root?"""
+    return bool(ctrl) and all(os.access(p, os.W_OK) for p in _files_for(ctrl) if os.path.exists(p))
+
+
+def apply_any(effect: str, color: str, brightness: int, ctrl: dict) -> dict:
+    """Aplica un ajuste al controlador detectado, sea de la marca que sea."""
+    validate(effect, color, brightness)
+    if effect not in ctrl["effects"]:
+        effect = "static"   # efecto no soportado por este teclado: color fijo
+    kind = ctrl["kind"]
+    if kind == "awelc":
+        return apply(effect, color, brightness, ctrl)
+
+    rgb = int(color, 16)
+    r, g, b = rgb >> 16, (rgb >> 8) & 0xFF, rgb & 0xFF
+    level = 0 if effect == "off" else int(brightness)
+
+    if kind == "acer4":
+        if effect in ("static", "off"):
+            _w(f"{ctrl['path']}/per_zone_mode", ",".join([color.lower()] * 4) + f",{level}")
+        elif effect == "breathe":
+            _w(f"{ctrl['path']}/four_zone_mode", f"1,4,{level},1,{r},{g},{b}")
+        else:  # aurora -> onda
+            _w(f"{ctrl['path']}/four_zone_mode", f"3,4,{level},2,0,0,0")
+    elif kind == "asus":
+        if effect != "off":
+            # cmd 0: aplicar sin guardar en la BIOS (el servicio lo reaplica al arrancar).
+            _w(f"{ctrl['path']}/kbd_rgb_mode", f"0 {ASUS_MODES[effect]} {r} {g} {b} 1")
+        _w(f"{ctrl['path']}/brightness", round(level / 100 * ctrl["max"]))
+    elif kind == "multicolor":
+        order = (_r(f"{ctrl['path']}/multi_index") or "red green blue").split()
+        val = {"red": r, "green": g, "blue": b}
+        _w(f"{ctrl['path']}/multi_intensity", " ".join(str(val.get(c, 0)) for c in order))
+        _w(f"{ctrl['path']}/brightness", round(level / 100 * ctrl["max"]))
+    else:  # brightness
+        _w(f"{ctrl['path']}/brightness", round(level / 100 * ctrl["max"]))
     return {"effect": effect, "color": color.upper(), "brightness": int(brightness), "time": time.time()}

@@ -218,7 +218,9 @@ class Tray(QObject):
             a.setChecked(self.b.profile == mid)
         ls = self.b.lightsState
         self.lights_menu.setEnabled(bool(ls.get("available")) and ls.get("via") != "none")
+        supported = ls.get("effects") or [f for f, _ in EFFECTS]
         for fid, a in self.fx_actions.items():
+            a.setVisible(fid in supported)
             a.setChecked(ls.get("effect") == fid)
         self.stealth_action.setChecked(bool(getattr(self.b, "_stealth", None)))
         self.games_action.setChecked(bool(self.b.gamesConfig.get("enabled")))

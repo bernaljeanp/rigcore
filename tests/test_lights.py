@@ -60,3 +60,66 @@ class DetectionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OtrasMarcasTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = self.tmp.name
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def w(self, rel, value=""):
+        path = os.path.join(self.root, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(str(value))
+        return path
+
+    def r(self, rel):
+        with open(os.path.join(self.root, rel)) as f:
+            return f.read().strip()
+
+    def test_asus(self):
+        led = "sys/class/leds/asus::kbd_backlight"
+        self.w(f"{led}/kbd_rgb_mode"); self.w(f"{led}/brightness", 0); self.w(f"{led}/max_brightness", 3)
+        c = lights.detect(self.root)
+        self.assertEqual(c["kind"], "asus")
+        lights.apply_any("breathe", "FF8000", 100, c)
+        self.assertEqual(self.r(f"{led}/kbd_rgb_mode"), "0 1 255 128 0 1")   # sin guardar en la BIOS
+        self.assertEqual(self.r(f"{led}/brightness"), "3")
+        lights.apply_any("off", "FF8000", 100, c)
+        self.assertEqual(self.r(f"{led}/brightness"), "0")
+
+    def test_acer_4_zonas(self):
+        base = lights.ACER_BASE
+        self.w(f"{base}/per_zone_mode", ""); self.w(f"{base}/four_zone_mode", "")
+        c = lights.detect(self.root)
+        self.assertEqual(c["kind"], "acer4")
+        lights.apply_any("static", "4287F5", 60, c)
+        self.assertEqual(self.r(f"{base}/per_zone_mode"), "4287f5,4287f5,4287f5,4287f5,60")
+        lights.apply_any("breathe", "FF0000", 80, c)
+        self.assertEqual(self.r(f"{base}/four_zone_mode"), "1,4,80,1,255,0,0")
+
+    def test_multicolor_respeta_el_orden(self):
+        led = "sys/class/leds/rgb:kbd_backlight"
+        self.w(f"{led}/multi_index", "green blue red"); self.w(f"{led}/multi_intensity", "0 0 0")
+        self.w(f"{led}/brightness", 0); self.w(f"{led}/max_brightness", 255)
+        c = lights.detect(self.root)
+        self.assertEqual(c["kind"], "multicolor")
+        lights.apply_any("static", "112233", 100, c)
+        self.assertEqual(self.r(f"{led}/multi_intensity"), "34 51 17")      # verde azul rojo
+        self.assertEqual(self.r(f"{led}/brightness"), "255")
+
+    def test_solo_brillo_y_efecto_no_soportado(self):
+        led = "sys/class/leds/tpacpi::kbd_backlight"
+        self.w(f"{led}/brightness", 0); self.w(f"{led}/max_brightness", 2)
+        c = lights.detect(self.root)
+        self.assertEqual((c["kind"], c["color"]), ("brightness", False))
+        out = lights.apply_any("aurora", "FFFFFF", 50, c)                 # no soportado: fijo
+        self.assertEqual(out["effect"], "static")
+        self.assertEqual(self.r(f"{led}/brightness"), "1")
+
+    def test_sin_teclado_iluminado(self):
+        self.assertIsNone(lights.detect(self.root))

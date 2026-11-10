@@ -298,7 +298,10 @@ class Backend(QObject):
                               "vortice", "lights.json")
 
     def _init_lights(self) -> None:
-        self._ctrl = lights.find_controller()
+        self._ctrl = lights.detect()
+        if "kbd-brightness" in hardware.SIMULATE:   # desarrollo: teclado que solo admite brillo
+            self._ctrl = {"kind": "brightness", "name": "tpacpi::kbd_backlight", "path": "/nonexistent",
+                          "sysfs": "/nonexistent", "max": 2, "effects": ["static", "off"], "color": False}
         self._lights = {"effect": "static", "color": "FFFFFF", "brightness": 100}
         try:
             with open(self.LIGHTS_CFG) as f:
@@ -324,7 +327,7 @@ class Backend(QObject):
                 ok, err = hardware.helper_call("SetLights", "ssu", eff, col, bri)
             else:
                 try:
-                    lights.apply(eff, col, bri, self._ctrl)
+                    lights.apply_any(eff, col, bri, self._ctrl)
                     ok, err = True, None
                 except (OSError, RuntimeError, ValueError) as e:
                     ok, err = False, str(e)
@@ -349,10 +352,16 @@ class Backend(QObject):
     @Property("QVariantMap", notify=lightsChanged)
     def lightsState(self) -> dict:
         self._reload_lights_if_changed()
+        hl = self._helper.get("lights") or {} if self._helper.get("available") else {}
+        if hl.get("effect") and self._lights_pending is None:
+            # Con el servicio, lo aplicado de verdad es lo que guarda el servicio.
+            self._lights = {"effect": hl["effect"], "color": hl["color"], "brightness": hl["brightness"]}
         via = "service" if self._helper.get("available") else (
-            "direct" if lights.writable(self._ctrl) else "none")
-        return {"available": bool(self._ctrl), "device": self._ctrl["name"] if self._ctrl else "",
-                "path": self._ctrl["path"] if self._ctrl else "", "via": via,
+            "direct" if lights.can_write(self._ctrl) else "none")
+        c = self._ctrl or {}
+        return {"available": bool(self._ctrl), "device": c.get("name", ""),
+                "path": c.get("path", ""), "via": via, "kind": c.get("kind", ""),
+                "effects": c.get("effects", []), "hasColor": bool(c.get("color")),
                 "aurora": ["%02X%02X%02X" % c for c in lights.AURORA], **self._lights}
 
     @Slot(str, str, int)
