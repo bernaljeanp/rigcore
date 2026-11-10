@@ -26,21 +26,29 @@ def tr(text: str) -> str:
     return QCoreApplication.translate(CONTEXT, text)
 
 
-def saved_lang() -> str:
+def get_setting(key: str, default: str) -> str:
     try:
-        return json.loads(SETTINGS.read_text()).get("lang", "system")
+        return json.loads(SETTINGS.read_text()).get(key, default)
     except (OSError, ValueError, AttributeError):
-        return "system"
+        return default
 
 
-def save_lang(lang: str) -> None:
+def set_setting(key: str, value: str) -> None:
     try:
         data = json.loads(SETTINGS.read_text())
     except (OSError, ValueError):
         data = {}
-    data["lang"] = lang
+    data[key] = value
     SETTINGS.parent.mkdir(parents=True, exist_ok=True)
     SETTINGS.write_text(json.dumps(data))
+
+
+def saved_lang() -> str:
+    return get_setting("lang", "system")
+
+
+def save_lang(lang: str) -> None:
+    set_setting("lang", lang)
 
 
 def effective_lang() -> str:

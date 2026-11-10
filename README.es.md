@@ -47,6 +47,7 @@ que el kernel añade soporte para un portátil, Vórtice lo aprovecha.
 | **Batería** | Modos y umbrales de carga guardados en el firmware (Dell/Alienware y la interfaz estándar `charge_control_*`) |
 | **Bandeja y teclas** | Icono con el color del panel, menú rápido y teclas especiales (en Alienware: F6 Boost, F7 Sigilo, F9 Luces) |
 | **Gráficas** | NVIDIA (NVML), AMD (`amdgpu`) e Intel (`i915`/`xe`). En portátiles híbridos no despierta la gráfica dedicada en reposo |
+| **Identidad de marca** | El color de acento sigue la marca del portátil (cian en Alienware, rojo en ROG/MSI…), las luces del teclado o el ámbar; insignias de fabricante propias (sin logos oficiales) |
 | **Ligera** | ~3 % de un núcleo con la ventana abierta; en la bandeja ~0,25 %. La ventana corre en su propio proceso y devuelve toda su memoria al cerrarse |
 
 <table>
@@ -165,7 +166,7 @@ Ejecuta `.venv/bin/python -m vortice.hardware` y adjunta la salida.
 ## Licencia
 
 [GPL-3.0](LICENSE). Iconos de interfaz derivados de [Lucide](https://lucide.dev) (ISC).
-Fuentes IBM Plex Sans Condensed e IBM Plex Mono (SIL Open Font License).
+Fuentes IBM Plex Sans Condensed, IBM Plex Mono y Oxanium (SIL Open Font License).
 Protocolo de luces AW-ELC documentado por [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT);
 protocolo de 4 zonas de Lenovo de [L5P-Keyboard-RGB](https://github.com/4JX/L5P-Keyboard-RGB) (GPL-3.0).
 Interfaces de otras marcas estudiadas en la documentación del kernel y en

@@ -40,7 +40,7 @@ Item {
                 Icon {
                     anchors.centerIn: parent
                     path: Icons.fan; size: 14; stroke: 1.6
-                    color: fc.rpm > 0 ? (fc.boosted ? T.amber : T.ink) : T.ink3
+                    color: fc.rpm > 0 ? (fc.boosted ? hw.accent : T.ink) : T.ink3
                     rotation: glyph.angle
                 }
                 property real angle: 0
@@ -67,7 +67,7 @@ Item {
                 id: rpmText
                 text: Math.round(fc.rpm)
                 color: fc.rpm > 0 ? T.ink : T.ink3
-                font { family: T.mono; pixelSize: 40; weight: Font.Light }
+                font { family: T.display; pixelSize: 40; weight: Font.Medium }
             }
             Text {
                 text: fc.unit === "%" ? "%" : qsTr("RPM")
@@ -93,7 +93,7 @@ Item {
                 anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                 height: 2
                 width: parent.width * fc.shownFrac
-                color: fc.boosted ? T.amber : T.ink
+                color: fc.boosted ? hw.accent : T.ink
             }
             Repeater {
                 model: 11
@@ -102,7 +102,7 @@ Item {
                     x: index / 10 * (parent.width - 1)
                     y: index % 5 === 0 ? 0 : 3
                     width: 1; height: index % 5 === 0 ? 10 : 4
-                    color: index / 10 <= fc.shownFrac && fc.rpm > 0 ? (fc.boosted ? T.amber : T.ink2) : T.ruleHi
+                    color: index / 10 <= fc.shownFrac && fc.rpm > 0 ? (fc.boosted ? hw.accent : T.ink2) : T.ruleHi
                 }
             }
         }
@@ -122,7 +122,7 @@ Item {
                 text: !fc.canBoost ? qsTr("requiere servicio")
                       : fc.onOff ? (fc.boosted ? qsTr("máximo") : qsTr("auto"))
                       : fader.value === 0 ? qsTr("auto") : Math.round(fader.value) + " %"
-                color: (fc.onOff ? fc.boosted : fader.value > 0) && fc.canBoost ? T.amber : T.ink3
+                color: (fc.onOff ? fc.boosted : fader.value > 0) && fc.canBoost ? hw.accent : T.ink3
                 font { family: T.mono; pixelSize: 11 }
             }
         }
@@ -141,7 +141,7 @@ Item {
             Layout.fillWidth: true
             enabled: fc.canBoost
             from: 0; to: 100; stepSize: 5
-            fill: value > 0 ? T.amber : T.ink
+            fill: value > 0 ? hw.accent : T.ink
             Binding on value { when: !fader.pressed; value: Math.round((fc.boost || 0) / 2.55 / 5) * 5; restoreMode: Binding.RestoreNone }
             onCommitted: v => fc.boostRequested(Math.round(v * 2.55))
         }

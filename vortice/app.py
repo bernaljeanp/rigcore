@@ -104,6 +104,8 @@ class Backend(QObject):
             "firmwareBattery": c.firmware_battery,
             "hostname": os.uname().nodename,
             "model": c.model,
+            "brand": c.brand,
+            "cpuVendor": c.cpu_vendor,
         }
 
     @Property(str, notify=profileChanged)
@@ -315,6 +317,7 @@ class Backend(QObject):
         self._lights_cv = threading.Condition()
         threading.Thread(target=self._lights_worker, daemon=True).start()
         self.helperChanged.connect(self.lightsChanged)
+        self.lightsChanged.connect(self.accentChanged)   # acento sincronizado con las luces
 
     def _lights_worker(self) -> None:
         """Aplica solo el ajuste más reciente: arrastrar el color no satura el USB."""
@@ -424,6 +427,50 @@ class Backend(QObject):
                                tr("Curva activada") if cfg["enabled"] else tr("Curva guardada"))
         else:
             self.helperChanged.emit()
+
+    # ---- color de acento ----------------------------------------------------------
+    # Cada marca, su color. El ámbar queda para los avisos (Theme.js: warn).
+    BRAND_ACCENTS = {"alienware": "#25C6EA", "dell": "#4DA3FF", "asus": "#FF3B52", "micro-star": "#FF3B4E",
+                     "msi": "#FF3B4E", "acer": "#1FD8C4", "lenovo": "#5B8CFF", "hp": "#FF5468",
+                     "gigabyte": "#FF7A1F", "razer": "#4BD62E", "framework": "#FFB020"}
+    accentChanged = Signal()
+
+    def _brand_accent(self) -> str:
+        brand = self._caps.brand
+        return next((c for k, c in self.BRAND_ACCENTS.items() if k in brand), "#FFB020")
+
+    @staticmethod
+    def _readable(hex_color: str) -> str | None:
+        """Color utilizable como acento sobre grafito, o None si es casi negro/blanco/gris."""
+        from PySide6.QtGui import QColor
+        c = QColor("#" + hex_color.lstrip("#"))
+        if c.hsvSaturationF() < 0.25 or c.valueF() < 0.3:
+            return None
+        h, s, v = c.hsvHueF(), c.hsvSaturationF(), c.valueF()
+        return QColor.fromHsvF(max(h, 0), min(s, 0.85), max(v, 0.9)).name()
+
+    @Property(str, notify=accentChanged)
+    def accent(self) -> str:
+        mode = i18n.get_setting("accent", "brand")
+        if mode == "amber":
+            return "#FFB020"
+        if mode == "lights":
+            l = self._lights
+            if l.get("effect") in ("static", "breathe"):
+                col = self._readable(l.get("color", ""))
+                if col:
+                    return col
+        return self._brand_accent()
+
+    @Property(str, notify=accentChanged)
+    def accentMode(self) -> str:
+        return i18n.get_setting("accent", "brand")
+
+    @Slot(str)
+    def setAccentMode(self, mode: str) -> None:
+        if mode in ("brand", "lights", "amber"):
+            i18n.set_setting("accent", mode)
+            self.accentChanged.emit()
 
     # ---- ajustes ----------------------------------------------------------------
     settingsChanged = Signal()

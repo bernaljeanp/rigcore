@@ -49,6 +49,7 @@ a laptop, Vórtice benefits from it.
 | **GPUs** | NVIDIA (NVML), AMD (`amdgpu`) and Intel (`i915`/`xe`). On hybrid laptops it never wakes a sleeping discrete GPU |
 | **Lightweight** | ~3 % of one core with the window open; ~0.25 % in the tray. The window runs in its own process and returns all its memory when closed |
 | **Languages** | English and Spanish, following the system language; selectable in *Settings* |
+| **Brand identity** | The accent color follows your laptop brand (Alienware cyan, ROG/MSI red…), your keyboard lights, or amber; vendor badges drawn in-house (no official logos) |
 
 <table>
   <tr>
@@ -166,7 +167,7 @@ model, distro and what works or doesn't (there's a *compatibility report* templa
 ## License
 
 [GPL-3.0](LICENSE). Interface icons derived from [Lucide](https://lucide.dev) (ISC).
-IBM Plex Sans Condensed and IBM Plex Mono fonts (SIL Open Font License).
+IBM Plex Sans Condensed, IBM Plex Mono and Oxanium fonts (SIL Open Font License).
 AW-ELC lighting protocol documented by [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT);
 Lenovo 4-zone protocol from [L5P-Keyboard-RGB](https://github.com/4JX/L5P-Keyboard-RGB) (GPL-3.0).
 Interfaces for other brands studied from the kernel documentation and from

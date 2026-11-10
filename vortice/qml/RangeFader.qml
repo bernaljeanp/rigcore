@@ -38,7 +38,7 @@ Item {
         x: 3 + r.px(r.first); width: r.px(r.second) - r.px(r.first)
         anchors.verticalCenter: track.verticalCenter
         height: 2
-        color: T.amber
+        color: hw.accent
     }
 
     component Knob: Rectangle {

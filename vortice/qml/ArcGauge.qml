@@ -12,7 +12,8 @@ Item {
 
     property real shown: value
     Behavior on shown { SmoothedAnimation { velocity: 18; reversingMode: SmoothedAnimation.Sync } }
-    readonly property color tint: dim ? T.ink3 : T.tempColor(shown)
+    // Normal: acento de la marca. Alta (≥82 °C): ámbar. Crítica (≥92 °C): rojo.
+    readonly property color tint: dim ? T.ink3 : shown >= 82 ? T.tempColor(shown) : hw.accent
     property color animTint: tint
     Behavior on animTint { ColorAnimation { duration: 400 } }
 

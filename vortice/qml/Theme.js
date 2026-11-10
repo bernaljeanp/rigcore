@@ -15,7 +15,8 @@ var ink2     = "#9A968E"
 var ink3     = "#5E5B56"
 
 // Señal
-var amber    = "#FFB020"   // activo, boost, temperatura alta
+var amber    = "#FFB020"   // avisos (el acento de la interfaz es hw.accent, según la marca)
+var warn     = amber
 var red      = "#FF5A45"   // crítico
 var steel    = "#7FA6BC"   // segunda serie de datos (GPU)
 var ok       = "#8FCB8F"   // estado correcto (muy contenido)
@@ -23,6 +24,7 @@ var ok       = "#8FCB8F"   // estado correcto (muy contenido)
 // Tipografía
 var sans     = "IBM Plex Sans Condensed"
 var mono     = "IBM Plex Mono"
+var display  = "Oxanium"   // cifras grandes: angulosa, de instrumento gamer
 
 // Medidas
 var pad      = 22

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 import "Theme.js" as T
 
 // Zona del panel. No es una tarjeta: las divisiones las dibuja la rejilla de 1 px.
@@ -13,12 +14,27 @@ Rectangle {
 
     color: T.bg
 
+    // Esquina superior derecha cortada: deja ver la línea divisoria del fondo.
+    Shape {
+        anchors { top: parent.top; right: parent.right }
+        width: 14; height: 14
+        ShapePath {
+            fillColor: T.rule
+            strokeColor: "transparent"
+            PathSvg { path: "M0 0 L14 0 L14 14 Z" }
+        }
+    }
+
     RowLayout {
         id: header
         visible: sec.label !== ""
         anchors { left: parent.left; right: parent.right; top: parent.top
                   leftMargin: sec.pad; rightMargin: sec.pad; topMargin: 16 }
         spacing: 10
+        Rectangle {   // marca de acento, como un indicador de cabina
+            width: 3; height: 12
+            color: hw.accent
+        }
         Text {
             text: sec.label
             color: T.ink2

@@ -28,7 +28,7 @@ Rectangle {
         Layout.preferredHeight: 62
         opacity: enabled_ ? 1 : 0.4
         Rectangle { anchors.fill: parent; color: o.active ? T.bgRaised : (oh.hovered && o.enabled_ ? Qt.rgba(1, 1, 1, 0.018) : "transparent") }
-        Rectangle { width: 3; height: parent.height; color: T.amber; visible: o.active }
+        Rectangle { width: 3; height: parent.height; color: hw.accent; visible: o.active }
         Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: T.rule }
         Column {
             anchors { left: parent.left; leftMargin: T.pad; right: parent.right; rightMargin: T.pad; verticalCenter: parent.verticalCenter }
@@ -159,9 +159,13 @@ Rectangle {
                                 id: lb
                                 required property var modelData
                                 property bool active: lang.current === modelData.id
-                                implicitWidth: lt.implicitWidth + 24; implicitHeight: 32; radius: 2
-                                color: active ? T.bgRaised : (lh.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent")
-                                border.color: active ? T.amber : T.ruleHi
+                                implicitWidth: lt.implicitWidth + 24; implicitHeight: 32
+                                color: "transparent"
+                                Chamfer {
+                                    anchors.fill: parent
+                                    fill: lb.active ? T.bgRaised : (lh.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent")
+                                    stroke: lb.active ? hw.accent : T.ruleHi
+                                }
                                 Text { id: lt; anchors.centerIn: parent; text: lb.modelData.name
                                        color: lb.active ? T.ink : T.ink2; font { family: T.sans; pixelSize: 13; weight: Font.Medium } }
                                 HoverHandler { id: lh; cursorShape: Qt.PointingHandCursor }
@@ -169,6 +173,32 @@ Rectangle {
                             }
                         }
                         QtObject { id: lang; property string current: hw.langSetting }
+                    }
+                    Item { Layout.preferredHeight: 24 }
+                    Label { text: qsTr("Color de acento"); Layout.bottomMargin: 8 }
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        Repeater {
+                            model: [{ id: "brand", name: qsTr("Marca del portátil") },
+                                    { id: "lights", name: qsTr("Luces del teclado") },
+                                    { id: "amber", name: qsTr("Ámbar") }]
+                            delegate: Item {
+                                id: ab
+                                required property var modelData
+                                readonly property bool active: hw.accentMode === modelData.id
+                                implicitWidth: at.implicitWidth + 26; implicitHeight: 32
+                                Chamfer {
+                                    anchors.fill: parent
+                                    fill: ab.active ? T.bgRaised : (ah2.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent")
+                                    stroke: ab.active ? hw.accent : T.ruleHi
+                                }
+                                Text { id: at; anchors.centerIn: parent; text: ab.modelData.name
+                                       color: ab.active ? T.ink : T.ink2; font { family: T.sans; pixelSize: 13; weight: Font.Medium } }
+                                HoverHandler { id: ah2; cursorShape: Qt.PointingHandCursor }
+                                TapHandler { onTapped: hw.setAccentMode(ab.modelData.id) }
+                            }
+                        }
                     }
                     Item { Layout.preferredHeight: 24 }
                     Label { text: qsTr("Componentes"); Layout.bottomMargin: 10 }
@@ -185,7 +215,7 @@ Rectangle {
                             Layout.fillWidth: true
                             Layout.bottomMargin: 8
                             Text { text: modelData.k; color: T.ink2; Layout.fillWidth: true; font { family: T.sans; pixelSize: 14 } }
-                            Text { text: modelData.v; color: modelData.ok ? T.ink : T.amber; font { family: T.mono; pixelSize: 12 } }
+                            Text { text: modelData.v; color: modelData.ok ? T.ink : T.warn; font { family: T.mono; pixelSize: 12 } }
                         }
                     }
                     Item { Layout.fillHeight: true }

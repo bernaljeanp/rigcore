@@ -62,6 +62,8 @@ class Capabilities:
     vendor_driver: str = ""
     cpu_name: str = ""
     model: str = ""             # p. ej. "Alienware 16X Aurora"
+    brand: str = ""             # fabricante del portátil, en minúsculas ("alienware", "asus"...)
+    cpu_vendor: str = ""        # "intel" | "amd"
     gpu_name: str = ""
     gpu_kind: str = ""
     gpu_discrete: bool = False
@@ -99,6 +101,9 @@ def detect() -> Capabilities:
         parts = parts[:-1]
     product = " ".join(parts)
     caps.model = product if product.lower().startswith(vendor.lower()) else f"{vendor} {product}".strip()
+    caps.brand = vendor.lower()
+    cpuinfo = _read("/proc/cpuinfo") or ""
+    caps.cpu_vendor = "intel" if "GenuineIntel" in cpuinfo else "amd" if "AuthenticAMD" in cpuinfo else ""
 
     for hw in sorted(glob.glob(f"{SYS}/hwmon/hwmon*")):
         name = _read(f"{hw}/name") or ""

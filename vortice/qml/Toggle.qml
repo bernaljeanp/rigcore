@@ -17,12 +17,12 @@ Item {
         Rectangle {
             width: 34; height: 18; radius: 2
             color: "transparent"
-            border.color: tg.checked ? T.amber : T.ruleHi
+            border.color: tg.checked ? hw.accent : T.ruleHi
             Rectangle {
                 width: 12; height: 12; radius: 1
                 y: 3
                 x: tg.checked ? parent.width - width - 3 : 3
-                color: tg.checked ? T.amber : T.ink3
+                color: tg.checked ? hw.accent : T.ink3
                 Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             }
         }

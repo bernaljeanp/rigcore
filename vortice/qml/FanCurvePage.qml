@@ -81,7 +81,7 @@ Rectangle {
                                font { family: T.sans; pixelSize: 10; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase } }
                         Text {
                             text: !page.service ? qsTr("requiere servicio") : page.cfg.enabled ? qsTr("curva de Vórtice") : qsTr("firmware")
-                            color: !page.service ? T.amber : page.cfg.enabled ? T.amber : T.ink
+                            color: !page.service ? T.warn : page.cfg.enabled ? hw.accent : T.ink
                             font { family: T.mono; pixelSize: 13 }
                         }
                     }
@@ -168,12 +168,12 @@ Rectangle {
                         var lt = page.live.temp
                         if (lt !== undefined && lt !== null) {
                             var lx = px(Math.max(tlo, Math.min(thi, lt)))
-                            ctx.strokeStyle = T.amber
+                            ctx.strokeStyle = hw.accent
                             ctx.lineWidth = 1
                             ctx.setLineDash([4, 4])
                             ctx.beginPath(); ctx.moveTo(lx, 8); ctx.lineTo(lx, baseY); ctx.stroke()
                             ctx.setLineDash([])
-                            ctx.fillStyle = T.amber
+                            ctx.fillStyle = hw.accent
                             ctx.fillRect(lx - 4, py(page.evaluate(pts, lt)) - 4, 8, 8)
                         }
                         // Puntos
@@ -246,7 +246,7 @@ Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 58
                             Rectangle { anchors.fill: parent; color: frow.active ? T.bgRaised : (fh.hovered ? Qt.rgba(1, 1, 1, 0.018) : "transparent") }
-                            Rectangle { width: 3; height: parent.height; color: T.amber; visible: frow.active }
+                            Rectangle { width: 3; height: parent.height; color: hw.accent; visible: frow.active }
                             Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: T.rule }
                             RowLayout {
                                 anchors { fill: parent; leftMargin: T.pad; rightMargin: T.pad }
@@ -318,7 +318,7 @@ Rectangle {
                               : (hw.helper || {}).hardwareCurve
                               ? qsTr("Este equipo guarda la curva en su firmware: Vórtice la escribe allí al guardarla y funciona aunque el servicio se detenga.")
                               : qsTr("Si un perfil de juego pide más refuerzo, se usa el mayor de los dos. Al detener el servicio, los ventiladores vuelven a automático.")
-                        color: page.service ? T.ink3 : T.amber
+                        color: page.service ? T.ink3 : T.warn
                         wrapMode: Text.WordWrap
                         font { family: T.sans; pixelSize: 13 }
                     }

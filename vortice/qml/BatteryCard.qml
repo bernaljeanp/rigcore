@@ -47,7 +47,7 @@ Section {
                 id: pct
                 text: Math.round(bc.shown)
                 color: T.ink
-                font { family: T.mono; pixelSize: 48; weight: Font.Light }
+                font { family: T.display; pixelSize: 48; weight: Font.Medium }
             }
             Text {
                 text: "%"
@@ -74,14 +74,14 @@ Section {
                 visible: bc.stopAt !== null
                 x: bar.width * (bc.stopAt || 0) / 100 - 1
                 y: 0; width: 2; height: 20
-                color: T.amber
+                color: hw.accent
             }
             Text {
                 visible: bc.stopAt !== null
                 x: Math.min(bar.width * (bc.stopAt || 0) / 100 - width / 2, bar.width - width)
                 y: 22
                 text: qsTr("límite ") + bc.stopAt
-                color: T.amber
+                color: hw.accent
                 font { family: T.mono; pixelSize: 10 }
             }
         }

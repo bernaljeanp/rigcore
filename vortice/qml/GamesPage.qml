@@ -72,7 +72,7 @@ Rectangle {
                                                       + (page.modeNames[(page.agent.applied || {}).mode] || "").toLowerCase()
                                   : page.running.length ? page.nameOf(page.running[0]) + qsTr(" · sin cambios")
                                   : qsTr("ningún juego abierto")
-                            color: page.agent.active ? T.amber : T.ink2
+                            color: page.agent.active ? hw.accent : T.ink2
                             font { family: T.mono; pixelSize: 13 }
                         }
                     }
@@ -84,7 +84,7 @@ Rectangle {
                                font { family: T.sans; pixelSize: 10; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase } }
                         Text {
                             text: page.agent.alive ? qsTr("activo") : qsTr("detenido")
-                            color: page.agent.alive ? T.ink : T.amber
+                            color: page.agent.alive ? T.ink : T.warn
                             font { family: T.mono; pixelSize: 13 }
                         }
                     }
@@ -107,7 +107,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 56
                 color: T.bg
-                Rectangle { width: 3; height: parent.height; color: T.amber }
+                Rectangle { width: 3; height: parent.height; color: T.warn }
                 RowLayout {
                     anchors { fill: parent; leftMargin: T.pad + 3; rightMargin: T.pad }
                     Text {
@@ -118,8 +118,9 @@ Rectangle {
                         font { family: T.sans; pixelSize: 14 }
                     }
                     Rectangle {
-                        implicitWidth: dt.implicitWidth + 28; implicitHeight: 32; radius: 2
-                        color: dh.hovered ? "#FFC04D" : T.amber
+                        implicitWidth: dt.implicitWidth + 28; implicitHeight: 32
+                        color: "transparent"
+                        Chamfer { anchors.fill: parent; fill: dh.hovered ? Qt.lighter(T.warn, 1.15) : T.warn }
                         Text { id: dt; anchors.centerIn: parent; text: qsTr("Desactivarlo"); color: "#1A1406"
                                font { family: T.sans; pixelSize: 13; weight: Font.DemiBold } }
                         HoverHandler { id: dh; cursorShape: Qt.PointingHandCursor }
@@ -184,7 +185,7 @@ Rectangle {
                             width: lv.width
                             height: 76
                             Rectangle { anchors.fill: parent; color: row.active ? T.bgRaised : (rhov.hovered ? Qt.rgba(1, 1, 1, 0.018) : "transparent") }
-                            Rectangle { width: 3; height: parent.height; color: T.amber; visible: row.active }
+                            Rectangle { width: 3; height: parent.height; color: hw.accent; visible: row.active }
                             Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: T.rule }
                             RowLayout {
                                 anchors { fill: parent; leftMargin: T.pad; rightMargin: T.pad }
@@ -221,14 +222,14 @@ Rectangle {
                                     Text {
                                         width: parent.width
                                         text: row.playing ? qsTr("jugando ahora") : (row.g.detail || "")
-                                        color: row.playing ? T.amber : T.ink3
+                                        color: row.playing ? hw.accent : T.ink3
                                         elide: Text.ElideRight
                                         font { family: T.mono; pixelSize: 11 }
                                     }
                                 }
                                 Text {
                                     text: row.mode === "" ? qsTr("predet.") : (page.modeNames[row.mode] || row.mode).toLowerCase()
-                                    color: row.mode === "performance" ? T.amber : row.mode === "" ? T.ink3 : T.ink2
+                                    color: row.mode === "performance" ? hw.accent : row.mode === "" ? T.ink3 : T.ink2
                                     font { family: T.mono; pixelSize: 11 }
                                 }
                             }
@@ -257,9 +258,9 @@ Rectangle {
                             onAccepted: { hw.addProcess(text); text = "" }
                         }
                         Rectangle {
-                            implicitWidth: at.implicitWidth + 24; implicitHeight: 32; radius: 2
-                            color: ah.hovered ? T.bgRaised : "transparent"
-                            border.color: T.ruleHi
+                            implicitWidth: at.implicitWidth + 24; implicitHeight: 32
+                            color: "transparent"
+                            Chamfer { anchors.fill: parent; fill: ah.hovered ? T.bgRaised : "transparent"; stroke: T.ruleHi }
                             Text { id: at; anchors.centerIn: parent; text: qsTr("Añadir"); color: T.ink
                                    font { family: T.sans; pixelSize: 13; weight: Font.Medium } }
                             HoverHandler { id: ah; cursorShape: Qt.PointingHandCursor }
@@ -366,7 +367,7 @@ Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 52
                                 Rectangle { anchors.fill: parent; color: opt.active ? T.bgRaised : (oh.hovered ? Qt.rgba(1, 1, 1, 0.018) : "transparent") }
-                                Rectangle { width: 3; height: parent.height; color: T.amber; visible: opt.active }
+                                Rectangle { width: 3; height: parent.height; color: hw.accent; visible: opt.active }
                                 Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: T.rule }
                                 RowLayout {
                                     anchors { fill: parent; leftMargin: 18; rightMargin: 18 }
@@ -406,7 +407,7 @@ Rectangle {
                             Text {
                                 text: !page.service ? qsTr("requiere servicio")
                                       : boostFader.value === 0 ? qsTr("automático") : Math.round(boostFader.value) + " %"
-                                color: boostFader.value > 0 && page.service ? T.amber : T.ink3
+                                color: boostFader.value > 0 && page.service ? hw.accent : T.ink3
                                 font { family: T.mono; pixelSize: 11 }
                             }
                         }
@@ -417,7 +418,7 @@ Rectangle {
                             Layout.topMargin: 6
                             enabled: page.service && page.selected.mode !== "none"
                             from: 0; to: 100; stepSize: 5
-                            fill: value > 0 ? T.amber : T.ink
+                            fill: value > 0 ? hw.accent : T.ink
                             Binding on value { when: !boostFader.pressed; value: Math.round((page.selected.boost || 0) / 2.55 / 5) * 5; restoreMode: Binding.RestoreNone }
                             onCommitted: v => page.selectedId === "default"
                                          ? hw.setDefault(page.cfg.defaultMode, Math.round(v * 2.55))

@@ -196,12 +196,12 @@
       <translation>To extend battery life: 50–80 %</translation>
     </message>
     <message>
-      <location filename="../qml/ChargePopup.qml" line="154" />
+      <location filename="../qml/ChargePopup.qml" line="158" />
       <source>Cancelar</source>
       <translation>Cancel</translation>
     </message>
     <message>
-      <location filename="../qml/ChargePopup.qml" line="155" />
+      <location filename="../qml/ChargePopup.qml" line="159" />
       <source>Aplicar</source>
       <translation>Apply</translation>
     </message>
@@ -392,31 +392,31 @@
     <name>GamesPage</name>
     <message>
       <location filename="../qml/GamesPage.qml" line="18" />
-      <location filename="../qml/GamesPage.qml" line="358" />
+      <location filename="../qml/GamesPage.qml" line="359" />
       <source>Silencioso</source>
       <translation>Quiet</translation>
     </message>
     <message>
       <location filename="../qml/GamesPage.qml" line="18" />
-      <location filename="../qml/GamesPage.qml" line="359" />
+      <location filename="../qml/GamesPage.qml" line="360" />
       <source>Equilibrado</source>
       <translation>Balanced</translation>
     </message>
     <message>
       <location filename="../qml/GamesPage.qml" line="19" />
-      <location filename="../qml/GamesPage.qml" line="360" />
+      <location filename="../qml/GamesPage.qml" line="361" />
       <source>Rendimiento</source>
       <translation>Performance</translation>
     </message>
     <message>
       <location filename="../qml/GamesPage.qml" line="19" />
-      <location filename="../qml/GamesPage.qml" line="361" />
+      <location filename="../qml/GamesPage.qml" line="362" />
       <source>Sin cambios</source>
       <translation>No changes</translation>
     </message>
     <message>
       <location filename="../qml/GamesPage.qml" line="27" />
-      <location filename="../qml/GamesPage.qml" line="179" />
+      <location filename="../qml/GamesPage.qml" line="180" />
       <source>Resto de juegos</source>
       <translation>Other games</translation>
     </message>
@@ -481,112 +481,112 @@
       <translation> also changes the mode while gaming. If both are active, they will conflict.</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="123" />
+      <location filename="../qml/GamesPage.qml" line="124" />
       <source>Desactivarlo</source>
       <translation>Disable it</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="153" />
+      <location filename="../qml/GamesPage.qml" line="154" />
       <source>Biblioteca</source>
       <translation>Library</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="155" />
+      <location filename="../qml/GamesPage.qml" line="156" />
       <source> juegos</source>
       <translation> games</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="162" />
+      <location filename="../qml/GamesPage.qml" line="163" />
       <source>Volver a leer la biblioteca</source>
       <translation>Reload library</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="179" />
+      <location filename="../qml/GamesPage.qml" line="180" />
       <source>juegos sin perfil propio</source>
       <translation>games without their own profile</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="223" />
+      <location filename="../qml/GamesPage.qml" line="224" />
       <source>jugando ahora</source>
       <translation>playing now</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="230" />
+      <location filename="../qml/GamesPage.qml" line="231" />
       <source>predet.</source>
       <translation>default</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="251" />
+      <location filename="../qml/GamesPage.qml" line="252" />
       <source>Proceso de otro juego (ej. sober, wine64)</source>
       <translation>Process of another game (e.g. sober, wine64)</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="263" />
+      <location filename="../qml/GamesPage.qml" line="264" />
       <source>Añadir</source>
       <translation>Add</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="349" />
+      <location filename="../qml/GamesPage.qml" line="350" />
       <source>Modo al jugar</source>
       <translation>Mode while playing</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="355" />
+      <location filename="../qml/GamesPage.qml" line="356" />
       <source>Predeterminado</source>
       <translation>Default</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="356" />
+      <location filename="../qml/GamesPage.qml" line="357" />
       <source>Lo mismo que el resto de juegos: </source>
       <translation>Same as other games: </translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="358" />
+      <location filename="../qml/GamesPage.qml" line="359" />
       <source>Para juegos ligeros o con batería</source>
       <translation>For light games or on battery</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="359" />
+      <location filename="../qml/GamesPage.qml" line="360" />
       <source>Menos ruido, rendimiento suficiente</source>
       <translation>Less noise, enough performance</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="360" />
+      <location filename="../qml/GamesPage.qml" line="361" />
       <source>Toda la potencia</source>
       <translation>Full power</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="361" />
+      <location filename="../qml/GamesPage.qml" line="362" />
       <source>Vórtice no toca nada con este juego</source>
       <translation>Vórtice doesn't change anything for this game</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="401" />
+      <location filename="../qml/GamesPage.qml" line="402" />
       <source>Boost de ventiladores</source>
       <translation>Fan boost</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="407" />
+      <location filename="../qml/GamesPage.qml" line="408" />
       <source>requiere servicio</source>
       <translation>requires service</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="408" />
+      <location filename="../qml/GamesPage.qml" line="409" />
       <source>automático</source>
       <translation>automatic</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="431" />
+      <location filename="../qml/GamesPage.qml" line="432" />
       <source>Al cerrar el juego se restaura el modo anterior y los ventiladores vuelven a automático. </source>
       <translation>When the game closes, the previous mode is restored and fans return to automatic. </translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="432" />
+      <location filename="../qml/GamesPage.qml" line="433" />
       <source>Si cambias el modo a mano durante la partida, se respeta.</source>
       <translation>If you change the mode manually during the game, it is respected.</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="440" />
+      <location filename="../qml/GamesPage.qml" line="441" />
       <source>Quitar de la lista</source>
       <translation>Remove from list</translation>
     </message>
@@ -786,128 +786,128 @@
       <translation>Performance</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="110" />
+      <location filename="../qml/Main.qml" line="117" />
       <source>Corriente</source>
       <translation>Power source</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="110" />
+      <location filename="../qml/Main.qml" line="117" />
       <source>batería</source>
       <translation>battery</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="110" />
+      <location filename="../qml/Main.qml" line="117" />
       <source>enchufado</source>
       <translation>plugged in</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="112" />
+      <location filename="../qml/Main.qml" line="119" />
       <source>Servicio</source>
       <translation>Service</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="113" />
+      <location filename="../qml/Main.qml" line="120" />
       <source>no instalado</source>
       <translation>not installed</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="113" />
+      <location filename="../qml/Main.qml" line="120" />
       <source>activo</source>
       <translation>active</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="118" />
+      <location filename="../qml/Main.qml" line="125" />
       <source>Modo</source>
       <translation>Mode</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="135" />
+      <location filename="../qml/Main.qml" line="142" />
       <source>CPU</source>
       <translation>CPU</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="139" />
-      <location filename="../qml/Main.qml" line="156" />
+      <location filename="../qml/Main.qml" line="152" />
+      <location filename="../qml/Main.qml" line="175" />
       <source>Uso</source>
       <translation>Usage</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="140" />
+      <location filename="../qml/Main.qml" line="153" />
       <source>Frecuencia</source>
       <translation>Frequency</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="140" />
+      <location filename="../qml/Main.qml" line="153" />
       <source>GHz</source>
       <translation>GHz</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="146" />
+      <location filename="../qml/Main.qml" line="159" />
       <source>GPU</source>
       <translation>GPU</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="152" />
+      <location filename="../qml/Main.qml" line="171" />
       <source>No se detectó una gráfica compatible</source>
       <translation>No compatible GPU detected</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="153" />
+      <location filename="../qml/Main.qml" line="172" />
       <source>Vórtice lee gráficas NVIDIA (con su driver), AMD e Intel.</source>
       <translation>Vórtice reads NVIDIA (with its driver), AMD and Intel GPUs.</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="157" />
+      <location filename="../qml/Main.qml" line="176" />
       <source>Consumo</source>
       <translation>Power</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="158" />
+      <location filename="../qml/Main.qml" line="177" />
       <source>W</source>
       <translation>W</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="159" />
+      <location filename="../qml/Main.qml" line="178" />
       <source>Reloj</source>
       <translation>Clock</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="159" />
+      <location filename="../qml/Main.qml" line="178" />
       <source>MHz</source>
       <translation>MHz</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="195" />
+      <location filename="../qml/Main.qml" line="214" />
       <source>Ventiladores no expuestos</source>
       <translation>Fans not exposed</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="196" />
+      <location filename="../qml/Main.qml" line="215" />
       <source>Este equipo no informa de sus ventiladores al kernel. Si tu modelo tiene un driver de la comunidad, Vórtice los mostrará al instalarlo.</source>
       <translation>This laptop doesn't report its fans to the kernel. If your model has a community driver, Vórtice will show them once it's installed.</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="211" />
+      <location filename="../qml/Main.qml" line="230" />
       <source>Ventilador CPU</source>
       <translation>CPU fan</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="211" />
+      <location filename="../qml/Main.qml" line="230" />
       <source>Ventilador GPU</source>
       <translation>GPU fan</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="230" />
+      <location filename="../qml/Main.qml" line="249" />
       <source>Batería</source>
       <translation>Battery</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="231" />
+      <location filename="../qml/Main.qml" line="250" />
       <source>Sin batería</source>
       <translation>No battery</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="231" />
+      <location filename="../qml/Main.qml" line="250" />
       <source>Equipo de escritorio o batería no detectada.</source>
       <translation>Desktop computer or battery not detected.</translation>
     </message>
@@ -1123,58 +1123,78 @@
       <translation>System</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="174" />
+      <location filename="../qml/SettingsPage.qml" line="178" />
+      <source>Color de acento</source>
+      <translation>Accent color</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="183" />
+      <source>Marca del portátil</source>
+      <translation>Laptop brand</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="184" />
+      <source>Luces del teclado</source>
+      <translation>Keyboard lights</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="185" />
+      <source>Ámbar</source>
+      <translation>Amber</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="204" />
       <source>Componentes</source>
       <translation>Components</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="177" />
+      <location filename="../qml/SettingsPage.qml" line="207" />
       <source>Servicio de hardware</source>
       <translation>Hardware service</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="177" />
+      <location filename="../qml/SettingsPage.qml" line="207" />
       <source>no instalado</source>
       <translation>not installed</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="177" />
-      <location filename="../qml/SettingsPage.qml" line="178" />
+      <location filename="../qml/SettingsPage.qml" line="207" />
+      <location filename="../qml/SettingsPage.qml" line="208" />
       <source>activo</source>
       <translation>active</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="178" />
+      <location filename="../qml/SettingsPage.qml" line="208" />
       <source>Agente de juegos</source>
       <translation>Game agent</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="178" />
+      <location filename="../qml/SettingsPage.qml" line="208" />
       <source>detenido</source>
       <translation>stopped</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="179" />
+      <location filename="../qml/SettingsPage.qml" line="209" />
       <source>Controlador de luces</source>
       <translation>Lighting controller</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="179" />
+      <location filename="../qml/SettingsPage.qml" line="209" />
       <source>detectado</source>
       <translation>detected</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="179" />
+      <location filename="../qml/SettingsPage.qml" line="209" />
       <source>no encontrado</source>
       <translation>not found</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="181" />
+      <location filename="../qml/SettingsPage.qml" line="211" />
       <source>Driver de plataforma</source>
       <translation>Platform driver</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="194" />
+      <location filename="../qml/SettingsPage.qml" line="224" />
       <source>Vórtice · software libre (GPL-3.0)
 </source>
       <translation>Vórtice · free software (GPL-3.0)

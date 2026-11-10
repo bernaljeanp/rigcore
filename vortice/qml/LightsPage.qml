@@ -61,12 +61,12 @@ Rectangle {
                 Cell {
                     label: qsTr("Controlador")
                     value: page.ls.available ? page.ls.device + " · " + (page.ls.path || "").replace("/dev/", "") : qsTr("no encontrado")
-                    tint: page.ls.available ? T.ink : T.amber
+                    tint: page.ls.available ? T.ink : T.warn
                 }
                 Cell {
                     label: qsTr("Al reiniciar o suspender")
                     value: page.ls.via === "service" ? qsTr("se reaplica") : page.ls.via === "direct" ? qsTr("se pierde · instala el servicio") : "—"
-                    tint: page.ls.via === "service" ? T.ink : T.amber
+                    tint: page.ls.via === "service" ? T.ink : T.warn
                 }
             }
         }
@@ -198,7 +198,7 @@ Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 54
                             Rectangle { anchors.fill: parent; color: opt.active ? T.bgRaised : (oh.hovered ? Qt.rgba(1, 1, 1, 0.018) : "transparent") }
-                            Rectangle { width: 3; height: parent.height; color: T.amber; visible: opt.active }
+                            Rectangle { width: 3; height: parent.height; color: hw.accent; visible: opt.active }
                             Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: T.rule }
                             Column {
                                 anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }

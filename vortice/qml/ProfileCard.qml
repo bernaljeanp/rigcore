@@ -54,7 +54,7 @@ Section {
                 Rectangle {   // marca de selección
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                     width: 3
-                    color: T.amber
+                    color: hw.accent
                     opacity: row.active ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: 160 } }
                 }
@@ -84,11 +84,11 @@ Section {
                     Rectangle {   // atajo de teclado
                         width: 22; height: 22; radius: 2
                         color: "transparent"
-                        border.color: row.active ? T.amber : T.ruleHi
+                        border.color: row.active ? hw.accent : T.ruleHi
                         Text {
                             anchors.centerIn: parent
                             text: row.index + 1
-                            color: row.active ? T.amber : T.ink3
+                            color: row.active ? hw.accent : T.ink3
                             font { family: T.mono; pixelSize: 11 }
                         }
                     }

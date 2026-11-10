@@ -73,7 +73,7 @@ Popup {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 56
                 Rectangle { anchors.fill: parent; color: opt.active ? T.bgRaised : (oh.hovered ? Qt.rgba(1, 1, 1, 0.018) : "transparent") }
-                Rectangle { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: 3; color: T.amber; visible: opt.active }
+                Rectangle { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: 3; color: hw.accent; visible: opt.active }
                 Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: T.rule }
                 Column {
                     anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
@@ -105,7 +105,7 @@ Popup {
                 Text { text: range.first + " %"; color: T.ink; font { family: T.mono; pixelSize: 13 } }
                 Item { Layout.fillWidth: true }
                 Text { text: qsTr("Para al"); color: T.ink2; font { family: T.sans; pixelSize: 13 } }
-                Text { text: range.second + " %"; color: T.amber; font { family: T.mono; pixelSize: 13 } }
+                Text { text: range.second + " %"; color: hw.accent; font { family: T.mono; pixelSize: 13 } }
             }
             RangeFader {
                 id: range
@@ -138,14 +138,18 @@ Popup {
                 property string label
                 property bool primary: false
                 signal clicked()
-                implicitWidth: bt.implicitWidth + 32; implicitHeight: 38; radius: 2
-                color: primary ? (bh.hovered ? "#FFC04D" : T.amber) : (bh.hovered ? T.bgRaised : "transparent")
-                border.color: primary ? "transparent" : T.ruleHi
+                implicitWidth: bt.implicitWidth + 32; implicitHeight: 38
+                color: "transparent"
+                Chamfer {
+                    anchors.fill: parent
+                    fill: b.primary ? (bh.hovered ? Qt.lighter(hw.accent, 1.15) : hw.accent) : (bh.hovered ? T.bgRaised : "transparent")
+                    stroke: b.primary ? "transparent" : T.ruleHi
+                }
                 Text {
                     id: bt
                     anchors.centerIn: parent
                     text: b.label
-                    color: b.primary ? "#1A1406" : T.ink
+                    color: b.primary ? T.bg : T.ink
                     font { family: T.sans; pixelSize: 14; weight: Font.DemiBold }
                 }
                 HoverHandler { id: bh; cursorShape: Qt.PointingHandCursor }

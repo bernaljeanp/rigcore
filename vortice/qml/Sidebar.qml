@@ -40,7 +40,7 @@ Rectangle {
                 Rectangle {
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom; topMargin: 14; bottomMargin: 14 }
                     width: 2
-                    color: T.amber
+                    color: hw.accent
                     visible: nav.active
                 }
                 Icon {

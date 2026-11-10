@@ -55,8 +55,8 @@ Section {
                     Text {
                         id: big
                         text: tc.asleep || tc.noSensor ? "—" : Math.round(gauge.shown)
-                        color: tc.asleep || tc.noSensor ? T.ink3 : gauge.animTint
-                        font { family: T.mono; pixelSize: Math.max(46, gauge.width * 0.17); weight: Font.Light }
+                        color: tc.asleep || tc.noSensor ? T.ink3 : tc.temp >= 82 ? gauge.animTint : T.ink
+                        font { family: T.display; pixelSize: Math.max(48, gauge.width * 0.18); weight: Font.Medium }
                     }
                     Text {
                         visible: !tc.asleep && !tc.noSensor

@@ -80,6 +80,13 @@ ApplicationWindow {
                         color: T.ink2
                         font { family: T.sans; pixelSize: 14 }
                     }
+                    Badge {
+                        Layout.leftMargin: 12
+                        visible: hw.caps.brand !== ""
+                        text: hw.caps.brand
+                        tint: hw.accent
+                        icon: Icons.gamepad
+                    }
                     Item { Layout.fillWidth: true }
 
                     component Status: Item {
@@ -111,13 +118,13 @@ ApplicationWindow {
                     Status {
                         label: qsTr("Servicio")
                         value: win.service ? qsTr("activo") : qsTr("no instalado")
-                        tint: win.service ? T.ink : T.amber
+                        tint: win.service ? T.ink : T.warn
                     }
                     Status {
                         visible: hw.caps.profiles
                         label: qsTr("Modo")
                         value: (win.profileNames[hw.profile] || "—").toLowerCase()
-                        tint: hw.profile === "performance" ? T.amber : T.ink
+                        tint: hw.profile === "performance" ? hw.accent : T.ink
                     }
                 }
             }
@@ -133,6 +140,12 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     label: qsTr("CPU")
+                    headerRight: Badge {
+                        visible: hw.caps.cpuVendor !== ""
+                        text: hw.caps.cpuVendor === "amd" ? "AMD" : "Intel"
+                        tint: hw.caps.cpuVendor === "amd" ? "#ED1C24" : "#3D9BE9"
+                        icon: Icons.cpu
+                    }
                     source: "coretemp · " + hw.caps.cpuName
                     temp: win.cpu.temp || 0
                     metrics: [
@@ -144,6 +157,12 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     label: qsTr("GPU")
+                    headerRight: Badge {
+                        visible: hw.caps.gpuKind !== ""
+                        text: hw.caps.gpuKind === "nvidia" ? "NVIDIA" : hw.caps.gpuKind === "amd" ? "AMD" : "Intel"
+                        tint: hw.caps.gpuKind === "nvidia" ? "#76B900" : hw.caps.gpuKind === "amd" ? "#ED1C24" : "#3D9BE9"
+                        icon: Icons.gpu
+                    }
                     source: (hw.caps.gpuKind === "nvidia" ? "nvml" : hw.caps.gpuKind === "amd" ? "amdgpu" : hw.caps.gpuKind)
                             + (hw.caps.gpuKind ? " · " + hw.caps.gpuName : "")
                     temp: win.gpu.temp || 0
