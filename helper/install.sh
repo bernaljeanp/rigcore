@@ -10,9 +10,17 @@ LIBEXEC=/usr/local/libexec/vortice
 UNIT=/etc/systemd/system/vortice-helper.service
 POLICY=/etc/dbus-1/system.d/io.github.vortice.Helper.conf
 
+HWDB=/etc/udev/hwdb.d/70-vortice-alienware.hwdb
+reload_keys() {
+    systemd-hwdb update
+    # Reaplica el mapa de teclas a los teclados integrados sin reiniciar.
+    udevadm trigger --action=change --subsystem-match=input --property-match=ID_INPUT_KEYBOARD=1 || true
+}
+
 if [ "${1:-}" = "--uninstall" ]; then
     systemctl disable --now vortice-helper.service 2>/dev/null || true
     rm -f "$UNIT" "$POLICY"
+    if [ -f "$HWDB" ]; then rm -f "$HWDB"; reload_keys; fi
     rm -rf "$LIBEXEC"
     systemctl daemon-reload
     echo "Servicio de Vórtice desinstalado."
@@ -62,6 +70,13 @@ awk -v blocks="$BLOCKS" '{ if ($0 ~ /@ADMIN_POLICIES@/) printf "%s", blocks; els
 install -o root -g root -m 0644 "$TMP" "$POLICY"
 rm -f "$TMP"
 install -o root -g root -m 0644 "$SRC/vortice-helper.service" "$UNIT"
+
+# Teclas especiales de Alienware (F6 Boost, F7 Sigilo): solo en equipos Alienware;
+# la regla limita además el modelo, así que en otros no cambia nada.
+if [ "$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null)" = "Alienware" ]; then
+    install -o root -g root -m 0644 "$SRC/70-vortice-alienware.hwdb" "$HWDB"
+    reload_keys
+fi
 command -v restorecon >/dev/null && restorecon -R "$LIBEXEC" "$UNIT" "$POLICY" || true
 
 systemctl reload dbus.service 2>/dev/null || busctl call org.freedesktop.DBus \

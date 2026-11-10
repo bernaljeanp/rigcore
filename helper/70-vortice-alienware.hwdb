@@ -1,0 +1,14 @@
+# Vórtice: teclas especiales de Alienware que el escritorio no puede usar tal cual.
+# Códigos de escaneo leídos en el propio equipo con tools/scan_keys.py.
+#
+# F6 (Boost): el firmware envía KEY_PERFORMANCE (701), un código fuera del rango
+#   que XKB puede representar, así que el escritorio no lo ve -> KEY_PROG4 (XF86Launch4).
+# F7 (Sigilo): envía KEY_F20, que XKB traduce a XF86AudioMicMute y el escritorio
+#   usa para silenciar el micrófono (que ya tiene su propia tecla, del driver
+#   Dell Privacy) -> KEY_PROG3 (XF86Launch3).
+# F9 (Luces) envía KEY_F18 (XF86Launch9) y no necesita cambios.
+
+# Alienware 16X Aurora (AC16251)
+evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAlienware*:pnAlienware16XAurora*:*
+ KEYBOARD_KEY_68=prog4
+ KEYBOARD_KEY_6b=prog3

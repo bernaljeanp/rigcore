@@ -184,8 +184,7 @@ class Tray(QObject):
         self.refresh()
         self.icon.show()
         if install_key_shortcuts():
-            import subprocess
-            subprocess.Popen(["kbuildsycoca6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            apply_key_shortcuts()
 
     def _on_theme_file(self) -> None:
         # KDE guarda reescribiendo el archivo: hay que volver a vigilarlo.
@@ -363,10 +362,10 @@ X-KDE-autostart-after=panel
 
 
 # ---- teclas Alienware como atajos globales de KDE ------------------------------
-# F9 (luces) llega como XF86Launch9. F7 (sigilo) llega como F20 = "silenciar
-# micrófono" y lo captura el escritorio; Vórtice la reasigna a KEY_PROG3
-# (XF86Launch3) con una regla hwdb del servicio. F6 (Boost) depende del modelo.
-KEY_SHORTCUTS = {"lights": "Launch (9)", "stealth": "Launch (3)", "boost": "Launch (8)"}
+# F9 (luces) llega como XF86Launch9. F7 (sigilo, F20 = "silenciar micrófono") y
+# F6 (boost, KEY_PERFORMANCE sin símbolo XKB) se reasignan con la regla hwdb del
+# servicio a KEY_PROG3 (XF86Launch3) y KEY_PROG4 (XF86Launch4).
+KEY_SHORTCUTS = {"lights": "Launch (9)", "stealth": "Launch (3)", "boost": "Launch (4)"}
 SHORTCUTS_FILE = Path(os.path.expanduser("~/.local/share/applications/vortice-teclas.desktop"))
 
 
@@ -398,3 +397,23 @@ X-KDE-Shortcuts={key}
         return True
     except OSError:
         return False
+
+
+_QT_KEYS = {"Launch (3)": 0x010000A5, "Launch (4)": 0x010000A6, "Launch (8)": 0x010000AA, "Launch (9)": 0x010000AB}
+
+
+def apply_key_shortcuts() -> None:
+    """Tras cambiar el archivo, KDE conserva el atajo activo anterior: se le
+    indica también por D-Bus (kglobalaccel) la tecla nueva."""
+    import subprocess
+
+    subprocess.run(["kbuildsycoca6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+    names = {"lights": "Ciclar brillo de las luces", "stealth": "Modo sigilo", "boost": "Alternar modo Rendimiento"}
+    for action, key in KEY_SHORTCUTS.items():
+        code = _QT_KEYS.get(key)
+        if code is None:
+            continue
+        subprocess.run(["busctl", "--user", "call", "org.kde.kglobalaccel", "/kglobalaccel",
+                        "org.kde.KGlobalAccel", "setForeignShortcut", "asai", "4",
+                        SHORTCUTS_FILE.name, action, "Vórtice (teclas)", names[action], "1", str(code)],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
