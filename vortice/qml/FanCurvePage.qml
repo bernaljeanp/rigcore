@@ -26,7 +26,7 @@ Rectangle {
     onFanChanged: syncPoints()
     Component.onCompleted: syncPoints()
 
-    function label(f) { return f.replace("CPU Fan", "Ventilador CPU").replace("GPU Fan", "Ventilador GPU") }
+    function label(f) { return f.replace("CPU Fan", qsTr("Ventilador CPU")).replace("GPU Fan", qsTr("Ventilador GPU")) }
 
     function commit(changes) {
         var fans = {}
@@ -62,9 +62,9 @@ Rectangle {
                 Column {
                     Layout.fillWidth: true
                     spacing: 4
-                    Text { text: "Curvas de ventilador"; color: T.ink; font { family: T.sans; pixelSize: 22; weight: Font.DemiBold } }
+                    Text { text: qsTr("Curvas de ventilador"); color: T.ink; font { family: T.sans; pixelSize: 22; weight: Font.DemiBold } }
                     Text {
-                        text: "El boost sube con la temperatura según la curva. Sin curva, decide el firmware."
+                        text: qsTr("El boost sube con la temperatura según la curva. Sin curva, decide el firmware.")
                         color: T.ink2
                         font { family: T.sans; pixelSize: 14 }
                     }
@@ -77,10 +77,10 @@ Rectangle {
                         id: st
                         anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
                         spacing: 3
-                        Text { text: "Control"; color: T.ink3
+                        Text { text: qsTr("Control"); color: T.ink3
                                font { family: T.sans; pixelSize: 10; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase } }
                         Text {
-                            text: !page.service ? "requiere servicio" : page.cfg.enabled ? "curva de Vórtice" : "firmware"
+                            text: !page.service ? qsTr("requiere servicio") : page.cfg.enabled ? qsTr("curva de Vórtice") : qsTr("firmware")
                             color: !page.service ? T.amber : page.cfg.enabled ? T.amber : T.ink
                             font { family: T.mono; pixelSize: 13 }
                         }
@@ -93,7 +93,7 @@ Rectangle {
                     Toggle {
                         id: tg
                         anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
-                        label: "Curva activa"
+                        label: qsTr("Curva activa")
                         checked: !!page.cfg.enabled
                         onToggled: on => page.commit({ enabled: on })
                     }
@@ -112,8 +112,8 @@ Rectangle {
                 Layout.fillHeight: true
                 label: page.label(page.fan)
                 source: page.live.temp !== undefined && page.live.temp !== null
-                        ? Math.round(page.live.temp) + " °C · curva " + Math.round(page.evaluate(page.points, page.live.temp)) + " %"
-                        : "arrastra los puntos"
+                        ? Math.round(page.live.temp) + qsTr(" °C · curva ") + Math.round(page.evaluate(page.points, page.live.temp)) + " %"
+                        : qsTr("arrastra los puntos")
 
                 Canvas {
                     id: chart
@@ -227,7 +227,7 @@ Rectangle {
             Section {
                 Layout.preferredWidth: 340
                 Layout.fillHeight: true
-                label: "Ventilador"
+                label: qsTr("Ventilador")
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -268,7 +268,7 @@ Rectangle {
                         Layout.preferredHeight: 52
                         Toggle {
                             anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
-                            label: "Misma curva para todos"
+                            label: qsTr("Misma curva para todos")
                             checked: page.linked
                             onToggled: on => page.commit({ linked: on })
                         }
@@ -278,14 +278,14 @@ Rectangle {
                     Text {
                         Layout.margins: T.pad
                         Layout.bottomMargin: 8
-                        text: "Punto de partida"
+                        text: qsTr("Punto de partida")
                         color: T.ink2
                         font { family: T.sans; pixelSize: T.labelSize; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase }
                     }
                     Repeater {
-                        model: [{ id: "silenciosa", name: "Silenciosa", desc: "Arranca tarde, por encima de 80 °C" },
-                                { id: "equilibrada", name: "Equilibrada", desc: "Empieza a 70 °C, al máximo a 90 °C" },
-                                { id: "agresiva", name: "Agresiva", desc: "Temperaturas bajas a costa de ruido" }]
+                        model: [{ id: "silenciosa", name: qsTr("Silenciosa"), desc: qsTr("Arranca tarde, por encima de 80 °C") },
+                                { id: "equilibrada", name: qsTr("Equilibrada"), desc: qsTr("Empieza a 70 °C, al máximo a 90 °C") },
+                                { id: "agresiva", name: qsTr("Agresiva"), desc: qsTr("Temperaturas bajas a costa de ruido") }]
                         delegate: Item {
                             id: prow
                             required property var modelData
@@ -314,10 +314,10 @@ Rectangle {
                         Layout.fillWidth: true
                         Layout.margins: T.pad
                         text: !page.service
-                              ? "Puedes preparar la curva ahora; se aplicará cuando instales el servicio de Vórtice."
+                              ? qsTr("Puedes preparar la curva ahora; se aplicará cuando instales el servicio de Vórtice.")
                               : (hw.helper || {}).hardwareCurve
-                              ? "Este equipo guarda la curva en su firmware: Vórtice la escribe allí al guardarla y funciona aunque el servicio se detenga."
-                              : "Si un perfil de juego pide más refuerzo, se usa el mayor de los dos. Al detener el servicio, los ventiladores vuelven a automático."
+                              ? qsTr("Este equipo guarda la curva en su firmware: Vórtice la escribe allí al guardarla y funciona aunque el servicio se detenga.")
+                              : qsTr("Si un perfil de juego pide más refuerzo, se usa el mayor de los dos. Al detener el servicio, los ventiladores vuelven a automático.")
                         color: page.service ? T.ink3 : T.amber
                         wrapMode: Text.WordWrap
                         font { family: T.sans; pixelSize: 13 }

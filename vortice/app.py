@@ -12,7 +12,8 @@ from pathlib import Path
 from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
 from PySide6.QtGui import QFontDatabase, QIcon
 
-from . import fancurve, games, hardware, lights
+from . import fancurve, games, hardware, i18n, lights
+from .i18n import tr
 
 HERE = Path(__file__).resolve().parent
 HISTORY = 90  # segundos de historial para las gráficas
@@ -140,7 +141,7 @@ class Backend(QObject):
     def _helper_write(self, method: str, sig: str, args: tuple, ok_msg: str) -> None:
         def work() -> None:
             ok, err = hardware.helper_call(method, sig, *args)
-            self.notify.emit(ok_msg if ok else f"No se pudo aplicar: {err}", ok)
+            self.notify.emit(ok_msg if ok else tr("No se pudo aplicar: {err}").format(err=err), ok)
             self.refreshHelper()
 
         threading.Thread(target=work, daemon=True).start()
@@ -149,11 +150,11 @@ class Backend(QObject):
     def setFanBoost(self, index: int, value: int) -> None:
         pct = round(value / 255 * 100)
         self._helper_write("SetFanBoost", "uu", (index, value),
-                           f"Boost del ventilador al {pct} %" if value else "Ventilador en automático")
+                           tr("Ventilador reforzado al {pct} %").format(pct=pct) if value else tr("Ventilador en automático"))
 
     @Slot(str, int, int)
     def setCharge(self, mode: str, start: int, stop: int) -> None:
-        self._helper_write("SetCharge", "suu", (mode, start, stop), "Configuración de carga aplicada")
+        self._helper_write("SetCharge", "suu", (mode, start, stop), tr("Configuración de carga aplicada"))
 
     # ---- perfiles por juego -------------------------------------------------
     gamesChanged = Signal()
@@ -279,7 +280,7 @@ class Backend(QObject):
     def installAgent(self) -> None:
         def work() -> None:
             ok, out = games.install_agent()
-            self.notify.emit("Agente de juegos activo" if ok else f"No se pudo activar el agente: {out}", ok)
+            self.notify.emit(tr("Agente de juegos activo") if ok else tr("No se pudo activar el agente: {err}").format(err=out), ok)
 
         threading.Thread(target=work, daemon=True).start()
 
@@ -287,7 +288,7 @@ class Backend(QObject):
     def disableConflict(self, unit: str) -> None:
         def work() -> None:
             ok, out = games.disable_service(unit)
-            self.notify.emit(f"{unit} desactivado" if ok else f"No se pudo desactivar: {out}", ok)
+            self.notify.emit(tr("{unit} desactivado").format(unit=unit) if ok else tr("No se pudo desactivar: {err}").format(err=out), ok)
             self.refreshGames()
 
         threading.Thread(target=work, daemon=True).start()
@@ -332,7 +333,7 @@ class Backend(QObject):
                 except (OSError, RuntimeError, ValueError) as e:
                     ok, err = False, str(e)
             if not ok:
-                self.notify.emit(f"Luces: {err}", False)
+                self.notify.emit(tr("Luces: {err}").format(err=err), False)
 
     def _reload_lights_if_changed(self) -> None:
         try:
@@ -411,7 +412,7 @@ class Backend(QObject):
         try:
             cfg = fancurve.validate(json.loads(payload))
         except (ValueError, TypeError, KeyError, IndexError) as e:
-            self.notify.emit(f"Curva no válida: {e}", False)
+            self.notify.emit(tr("Curva no válida: {err}").format(err=e), False)
             return
         os.makedirs(os.path.dirname(self.CURVE_CFG), exist_ok=True)
         with open(self.CURVE_CFG, "w") as f:
@@ -420,7 +421,7 @@ class Backend(QObject):
             self._helper["curve"] = cfg          # respuesta inmediata en la interfaz
             self.helperChanged.emit()
             self._helper_write("SetFanCurve", "s", (json.dumps(cfg),),
-                               "Curva activada" if cfg["enabled"] else "Curva guardada")
+                               tr("Curva activada") if cfg["enabled"] else tr("Curva guardada"))
         else:
             self.helperChanged.emit()
 
@@ -429,15 +430,24 @@ class Backend(QObject):
 
     @Slot(str, str)
     def setBiosOption(self, name: str, value: str) -> None:
-        msg = {"EnableSecondary": "Funciones especiales primero (sin Fn)",
-               "DisableStandard": "Teclas F1–F12 primero (especiales con Fn)",
-               "Enabled": "Fn+Esc activado", "Disabled": "Fn+Esc desactivado"}.get(value, "Guardado en la BIOS")
+        msg = tr({"EnableSecondary": "Funciones especiales primero (sin Fn)",
+                  "DisableStandard": "Teclas F1–F12 primero (especiales con Fn)",
+                  "Enabled": "Fn+Esc activado", "Disabled": "Fn+Esc desactivado"}.get(value, "Guardado en la BIOS"))
         self._helper_write("SetBiosOption", "ss", (name, value), msg)
 
     @Property(bool, notify=settingsChanged)
     def autostart(self) -> bool:
         from .tray import AUTOSTART
         return AUTOSTART.exists()
+
+    @Property(str, constant=True)
+    def langSetting(self) -> str:
+        return i18n.saved_lang()
+
+    @Slot(str)
+    def setLang(self, lang: str) -> None:
+        i18n.save_lang(lang)
+        self.notify.emit(tr("El idioma se aplicará al volver a abrir Vórtice"), True)
 
     @Slot(bool)
     def setAutostart(self, on: bool) -> None:
@@ -518,7 +528,9 @@ def main() -> int:
     app.setApplicationName("Vórtice")
     app.setDesktopFileName("vortice")
     app.setWindowIcon(QIcon(str(HERE / "qml" / "icon.svg")))
+    lang = i18n.install(app)
     backend = Backend()
+    backend._lang = lang
 
     if tray_mode:
         if not QSystemTrayIcon.isSystemTrayAvailable():

@@ -11,7 +11,7 @@ ApplicationWindow {
     minimumWidth: 1120
     minimumHeight: 760
     visible: true
-    title: "Vórtice"
+    title: qsTr("Vórtice")
     color: T.rule   // el color de fondo hace de líneas divisorias entre zonas
     onVisibilityChanged: (v) => hw.setVisible(v !== Window.Minimized && v !== Window.Hidden)
 
@@ -30,7 +30,7 @@ ApplicationWindow {
         return -1
     }
     function n(v, d) { return (v === undefined || v === null) ? "—" : Number(v).toFixed(d || 0) }
-    readonly property var profileNames: ({ "power-saver": "Silencioso", "balanced": "Equilibrado", "performance": "Rendimiento" })
+    readonly property var profileNames: ({ "power-saver": qsTr("Silencioso"), "balanced": qsTr("Equilibrado"), "performance": qsTr("Rendimiento") })
 
     // Atajos 1, 2, 3 para cambiar de modo.
     Shortcut { sequence: "Ctrl+1"; onActivated: pages.currentIndex = 0 }
@@ -70,7 +70,7 @@ ApplicationWindow {
                     anchors { fill: parent; leftMargin: T.pad; rightMargin: 0 }
                     spacing: 0
                     Text {
-                        text: "Vórtice"
+                        text: qsTr("Vórtice")
                         color: T.ink
                         font { family: T.sans; pixelSize: 20; weight: Font.DemiBold }
                     }
@@ -107,15 +107,15 @@ ApplicationWindow {
                         }
                     }
 
-                    Status { label: "Corriente"; value: win.st.ac ? "enchufado" : "batería" }
+                    Status { label: qsTr("Corriente"); value: win.st.ac ? qsTr("enchufado") : qsTr("batería") }
                     Status {
-                        label: "Servicio"
-                        value: win.service ? "activo" : "no instalado"
+                        label: qsTr("Servicio")
+                        value: win.service ? qsTr("activo") : qsTr("no instalado")
                         tint: win.service ? T.ink : T.amber
                     }
                     Status {
                         visible: hw.caps.profiles
-                        label: "Modo"
+                        label: qsTr("Modo")
                         value: (win.profileNames[hw.profile] || "—").toLowerCase()
                         tint: hw.profile === "performance" ? T.amber : T.ink
                     }
@@ -132,31 +132,31 @@ ApplicationWindow {
                 TempCard {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    label: "CPU"
+                    label: qsTr("CPU")
                     source: "coretemp · " + hw.caps.cpuName
                     temp: win.cpu.temp || 0
                     metrics: [
-                        { label: "Uso", value: win.n(win.cpu.util), unit: "%" },
-                        { label: "Frecuencia", value: win.n(win.cpu.freq, 2), unit: "GHz" }
+                        { label: qsTr("Uso"), value: win.n(win.cpu.util), unit: "%" },
+                        { label: qsTr("Frecuencia"), value: win.n(win.cpu.freq, 2), unit: qsTr("GHz") }
                     ]
                 }
                 TempCard {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    label: "GPU"
+                    label: qsTr("GPU")
                     source: (hw.caps.gpuKind === "nvidia" ? "nvml" : hw.caps.gpuKind === "amd" ? "amdgpu" : hw.caps.gpuKind)
                             + (hw.caps.gpuKind ? " · " + hw.caps.gpuName : "")
                     temp: win.gpu.temp || 0
                     asleep: !!win.gpu.asleep
                     noSensor: !!win.st.t && !!hw.caps.gpuKind && !win.gpu.asleep && (win.gpu.temp === undefined || win.gpu.temp === null)
-                    notice: hw.caps.gpuKind ? "" : "No se detectó una gráfica compatible"
-                    noticeText: "Vórtice lee gráficas NVIDIA (con su driver), AMD e Intel."
+                    notice: hw.caps.gpuKind ? "" : qsTr("No se detectó una gráfica compatible")
+                    noticeText: qsTr("Vórtice lee gráficas NVIDIA (con su driver), AMD e Intel.")
                     noticeIcon: Icons.gpu
                     metrics: [
-                        { label: "Uso", value: win.n(win.gpu.util), unit: "%" },
-                        { label: "Consumo", value: win.n(win.gpu.power),
-                          unit: win.gpu.power_limit ? "/ " + win.n(win.gpu.power_limit) + " W" : "W" },
-                        { label: "Reloj", value: win.n(win.gpu.clock), unit: "MHz" }
+                        { label: qsTr("Uso"), value: win.n(win.gpu.util), unit: "%" },
+                        { label: qsTr("Consumo"), value: win.n(win.gpu.power),
+                          unit: win.gpu.power_limit ? "/ " + win.n(win.gpu.power_limit) + " W" : qsTr("W") },
+                        { label: qsTr("Reloj"), value: win.n(win.gpu.clock), unit: qsTr("MHz") }
                     ]
                 }
                 ProfileCard {
@@ -192,8 +192,8 @@ ApplicationWindow {
                         anchors.fill: parent
                         visible: hw.caps.fanCount === 0
                         icon: Icons.fan
-                        title: "Ventiladores no expuestos"
-                        text: "Este equipo no informa de sus ventiladores al kernel. Si tu modelo tiene un driver de la comunidad, Vórtice los mostrará al instalarlo."
+                        title: qsTr("Ventiladores no expuestos")
+                        text: qsTr("Este equipo no informa de sus ventiladores al kernel. Si tu modelo tiene un driver de la comunidad, Vórtice los mostrará al instalarlo.")
                     }
                     Row {
                         anchors.fill: parent
@@ -208,7 +208,7 @@ ApplicationWindow {
                                 Rectangle { visible: fanSlot.index > 0; width: 1; height: parent.height; color: T.rule }
                                 FanCell {
                                     anchors { fill: parent; margins: T.pad; topMargin: 16 }
-                                    label: (fanSlot.f.label || "").replace("CPU Fan", "Ventilador CPU").replace("GPU Fan", "Ventilador GPU")
+                                    label: (fanSlot.f.label || "").replace("CPU Fan", qsTr("Ventilador CPU")).replace("GPU Fan", qsTr("Ventilador GPU"))
                                     rpm: fanSlot.f.rpm || 0
                                     maxRpm: fanSlot.f.max || 5400
                                     boost: fanSlot.hIndex >= 0 ? win.helper.fans[fanSlot.hIndex].boost
@@ -226,8 +226,8 @@ ApplicationWindow {
                     visible: !hw.caps.hasBattery
                     Layout.preferredWidth: 340
                     Layout.fillHeight: true
-                    label: "Batería"
-                    Notice { anchors.fill: parent; icon: Icons.plug; title: "Sin batería"; text: "Equipo de escritorio o batería no detectada." }
+                    label: qsTr("Batería")
+                    Notice { anchors.fill: parent; icon: Icons.plug; title: qsTr("Sin batería"); text: qsTr("Equipo de escritorio o batería no detectada.") }
                 }
                 BatteryCard {
                     visible: hw.caps.hasBattery

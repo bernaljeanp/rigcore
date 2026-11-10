@@ -4,153 +4,172 @@
 
 <h1 align="center">Vórtice</h1>
 
+<p align="center"><b>English</b> · <a href="README.es.md">Español</a></p>
+
 <p align="center">
-  <b>El centro de control para portátiles gaming en Linux.</b><br>
-  Temperaturas, ventiladores, modos de rendimiento, batería, luces del teclado y perfiles por juego<br>
-  en una sola app, diseñada como un instrumento de medición y con un consumo mínimo.
+  <b>The control center for gaming laptops on Linux.</b><br>
+  Temperatures, fans, performance modes, battery, keyboard lighting and game profiles<br>
+  in a single app, designed like a measuring instrument and with minimal resource use.
 </p>
 
 <p align="center">
-  <img src="docs/panel.png" alt="Panel de Vórtice" width="900">
+  <img src="docs/en/panel.png" alt="Vórtice dashboard" width="900">
 </p>
 
-> **Estado: beta.** Probado a fondo en un Alienware 16X Aurora con Bazzite (KDE Plasma, Wayland).
-> El soporte de otras marcas sigue la documentación del kernel y de los proyectos de cada marca y
-> está probado con sysfs simulados, pero no en esos equipos: tu informe es lo que más ayuda (ver *Contribuir*).
+> **Status: beta.** Thoroughly tested on an Alienware 16X Aurora running Bazzite (KDE Plasma, Wayland).
+> Support for other brands follows the kernel documentation and each brand's community projects and
+> is tested against simulated sysfs trees, not on that hardware: your report helps the most (see *Contributing*).
 
-**Seguridad en el control manual:** en los ventiladores con velocidad manual (ThinkPad, Dell, HP
-Victus S), Vórtice fuerza el máximo a partir de 90 °C, devuelve el control al firmware con el valor 0
-y siempre al detener el servicio.
+**Safety with manual fan control:** on fans with manual speed control (ThinkPad, Dell, HP Victus S),
+Vórtice forces maximum speed from 90 °C, hands control back to the firmware for a value of 0, and always
+when the service stops.
 
-## Por qué Vórtice
+## Why Vórtice
 
-Los fabricantes no publican sus apps de control para Linux, y la comunidad ha
-respondido con decenas de herramientas sueltas: una por marca, a veces una por
-modelo, muchas abandonadas. Vórtice quiere ser **una sola app para todas las marcas**.
+Laptop vendors don't ship their control apps for Linux, and the community has
+answered with dozens of separate tools: one per brand, sometimes one per model,
+many of them abandoned. Vórtice aims to be **one app for every brand**.
 
-En lugar de escribir un driver por modelo, Vórtice usa las **interfaces estándar
-del kernel** (`hwmon`, `platform-profile`, `firmware-attributes`, `power_supply`,
-`hidraw`) y servicios estándar (`power-profiles-daemon` / `tuned-ppd`, NVML). Cada vez
-que el kernel añade soporte para un portátil, Vórtice lo aprovecha.
+Instead of writing a driver per model, Vórtice uses the **standard kernel interfaces**
+(`hwmon`, `platform-profile`, `firmware-attributes`, `power_supply`, `hidraw`) and standard
+services (`power-profiles-daemon` / `tuned-ppd`, NVML). Every time the kernel adds support for
+a laptop, Vórtice benefits from it.
 
-## Funciones
+## Features
 
 | | |
 |---|---|
-| **Panel** | Temperatura de CPU y GPU con indicadores de escala, uso, frecuencia, consumo, historial de 90 s, ventiladores y batería |
-| **Modos de rendimiento** | Silencioso · Equilibrado · Rendimiento por D-Bus; respeta a `tuned` y al escritorio. Teclas 1, 2, 3 |
-| **Perfiles por juego** | Modo y boost por juego (Steam con sus carátulas, o cualquier proceso). Un agente ligero los aplica al abrir el juego y restaura todo al cerrarlo |
-| **Curvas de ventilador** | Boost según la temperatura, con editor de puntos, histéresis y presets; las aplica el servicio aunque la app esté cerrada |
-| **Iluminación** | Color fijo, respirar, aurora y brillo del teclado (Alienware AW-ELC); se reaplica al arrancar y al volver de la suspensión |
-| **Batería** | Modos y umbrales de carga guardados en el firmware (Dell/Alienware y la interfaz estándar `charge_control_*`) |
-| **Bandeja y teclas** | Icono con el color del panel, menú rápido y teclas especiales (en Alienware: F6 Boost, F7 Sigilo, F9 Luces) |
-| **Gráficas** | NVIDIA (NVML), AMD (`amdgpu`) e Intel (`i915`/`xe`). En portátiles híbridos no despierta la gráfica dedicada en reposo |
-| **Ligera** | ~3 % de un núcleo con la ventana abierta; en la bandeja ~0,25 %. La ventana corre en su propio proceso y devuelve toda su memoria al cerrarse |
+| **Dashboard** | CPU and GPU temperature on scale gauges, usage, frequency, power, 90 s history, fans and battery |
+| **Performance modes** | Quiet · Balanced · Performance over D-Bus; plays nicely with `tuned` and the desktop. Keys 1, 2, 3 |
+| **Game profiles** | Mode and fan boost per game (Steam with cover art, or any process). A lightweight agent applies them when a game starts and restores everything when it closes |
+| **Fan curves** | Boost driven by temperature, with a point editor, hysteresis and presets; applied by the service even when the app is closed |
+| **Lighting** | Keyboard color, breathing, aurora and brightness; reapplied at boot and after resume |
+| **Battery** | Charging modes and thresholds stored in the firmware |
+| **Tray and keys** | Icon matching the panel color, quick menu and special keys (on Alienware: F6 Boost, F7 Stealth, F9 Lights) |
+| **GPUs** | NVIDIA (NVML), AMD (`amdgpu`) and Intel (`i915`/`xe`). On hybrid laptops it never wakes a sleeping discrete GPU |
+| **Lightweight** | ~3 % of one core with the window open; ~0.25 % in the tray. The window runs in its own process and returns all its memory when closed |
+| **Languages** | English and Spanish, following the system language; selectable in *Settings* |
 
 <table>
   <tr>
-    <td><img src="docs/juegos.png" alt="Perfiles por juego"></td>
-    <td><img src="docs/curvas.png" alt="Curvas de ventilador"></td>
+    <td><img src="docs/en/games.png" alt="Game profiles"></td>
+    <td><img src="docs/en/curves.png" alt="Fan curves"></td>
   </tr>
   <tr>
-    <td><img src="docs/luces.png" alt="Iluminación"></td>
-    <td><img src="docs/ajustes.png" alt="Ajustes"></td>
+    <td><img src="docs/en/lighting.png" alt="Lighting"></td>
+    <td><img src="docs/en/settings.png" alt="Settings"></td>
   </tr>
 </table>
 
-## Compatibilidad
+## Compatibility
 
-| Función | Dónde funciona hoy |
+| Feature | Where it works today |
 |---|---|
-| Temperatura de CPU | Cualquier Intel o AMD |
-| Gráfica | NVIDIA, AMD, Intel |
-| Leer ventiladores | La mayoría de portátiles con driver en el kernel |
-| Control de ventiladores y curvas | **Alienware / Dell G** (boost sobre el firmware) · **ThinkPad** (manual, con `thinkpad_acpi fan_control=1`) · **ASUS** (automático/máximo y curva guardada en el firmware) · **HP Omen/Victus** (automático/máximo; manual en Victus S) · **MSI** con msi-ec (Cooler Boost) · **Acer Predator/Nitro** con Linuwu-Sense · otros Dell y sobremesas (`pwmN` estándar) |
-| Límite de batería | Dell / Alienware (`dell-wmi-sysman`), interfaz estándar `charge_control_*` (ThinkPad, ASUS, Framework, MSI…), **Lenovo** (modo conservación) y **Acer** (límite al 80 %) |
-| Luces del teclado | **Alienware / Dell G** (AW-ELC: color, respirar, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, respirar, ciclo) · **Acer Predator/Nitro** con Linuwu-Sense (4 zonas: color, respirar, onda) · teclados **RGB estándar** (LED multicolor: Tuxedo/Clevo, System76…) · **brillo** de cualquier teclado retroiluminado |
-| Teclas especiales | Alienware 16X Aurora (otros modelos: aporta tus códigos con `tools/scan_keys.py`) |
-| Modos de rendimiento | Distros con `power-profiles-daemon` o `tuned-ppd` (si usas TLP, Vórtice lo indica) |
-| Distros | Con systemd. Probado en Bazzite (Fedora) |
+| CPU temperature | Any Intel or AMD CPU |
+| GPU | NVIDIA, AMD, Intel |
+| Fan readings | Most laptops with a kernel driver |
+| Fan control and curves | **Alienware / Dell G** (boost over the firmware curve) · **ThinkPad** (manual, with `thinkpad_acpi fan_control=1`) · **ASUS** (auto/max and a curve stored in the firmware) · **HP Omen/Victus** (auto/max; manual on Victus S) · **MSI** with msi-ec (Cooler Boost) · **Acer Predator/Nitro** with Linuwu-Sense · other Dell laptops and desktops (standard `pwmN`) |
+| Battery charge limit | Dell / Alienware (`dell-wmi-sysman`), standard `charge_control_*` interface (ThinkPad, ASUS, Framework, MSI…), **Lenovo** (conservation mode) and **Acer** (80 % limit) |
+| Keyboard lighting | **Alienware / Dell G** (AW-ELC: color, breathe, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, breathe, cycle) · **Acer Predator/Nitro** with Linuwu-Sense (4 zones: color, breathe, wave) · **standard RGB** keyboards (multicolor LED: Tuxedo/Clevo, System76…) · **brightness** of any backlit keyboard |
+| Special keys | Alienware 16X Aurora (other models: contribute your key codes with `tools/scan_keys.py`) |
+| Performance modes | Distros with `power-profiles-daemon` or `tuned-ppd` (if you use TLP, Vórtice tells you) |
+| Distros | systemd-based. Tested on Bazzite (Fedora) |
 
-## Instalación (desarrollo)
+## Installation
+
+**Any distro, including Bazzite, Silverblue and SteamOS** (universal installer: the app goes
+into your user account and, if you want, it installs the hardware service asking for your password):
 
 ```sh
 git clone https://github.com/bernaljeanp/vortice.git
 cd vortice
+./install.sh            # ./install.sh --uninstall to remove it
+```
+
+**Arch, CachyOS, EndeavourOS, Garuda:** `vortice-git` package (AUR, coming soon).
+**Fedora:** COPR repository (coming soon). Details in [packaging/](packaging/README.md).
+
+### From source (development)
+
+```sh
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-./vortice.sh               # ventana
-./vortice.sh --bandeja     # en la bandeja (se puede activar al iniciar sesión desde Ajustes)
+./vortice.sh               # window
+./vortice.sh --bandeja     # tray (can be enabled at login from Settings)
 ```
 
-### Servicio para ventiladores, batería y luces
+### Service for fans, battery and lighting
 
-Cambiar el boost, las curvas, el límite de carga, la iluminación persistente o el
-bloqueo de Fn requiere permisos de administrador. Vórtice usa un servicio mínimo que
-**solo** expone esas operaciones, valida cada valor y solo acepta a administradores
-del sistema (grupo `wheel`, `sudo` o `admin`):
+Changing fan boost, curves, the charge limit, persistent lighting or the Fn lock needs
+administrator rights. Vórtice uses a minimal service that exposes **only** those operations,
+validates every value and only accepts system administrators (group `wheel`, `sudo` or `admin`):
 
 ```sh
-pkexec "$PWD/helper/install.sh"              # instalar
-pkexec "$PWD/helper/install.sh" --uninstall  # desinstalar
+pkexec "$PWD/helper/install.sh"              # install
+pkexec "$PWD/helper/install.sh" --uninstall  # uninstall
 ```
 
-El código privilegiado se copia a `/usr/local/libexec/vortice/` (propiedad de root)
-y corre aislado por systemd: sin red, sin acceso a `/home`, con el sistema en solo
-lectura salvo `/sys`, y acceso solo a dispositivos `hidraw`. Al detenerse, devuelve los
-ventiladores a automático. De la BIOS solo puede cambiar las opciones de una lista
-blanca (bloqueo de Fn). En equipos Alienware instala además una regla `hwdb`, limitada
-al modelo, que reasigna las teclas especiales que el escritorio no puede usar.
+The privileged code is copied to a root-owned directory (`/usr/local/libexec/vortice/`, or the
+package's) and runs sandboxed by systemd: no network, no access to `/home`, the system read-only
+except `/sys`, and access only to `hidraw` devices. When it stops, fans go back to automatic. In the
+BIOS it can only change options from an allowlist (Fn lock). On Alienware laptops it also installs an
+`hwdb` rule, limited to the model, that remaps special keys the desktop can't use.
 
-Requiere PyGObject del sistema (`python3-gobject` en Fedora, `python3-gi` en
-Debian/Ubuntu, `python-gobject` en Arch).
+Requires the system's PyGObject (`python3-gobject` on Fedora, `python3-gi` on Debian/Ubuntu,
+`python-gobject` on Arch).
 
-## Desarrollo
+## Development
 
 ```sh
-.venv/bin/python -m unittest discover -s tests -v   # pruebas
-tools/measure.sh 20                                  # consumo de CPU de la ventana
-VORTICE_SHOT=captura.png ./vortice.sh --ventana      # captura automática
-./vortice.sh --ventana --pagina 2                    # abrir en una página
+.venv/bin/python -m unittest discover -s tests -v   # tests
+tools/measure.sh 20                                  # CPU usage of the window
+VORTICE_SHOT=shot.png ./vortice.sh --ventana         # automatic screenshot
+./vortice.sh --ventana --pagina 2                    # open on a given page
+VORTICE_LANG=en ./vortice.sh --ventana               # force a language (es, en)
 
-# Simular hardware ausente para probar los avisos:
-VORTICE_SIMULATE="no-gpu,gpu-asleep,no-ppd,tlp,no-fans,no-battery" ./vortice.sh --ventana
+# Simulate missing hardware to test the notices:
+VORTICE_SIMULATE="no-gpu,gpu-asleep,no-ppd,tlp,no-fans,no-battery,kbd-brightness" ./vortice.sh --ventana
 
-tools/build_shaders.sh                          # recompilar shaders (requirements-dev.txt)
-pkexec /usr/bin/python3 -I tools/scan_keys.py   # códigos de las teclas especiales
+tools/build_shaders.sh                          # rebuild shaders (requirements-dev.txt)
+pkexec /usr/bin/python3 -I tools/scan_keys.py   # special key codes
+.venv/bin/python tools/i18n_update.py --check   # English translation (vortice/i18n/vortice_en.ts)
 ```
 
-Estructura:
+The source strings are in Spanish; the English translation lives in `vortice/i18n/vortice_en.ts`
+(editable with Qt Linguist or by hand).
+
+Layout:
 
 ```
-vortice/hardware.py   detección y lectura de sensores (interfaces estándar)
+vortice/hardware.py   sensor detection and readings (standard interfaces)
 vortice/gpu.py        NVIDIA / AMD / Intel
-vortice/lights.py     controlador de luces AW-ELC
-vortice/fans.py       control de ventiladores por marca (boost, pwm, auto/máximo...)
-vortice/fancurve.py   curvas de ventilador
-vortice/agent.py      agente de perfiles por juego (servicio de usuario)
-vortice/games.py      biblioteca de juegos y configuración
-vortice/tray.py       bandeja, instancia única, teclas
-vortice/app.py        puente Python ↔ QML
-vortice/qml/          interfaz (Qt Quick)
-vortice/shaders/      indicadores en GLSL
-helper/               servicio privilegiado, regla de teclas e instalador
-tests/                pruebas con sysfs simulado
+vortice/lights.py     keyboard lighting per brand
+vortice/fans.py       fan control per brand (boost, pwm, auto/max...)
+vortice/fancurve.py   fan curves
+vortice/agent.py      game profile agent (user service)
+vortice/games.py      game library and configuration
+vortice/tray.py       tray, single instance, keys
+vortice/i18n.py       language (English translation in vortice/i18n/)
+vortice/app.py        Python ↔ QML bridge
+vortice/qml/          user interface (Qt Quick)
+vortice/shaders/      gauges in GLSL
+helper/               privileged service, key rule and installer
+tests/                tests with simulated sysfs
 ```
 
-## Contribuir
+## Contributing
 
-Lo más valioso ahora mismo: **probar Vórtice en tu portátil** y abrir un *issue* con
-tu modelo, distro y qué funciona o no. Ejecuta `.venv/bin/python -m vortice.hardware`
-y adjunta la salida.
+The most valuable thing right now: **try Vórtice on your laptop** and open an issue with your
+model, distro and what works or doesn't (there's a *compatibility report* template). Run
+`python -m vortice.hardware` and attach the output.
 
-## Licencia
+## License
 
-[GPL-3.0](LICENSE). Iconos de interfaz derivados de [Lucide](https://lucide.dev) (ISC).
-Fuentes IBM Plex Sans Condensed e IBM Plex Mono (SIL Open Font License).
-Protocolo de luces AW-ELC documentado por [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT).
-Interfaces de otras marcas estudiadas en la documentación del kernel y en
+[GPL-3.0](LICENSE). Interface icons derived from [Lucide](https://lucide.dev) (ISC).
+IBM Plex Sans Condensed and IBM Plex Mono fonts (SIL Open Font License).
+AW-ELC lighting protocol documented by [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT).
+Interfaces for other brands studied from the kernel documentation and from
 [msi-ec](https://github.com/BeardOverflow/msi-ec), [Linuwu-Sense](https://github.com/0x7375646F/Linuwu-Sense),
-[LenovoLegionLinux](https://github.com/johnfanv2/LenovoLegionLinux) y [asusctl](https://gitlab.com/asus-linux/asusctl)
-(sin copiar su código).
-Las carátulas de juegos que aparecen en las capturas pertenecen a sus respectivos dueños.
+[LenovoLegionLinux](https://github.com/johnfanv2/LenovoLegionLinux) and [asusctl](https://gitlab.com/asus-linux/asusctl)
+(without copying their code).
+Game cover art shown in the screenshots belongs to its respective owners.

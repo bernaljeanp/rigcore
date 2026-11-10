@@ -51,8 +51,8 @@ Rectangle {
             Column {
                 anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
                 spacing: 4
-                Text { text: "Ajustes"; color: T.ink; font { family: T.sans; pixelSize: 22; weight: Font.DemiBold } }
-                Text { text: "Teclado, inicio y estado de los componentes de Vórtice."; color: T.ink2; font { family: T.sans; pixelSize: 14 } }
+                Text { text: qsTr("Ajustes"); color: T.ink; font { family: T.sans; pixelSize: 22; weight: Font.DemiBold } }
+                Text { text: qsTr("Teclado, inicio y estado de los componentes de Vórtice."); color: T.ink2; font { family: T.sans; pixelSize: 14 } }
             }
         }
 
@@ -65,8 +65,8 @@ Rectangle {
             Section {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                label: "Teclas de función"
-                source: page.fnMode ? "BIOS · FnLockMode" : (page.helper.available ? "no disponible en este equipo" : "requiere servicio")
+                label: qsTr("Teclas de función")
+                source: page.fnMode ? "BIOS · FnLockMode" : (page.helper.available ? qsTr("no disponible en este equipo") : qsTr("requiere servicio"))
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -75,15 +75,15 @@ Rectangle {
                     spacing: 0
                     Rectangle { Layout.fillWidth: true; height: 1; color: T.rule }
                     OptionRow {
-                        title: "Funciones especiales primero"
-                        desc: "F6 Boost, F7 Sigilo y F9 Luces sin pulsar Fn; F1–F12 con Fn"
+                        title: qsTr("Funciones especiales primero")
+                        desc: qsTr("F6 Boost, F7 Sigilo y F9 Luces sin pulsar Fn; F1–F12 con Fn")
                         active: !!page.fnMode && page.fnMode.value === "EnableSecondary"
                         enabled_: !!page.fnMode
                         onPicked: hw.setBiosOption("FnLockMode", "EnableSecondary")
                     }
                     OptionRow {
-                        title: "Teclas F1–F12 primero"
-                        desc: "Las funciones especiales se usan con Fn"
+                        title: qsTr("Teclas F1–F12 primero")
+                        desc: qsTr("Las funciones especiales se usan con Fn")
                         active: !!page.fnMode && page.fnMode.value === "DisableStandard"
                         enabled_: !!page.fnMode
                         onPicked: hw.setBiosOption("FnLockMode", "DisableStandard")
@@ -94,18 +94,18 @@ Rectangle {
                         opacity: page.fnLock ? 1 : 0.4
                         Toggle {
                             anchors { left: parent.left; leftMargin: T.pad; verticalCenter: parent.verticalCenter }
-                            label: "Permitir cambiarlo con Fn+Esc"
+                            label: qsTr("Permitir cambiarlo con Fn+Esc")
                             checked: !!page.fnLock && page.fnLock.value === "Enabled"
                             onToggled: on => { if (page.fnLock) hw.setBiosOption("FnLock", on ? "Enabled" : "Disabled") }
                         }
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: T.rule }
 
-                    Label { Layout.margins: T.pad; Layout.bottomMargin: 8; text: "Teclas especiales" }
+                    Label { Layout.margins: T.pad; Layout.bottomMargin: 8; text: qsTr("Teclas especiales") }
                     Repeater {
-                        model: [{ k: "F6", v: "Alterna el modo Rendimiento" },
-                                { k: "F7", v: "Sigilo: Silencioso y luces tenues" },
-                                { k: "F9", v: "Brillo del teclado: 100 % → 40 % → apagado" }]
+                        model: [{ k: qsTr("F6"), v: qsTr("Alterna el modo Rendimiento") },
+                                { k: qsTr("F7"), v: qsTr("Sigilo: Silencioso y luces tenues") },
+                                { k: qsTr("F9"), v: qsTr("Brillo del teclado: 100 % → 40 % → apagado") }]
                         delegate: RowLayout {
                             required property var modelData
                             Layout.leftMargin: T.pad
@@ -123,9 +123,9 @@ Rectangle {
                     Text {
                         Layout.fillWidth: true
                         Layout.margins: T.pad
-                        text: "Estas opciones se guardan en la BIOS y valen al arrancar. Fn+Esc cambia el modo "
-                              + "al momento hasta el próximo reinicio, sin modificar la BIOS: si F6 o F7 solo "
-                              + "funcionan con Fn, pulsa Fn+Esc."
+                        text: qsTr("Estas opciones se guardan en la BIOS y valen al arrancar. Fn+Esc cambia el modo ")
+                              + qsTr("al momento hasta el próximo reinicio, sin modificar la BIOS: si F6 o F7 solo ")
+                              + qsTr("funcionan con Fn, pulsa Fn+Esc.")
                         color: T.ink3
                         wrapMode: Text.WordWrap
                         font { family: T.sans; pixelSize: 13 }
@@ -137,26 +137,48 @@ Rectangle {
             Section {
                 Layout.preferredWidth: 420
                 Layout.fillHeight: true
-                label: "Vórtice"
+                label: qsTr("Vórtice")
 
                 ColumnLayout {
                     anchors.fill: parent
                     spacing: 0
 
                     Toggle {
-                        label: "Iniciar en la bandeja con la sesión"
+                        label: qsTr("Iniciar en la bandeja con la sesión")
                         checked: hw.autostart
                         onToggled: on => hw.setAutostart(on)
                     }
                     Item { Layout.preferredHeight: 24 }
-                    Label { text: "Componentes"; Layout.bottomMargin: 10 }
+                    Label { text: qsTr("Idioma"); Layout.bottomMargin: 8 }
+                    Row {
+                        spacing: 8
+                        Repeater {
+                            // Los nombres de idioma van en su propio idioma (convención habitual).
+                            model: [{ id: "system", name: qsTr("Sistema") }, { id: "es", name: "Español" }, { id: "en", name: "English" }]
+                            delegate: Rectangle {
+                                id: lb
+                                required property var modelData
+                                property bool active: lang.current === modelData.id
+                                implicitWidth: lt.implicitWidth + 24; implicitHeight: 32; radius: 2
+                                color: active ? T.bgRaised : (lh.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent")
+                                border.color: active ? T.amber : T.ruleHi
+                                Text { id: lt; anchors.centerIn: parent; text: lb.modelData.name
+                                       color: lb.active ? T.ink : T.ink2; font { family: T.sans; pixelSize: 13; weight: Font.Medium } }
+                                HoverHandler { id: lh; cursorShape: Qt.PointingHandCursor }
+                                TapHandler { onTapped: { lang.current = lb.modelData.id; hw.setLang(lb.modelData.id) } }
+                            }
+                        }
+                        QtObject { id: lang; property string current: hw.langSetting }
+                    }
+                    Item { Layout.preferredHeight: 24 }
+                    Label { text: qsTr("Componentes"); Layout.bottomMargin: 10 }
                     Repeater {
                         model: [
-                            { k: "Servicio de hardware", v: page.helper.available ? "activo" : "no instalado", ok: !!page.helper.available },
-                            { k: "Agente de juegos", v: page.agent.alive ? "activo" : "detenido", ok: !!page.agent.alive },
-                            { k: "Controlador de luces", v: (hw.lightsState || {}).available ? (hw.lightsState.device || "detectado") : "no encontrado",
+                            { k: qsTr("Servicio de hardware"), v: page.helper.available ? qsTr("activo") : qsTr("no instalado"), ok: !!page.helper.available },
+                            { k: qsTr("Agente de juegos"), v: page.agent.alive ? qsTr("activo") : qsTr("detenido"), ok: !!page.agent.alive },
+                            { k: qsTr("Controlador de luces"), v: (hw.lightsState || {}).available ? (hw.lightsState.device || qsTr("detectado")) : qsTr("no encontrado"),
                               ok: !!(hw.lightsState || {}).available },
-                            { k: "Driver de plataforma", v: hw.caps.vendor || "—", ok: !!hw.caps.vendor }
+                            { k: qsTr("Driver de plataforma"), v: hw.caps.vendor || "—", ok: !!hw.caps.vendor }
                         ]
                         delegate: RowLayout {
                             required property var modelData
@@ -169,7 +191,7 @@ Rectangle {
                     Item { Layout.fillHeight: true }
                     Text {
                         Layout.fillWidth: true
-                        text: "Vórtice · software libre (GPL-3.0)\n" + hw.caps.model
+                        text: qsTr("Vórtice · software libre (GPL-3.0)\n") + hw.caps.model
                         color: T.ink3
                         font { family: T.mono; pixelSize: 11 }
                     }

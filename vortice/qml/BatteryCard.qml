@@ -5,7 +5,7 @@ import "Icons.js" as Icons
 
 Section {
     id: bc
-    label: "Batería"
+    label: qsTr("Batería")
 
     property int capacity: 0
     property string status: ""
@@ -17,21 +17,21 @@ Section {
 
     source: firmwareLimit ? "dell-wmi-sysman" : (limit !== null && limit !== undefined ? "power_supply" : "")
 
-    readonly property string statusText: status === "Charging" ? "Cargando"
-        : status === "Full" ? "Completa"
-        : status === "Not charging" ? "En pausa por el límite"
-        : status === "Discharging" ? "Usando batería" : status
+    readonly property string statusText: status === "Charging" ? qsTr("Cargando")
+        : status === "Full" ? qsTr("Completa")
+        : status === "Not charging" ? qsTr("En pausa por el límite")
+        : status === "Discharging" ? qsTr("Usando batería") : status
 
-    readonly property var modeNames: ({ "Adaptive": "Adaptativa", "Standard": "Estándar",
-        "Express": "Rápida", "PrimAcUse": "Siempre enchufado", "Custom": "Personalizada",
-        "Conservation": "Conservación", "Limit80": "Hasta 80 %" })
+    readonly property var modeNames: ({ "Adaptive": qsTr("Adaptativa"), "Standard": qsTr("Estándar"),
+        "Express": qsTr("Rápida"), "PrimAcUse": qsTr("Siempre enchufado"), "Custom": qsTr("Personalizada"),
+        "Conservation": qsTr("Conservación"), "Limit80": qsTr("Hasta 80 %") })
     readonly property var stopAt: service && service.mode === "Custom" ? service.stop
                                 : (limit !== null && limit !== undefined ? limit : null)
     readonly property string summary: service
         ? (service.mode === "Custom" && service.stop
-            ? (service.start ? service.start + "–" + service.stop + " %" : "hasta " + service.stop + " %")
+            ? (service.start ? service.start + "–" + service.stop + " %" : qsTr("hasta ") + service.stop + " %")
             : (modeNames[service.mode] || service.mode || "—"))
-        : firmwareLimit ? "en la BIOS" : "no disponible"
+        : firmwareLimit ? qsTr("en la BIOS") : qsTr("no disponible")
 
     property real shown: capacity
     Behavior on shown { NumberAnimation { duration: 700; easing.type: Easing.OutCubic } }
@@ -57,7 +57,7 @@ Section {
             }
         }
         Text {
-            text: (bc.ac ? "Enchufado · " : "") + bc.statusText
+            text: (bc.ac ? qsTr("Enchufado · ") : "") + bc.statusText
             color: T.ink2
             font { family: T.sans; pixelSize: 13 }
         }
@@ -80,7 +80,7 @@ Section {
                 visible: bc.stopAt !== null
                 x: Math.min(bar.width * (bc.stopAt || 0) / 100 - width / 2, bar.width - width)
                 y: 22
-                text: "límite " + bc.stopAt
+                text: qsTr("límite ") + bc.stopAt
                 color: T.amber
                 font { family: T.mono; pixelSize: 10 }
             }
@@ -105,12 +105,12 @@ Section {
                     Layout.fillWidth: true
                     spacing: 2
                     Text {
-                        text: "Límite de carga"
+                        text: qsTr("Límite de carga")
                         color: T.ink
                         font { family: T.sans; pixelSize: 14; weight: Font.Medium }
                     }
                     Text {
-                        text: bc.summary + (cfg.live ? "" : " · requiere servicio")
+                        text: bc.summary + (cfg.live ? "" : qsTr(" · requiere servicio"))
                         color: T.ink3
                         font { family: T.mono; pixelSize: 11 }
                     }

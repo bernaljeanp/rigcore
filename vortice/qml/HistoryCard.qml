@@ -4,14 +4,14 @@ import "Theme.js" as T
 // Historial térmico de 90 s: líneas finas sobre rejilla, como un registrador.
 Section {
     id: hc
-    label: "Historial"
+    label: qsTr("Historial")
     source: "90 s"
 
     property var cpu: []
     property var gpu: []
     readonly property var series: [
-        { name: "CPU", data: cpu, color: T.ink },
-        { name: "GPU", data: gpu, color: T.steel }
+        { name: qsTr("CPU"), data: cpu, color: T.ink },
+        { name: qsTr("GPU"), data: gpu, color: T.steel }
     ]
     onCpuChanged: chart.requestPaint()
 
@@ -65,7 +65,7 @@ Section {
             })
             // Eje de tiempo.
             ctx.textBaseline = "alphabetic"
-            ;[[0, "-90 s"], [45, "-45 s"], [89, "ahora"]].forEach(function (p) {
+            ;[[0, qsTr("-90 s")], [45, qsTr("-45 s")], [89, qsTr("ahora")]].forEach(function (p) {
                 var x = X(p[0])
                 ctx.fillStyle = T.ink3
                 var tw = ctx.measureText(p[1]).width

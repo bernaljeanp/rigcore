@@ -16,12 +16,15 @@ from PySide6.QtGui import QAction, QActionGroup, QColor, QIcon
 from PySide6.QtNetwork import QLocalServer
 from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 
+from .i18n import tr
+
 HERE = Path(__file__).resolve().parent
 RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "vortice"
 SOCKET = RUNTIME / "app.sock"        # proceso de la bandeja
 GUI_SOCKET = RUNTIME / "gui.sock"    # proceso de la ventana
 AUTOSTART = Path(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))) / "autostart" / "vortice.desktop"
 
+# Los nombres se traducen al mostrarlos (tr) para respetar el idioma elegido.
 MODES = [("power-saver", "Silencioso"), ("balanced", "Equilibrado"), ("performance", "Rendimiento")]
 EFFECTS = [("static", "Fijo"), ("breathe", "Respirar"), ("aurora", "Aurora"), ("off", "Apagado")]
 LIGHT_LEVELS = [100, 40, 0]          # ciclo de la tecla de luces (como en Zenit)
@@ -150,41 +153,41 @@ class Tray(QObject):
         self.mode_group = QActionGroup(self)
         self.mode_actions = {}
         for mid, name in MODES:
-            a = self.menu.addAction(name)
+            a = self.menu.addAction(tr(name))
             a.setCheckable(True)
             a.triggered.connect(lambda _=False, m=mid: self.b.setProfile(m))
             self.mode_group.addAction(a)
             self.mode_actions[mid] = a
 
         self.menu.addSeparator()
-        self.lights_menu = self.menu.addMenu("Luces")
+        self.lights_menu = self.menu.addMenu(tr("Luces"))
         self.fx_group = QActionGroup(self)
         self.fx_actions = {}
         for fid, name in EFFECTS:
-            a = self.lights_menu.addAction(name)
+            a = self.lights_menu.addAction(tr(name))
             a.setCheckable(True)
             a.triggered.connect(lambda _=False, f=fid: self._set_effect(f))
             self.fx_group.addAction(a)
             self.fx_actions[fid] = a
         self.lights_menu.addSeparator()
         for level in (100, 60, 30):
-            a = self.lights_menu.addAction(f"Brillo {level} %")
+            a = self.lights_menu.addAction(tr("Brillo {level} %").format(level=level))
             a.triggered.connect(lambda _=False, v=level: self._set_brightness(v))
 
-        self.stealth_action = self.menu.addAction("Sigilo")
+        self.stealth_action = self.menu.addAction(tr("Sigilo"))
         self.stealth_action.setCheckable(True)
         self.stealth_action.triggered.connect(lambda: run_action(self.b, self.windows, "stealth"))
 
-        self.games_action = self.menu.addAction("Perfiles por juego automáticos")
+        self.games_action = self.menu.addAction(tr("Perfiles por juego automáticos"))
         self.games_action.setCheckable(True)
         self.games_action.triggered.connect(lambda on: self.b.setGamesEnabled(on))
 
         self.menu.addSeparator()
-        self.autostart_action = self.menu.addAction("Iniciar con la sesión")
+        self.autostart_action = self.menu.addAction(tr("Iniciar con la sesión"))
         self.autostart_action.setCheckable(True)
         self.autostart_action.triggered.connect(set_autostart)
-        self.menu.addAction("Abrir Vórtice").triggered.connect(lambda: self.windows.show())
-        self.menu.addAction("Salir").triggered.connect(self._quit)
+        self.menu.addAction(tr("Abrir Vórtice")).triggered.connect(lambda: self.windows.show())
+        self.menu.addAction(tr("Salir")).triggered.connect(self._quit)
 
         self.menu.aboutToShow.connect(self.refresh)
         self.icon.setContextMenu(self.menu)
@@ -213,7 +216,7 @@ class Tray(QObject):
         if cpu is not None:
             parts.append(f"CPU {cpu:.0f} °C")
         if gpu.get("asleep"):
-            parts.append("GPU en reposo")
+            parts.append(tr("GPU en reposo"))
         elif gpu.get("temp") is not None:
             parts.append(f"GPU {gpu['temp']:.0f} °C")
         return " · ".join(parts) or "Vórtice"
@@ -278,7 +281,7 @@ def run_action(backend, windows: WindowController | None, action: str) -> str:
             backend._before_boost = cur
             target = "performance"
         backend.setProfile(target)
-        backend.notify.emit(f"Modo {dict(MODES).get(target, target)}", True)
+        backend.notify.emit(tr("Modo {name}").format(name=tr(dict(MODES).get(target, target))), True)
         return target
     if action == "stealth":
         # Sigilo (tecla F7, como en Zenit): Silencioso + luces tenues; otra pulsación lo deshace.
@@ -289,7 +292,7 @@ def run_action(backend, windows: WindowController | None, action: str) -> str:
             backend.setProfile(saved["profile"])
             if ls.get("available") and ls.get("via") != "none":
                 backend.setLights(*saved["lights"])
-            backend.notify.emit("Sigilo desactivado", True)
+            backend.notify.emit(tr("Sigilo desactivado"), True)
             return "off"
         backend._stealth = {"profile": backend.profile or "balanced",
                             "lights": (ls.get("effect", "static"), ls.get("color", "FFFFFF"),
@@ -297,7 +300,7 @@ def run_action(backend, windows: WindowController | None, action: str) -> str:
         backend.setProfile("power-saver")
         if ls.get("available") and ls.get("via") != "none":
             backend.setLights("static", "FFFFFF", 15)
-        backend.notify.emit("Sigilo activado: Silencioso y luces tenues", True)
+        backend.notify.emit(tr("Sigilo activado: Silencioso y luces tenues"), True)
         return "on"
     if action == "lights":
         ls = backend.lightsState
@@ -384,7 +387,7 @@ SHORTCUTS_FILE = Path(os.path.expanduser("~/.local/share/applications/vortice-te
 def install_key_shortcuts() -> bool:
     """Atajos globales vía archivo .desktop con X-KDE-Shortcuts (los lee kglobalaccel)."""
     cmd = launcher()
-    names = {"lights": "Ciclar brillo de las luces", "stealth": "Modo sigilo", "boost": "Alternar modo Rendimiento"}
+    names = {"lights": tr("Ciclar brillo de las luces"), "stealth": tr("Modo sigilo"), "boost": tr("Alternar modo Rendimiento")}
     body = f"""[Desktop Entry]
 Type=Application
 Name=Vórtice (teclas)
@@ -428,7 +431,7 @@ def apply_key_shortcuts() -> None:
     import subprocess
 
     subprocess.run(["kbuildsycoca6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
-    names = {"lights": "Ciclar brillo de las luces", "stealth": "Modo sigilo", "boost": "Alternar modo Rendimiento"}
+    names = {"lights": tr("Ciclar brillo de las luces"), "stealth": tr("Modo sigilo"), "boost": tr("Alternar modo Rendimiento")}
     for action, key in KEY_SHORTCUTS.items():
         code = _qt_key_code(key)
         if code is None:

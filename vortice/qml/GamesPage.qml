@@ -15,8 +15,8 @@ Rectangle {
     readonly property var agent: hw.agentInfo || ({})
     readonly property var list: hw.gamesList || []
     readonly property var running: agent.running || []
-    readonly property var modeNames: ({ "power-saver": "Silencioso", "balanced": "Equilibrado",
-                                        "performance": "Rendimiento", "none": "Sin cambios" })
+    readonly property var modeNames: ({ "power-saver": qsTr("Silencioso"), "balanced": qsTr("Equilibrado"),
+                                        "performance": qsTr("Rendimiento"), "none": qsTr("Sin cambios") })
 
     function gameById(id) {
         for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]
@@ -24,7 +24,7 @@ Rectangle {
     }
     function nameOf(id) { var g = gameById(id); return g ? g.name : id }
     readonly property var selected: selectedId === "default"
-        ? { id: "default", name: "Resto de juegos", detail: "Cualquier juego sin perfil propio",
+        ? { id: "default", name: qsTr("Resto de juegos"), detail: qsTr("Cualquier juego sin perfil propio"),
             mode: cfg.defaultMode, boost: cfg.defaultBoost, kind: "default" }
         : (gameById(selectedId) || { id: selectedId, name: selectedId, detail: "", mode: "", boost: 0 })
 
@@ -44,12 +44,12 @@ Rectangle {
                     Layout.fillWidth: true
                     spacing: 4
                     Text {
-                        text: "Perfiles por juego"
+                        text: qsTr("Perfiles por juego")
                         color: T.ink
                         font { family: T.sans; pixelSize: 22; weight: Font.DemiBold }
                     }
                     Text {
-                        text: "Al abrir un juego, Vórtice aplica su modo; al cerrarlo, restaura el anterior."
+                        text: qsTr("Al abrir un juego, Vórtice aplica su modo; al cerrarlo, restaura el anterior.")
                         color: T.ink2
                         font { family: T.sans; pixelSize: 14 }
                     }
@@ -65,13 +65,13 @@ Rectangle {
                 Cell {
                     Column {
                         spacing: 3
-                        Text { text: "Ahora"; color: T.ink3
+                        Text { text: qsTr("Ahora"); color: T.ink3
                                font { family: T.sans; pixelSize: 10; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase } }
                         Text {
                             text: page.agent.active ? page.nameOf(page.agent.active) + " · "
                                                       + (page.modeNames[(page.agent.applied || {}).mode] || "").toLowerCase()
-                                  : page.running.length ? page.nameOf(page.running[0]) + " · sin cambios"
-                                  : "ningún juego abierto"
+                                  : page.running.length ? page.nameOf(page.running[0]) + qsTr(" · sin cambios")
+                                  : qsTr("ningún juego abierto")
                             color: page.agent.active ? T.amber : T.ink2
                             font { family: T.mono; pixelSize: 13 }
                         }
@@ -80,10 +80,10 @@ Rectangle {
                 Cell {
                     Column {
                         spacing: 3
-                        Text { text: "Agente"; color: T.ink3
+                        Text { text: qsTr("Agente"); color: T.ink3
                                font { family: T.sans; pixelSize: 10; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase } }
                         Text {
-                            text: page.agent.alive ? "activo" : "detenido"
+                            text: page.agent.alive ? qsTr("activo") : qsTr("detenido")
                             color: page.agent.alive ? T.ink : T.amber
                             font { family: T.mono; pixelSize: 13 }
                         }
@@ -92,8 +92,8 @@ Rectangle {
                 Cell {
                     Column {
                         spacing: 6
-                        Toggle { label: "Automático"; checked: !!page.cfg.enabled; onToggled: on => hw.setGamesEnabled(on) }
-                        Toggle { label: "Solo con cargador"; checked: !!page.cfg.acOnly; onToggled: on => hw.setAcOnly(on) }
+                        Toggle { label: qsTr("Automático"); checked: !!page.cfg.enabled; onToggled: on => hw.setGamesEnabled(on) }
+                        Toggle { label: qsTr("Solo con cargador"); checked: !!page.cfg.acOnly; onToggled: on => hw.setAcOnly(on) }
                     }
                 }
             }
@@ -112,7 +112,7 @@ Rectangle {
                     anchors { fill: parent; leftMargin: T.pad + 3; rightMargin: T.pad }
                     Text {
                         Layout.fillWidth: true
-                        text: modelData.replace(".service", "") + " también cambia el modo al jugar. Si los dos están activos, competirán."
+                        text: modelData.replace(".service", "") + qsTr(" también cambia el modo al jugar. Si los dos están activos, competirán.")
                         color: T.ink
                         elide: Text.ElideRight
                         font { family: T.sans; pixelSize: 14 }
@@ -120,7 +120,7 @@ Rectangle {
                     Rectangle {
                         implicitWidth: dt.implicitWidth + 28; implicitHeight: 32; radius: 2
                         color: dh.hovered ? "#FFC04D" : T.amber
-                        Text { id: dt; anchors.centerIn: parent; text: "Desactivarlo"; color: "#1A1406"
+                        Text { id: dt; anchors.centerIn: parent; text: qsTr("Desactivarlo"); color: "#1A1406"
                                font { family: T.sans; pixelSize: 13; weight: Font.DemiBold } }
                         HoverHandler { id: dh; cursorShape: Qt.PointingHandCursor }
                         TapHandler { onTapped: hw.disableConflict(modelData) }
@@ -150,16 +150,16 @@ Rectangle {
                         Layout.preferredHeight: 48
                         Layout.leftMargin: T.pad
                         Layout.rightMargin: T.pad
-                        Text { text: "Biblioteca"; color: T.ink2
+                        Text { text: qsTr("Biblioteca"); color: T.ink2
                                font { family: T.sans; pixelSize: T.labelSize; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase } }
-                        Text { text: page.list.length + " juegos"; color: T.ink3; font { family: T.mono; pixelSize: 11 } }
+                        Text { text: page.list.length + qsTr(" juegos"); color: T.ink3; font { family: T.mono; pixelSize: 11 } }
                         Item { Layout.fillWidth: true }
                         Icon {
                             path: "M21 12a9 9 0 1 1-3-6.7L21 8 M21 3v5h-5"
                             size: 15; stroke: 1.6; color: rh.hovered ? T.ink : T.ink3
                             HoverHandler { id: rh; cursorShape: Qt.PointingHandCursor }
                             TapHandler { onTapped: hw.refreshGames() }
-                            ToolTip.visible: rh.hovered; ToolTip.text: "Volver a leer la biblioteca"
+                            ToolTip.visible: rh.hovered; ToolTip.text: qsTr("Volver a leer la biblioteca")
                         }
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: T.rule }
@@ -176,7 +176,7 @@ Rectangle {
                             id: row
                             required property var modelData
                             readonly property bool isDefault: modelData.id === "default"
-                            readonly property var g: isDefault ? { name: "Resto de juegos", detail: "juegos sin perfil propio" }
+                            readonly property var g: isDefault ? { name: qsTr("Resto de juegos"), detail: qsTr("juegos sin perfil propio") }
                                                                : modelData
                             readonly property bool active: page.selectedId === modelData.id
                             readonly property bool playing: page.running.indexOf(modelData.id) >= 0
@@ -220,14 +220,14 @@ Rectangle {
                                     }
                                     Text {
                                         width: parent.width
-                                        text: row.playing ? "jugando ahora" : (row.g.detail || "")
+                                        text: row.playing ? qsTr("jugando ahora") : (row.g.detail || "")
                                         color: row.playing ? T.amber : T.ink3
                                         elide: Text.ElideRight
                                         font { family: T.mono; pixelSize: 11 }
                                     }
                                 }
                                 Text {
-                                    text: row.mode === "" ? "predet." : (page.modeNames[row.mode] || row.mode).toLowerCase()
+                                    text: row.mode === "" ? qsTr("predet.") : (page.modeNames[row.mode] || row.mode).toLowerCase()
                                     color: row.mode === "performance" ? T.amber : row.mode === "" ? T.ink3 : T.ink2
                                     font { family: T.mono; pixelSize: 11 }
                                 }
@@ -248,7 +248,7 @@ Rectangle {
                         TextField {
                             id: procField
                             Layout.fillWidth: true
-                            placeholderText: "Proceso de otro juego (ej. sober, wine64)"
+                            placeholderText: qsTr("Proceso de otro juego (ej. sober, wine64)")
                             placeholderTextColor: T.ink3
                             color: T.ink
                             font { family: T.mono; pixelSize: 12 }
@@ -260,7 +260,7 @@ Rectangle {
                             implicitWidth: at.implicitWidth + 24; implicitHeight: 32; radius: 2
                             color: ah.hovered ? T.bgRaised : "transparent"
                             border.color: T.ruleHi
-                            Text { id: at; anchors.centerIn: parent; text: "Añadir"; color: T.ink
+                            Text { id: at; anchors.centerIn: parent; text: qsTr("Añadir"); color: T.ink
                                    font { family: T.sans; pixelSize: 13; weight: Font.Medium } }
                             HoverHandler { id: ah; cursorShape: Qt.PointingHandCursor }
                             TapHandler { onTapped: { hw.addProcess(procField.text); procField.text = "" } }
@@ -346,19 +346,19 @@ Rectangle {
                         Text {
                             Layout.topMargin: 28
                             Layout.bottomMargin: 10
-                            text: "Modo al jugar"
+                            text: qsTr("Modo al jugar")
                             color: T.ink2
                             font { family: T.sans; pixelSize: T.labelSize; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase }
                         }
                         Rectangle { Layout.fillWidth: true; height: 1; color: T.rule }
                         Repeater {
-                            model: (page.selectedId === "default" ? [] : [{ id: "", name: "Predeterminado",
-                                     desc: "Lo mismo que el resto de juegos: " + (page.modeNames[page.cfg.defaultMode] || "").toLowerCase() }])
+                            model: (page.selectedId === "default" ? [] : [{ id: "", name: qsTr("Predeterminado"),
+                                     desc: qsTr("Lo mismo que el resto de juegos: ") + (page.modeNames[page.cfg.defaultMode] || "").toLowerCase() }])
                                    .concat([
-                                     { id: "power-saver", name: "Silencioso", desc: "Para juegos ligeros o con batería" },
-                                     { id: "balanced", name: "Equilibrado", desc: "Menos ruido, rendimiento suficiente" },
-                                     { id: "performance", name: "Rendimiento", desc: "Toda la potencia" },
-                                     { id: "none", name: "Sin cambios", desc: "Vórtice no toca nada con este juego" }])
+                                     { id: "power-saver", name: qsTr("Silencioso"), desc: qsTr("Para juegos ligeros o con batería") },
+                                     { id: "balanced", name: qsTr("Equilibrado"), desc: qsTr("Menos ruido, rendimiento suficiente") },
+                                     { id: "performance", name: qsTr("Rendimiento"), desc: qsTr("Toda la potencia") },
+                                     { id: "none", name: qsTr("Sin cambios"), desc: qsTr("Vórtice no toca nada con este juego") }])
                             delegate: Item {
                                 id: opt
                                 required property var modelData
@@ -398,14 +398,14 @@ Rectangle {
                             Layout.fillWidth: true
                             Layout.topMargin: 26
                             Text {
-                                text: "Boost de ventiladores"
+                                text: qsTr("Boost de ventiladores")
                                 color: T.ink2
                                 font { family: T.sans; pixelSize: T.labelSize; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase }
                             }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: !page.service ? "requiere servicio"
-                                      : boostFader.value === 0 ? "automático" : Math.round(boostFader.value) + " %"
+                                text: !page.service ? qsTr("requiere servicio")
+                                      : boostFader.value === 0 ? qsTr("automático") : Math.round(boostFader.value) + " %"
                                 color: boostFader.value > 0 && page.service ? T.amber : T.ink3
                                 font { family: T.mono; pixelSize: 11 }
                             }
@@ -428,8 +428,8 @@ Rectangle {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Al cerrar el juego se restaura el modo anterior y los ventiladores vuelven a automático. "
-                                  + "Si cambias el modo a mano durante la partida, se respeta."
+                            text: qsTr("Al cerrar el juego se restaura el modo anterior y los ventiladores vuelven a automático. ")
+                                  + qsTr("Si cambias el modo a mano durante la partida, se respeta.")
                             color: T.ink3
                             wrapMode: Text.WordWrap
                             font { family: T.sans; pixelSize: 13 }
@@ -437,7 +437,7 @@ Rectangle {
                         Text {
                             visible: page.selected.kind === "process"
                             Layout.topMargin: 10
-                            text: "Quitar de la lista"
+                            text: qsTr("Quitar de la lista")
                             color: qh.hovered ? T.red : T.ink3
                             font { family: T.sans; pixelSize: 13; underline: qh.hovered }
                             HoverHandler { id: qh; cursorShape: Qt.PointingHandCursor }

@@ -10,13 +10,13 @@ Popup {
     signal apply(string mode, int start, int stop)
 
     readonly property var info: ({
-        "Adaptive":  ["Adaptativa", "Ajusta la carga según cómo usas el equipo"],
-        "Standard":  ["Estándar", "Carga completa a ritmo normal"],
-        "Express":   ["Rápida", "Carga más deprisa; desgasta más la batería"],
-        "PrimAcUse": ["Siempre enchufado", "Para equipos que casi nunca usan la batería"],
-        "Custom":    ["Personalizada", "Tú eliges cuándo empieza y cuándo para"],
-        "Conservation": ["Conservación", "Lenovo: mantiene la batería en torno al 60 %"],
-        "Limit80":   ["Limitar al 80 %", "Acer: deja de cargar al 80 %"]
+        "Adaptive":  [qsTr("Adaptativa"), qsTr("Ajusta la carga según cómo usas el equipo")],
+        "Standard":  [qsTr("Estándar"), qsTr("Carga completa a ritmo normal")],
+        "Express":   [qsTr("Rápida"), qsTr("Carga más deprisa; desgasta más la batería")],
+        "PrimAcUse": [qsTr("Siempre enchufado"), qsTr("Para equipos que casi nunca usan la batería")],
+        "Custom":    [qsTr("Personalizada"), qsTr("Tú eliges cuándo empieza y cuándo para")],
+        "Conservation": [qsTr("Conservación"), qsTr("Lenovo: mantiene la batería en torno al 60 %")],
+        "Limit80":   [qsTr("Limitar al 80 %"), qsTr("Acer: deja de cargar al 80 %")]
     })
     property string mode: ""
     property int start: 50
@@ -50,13 +50,13 @@ Popup {
             Layout.margins: T.pad
             spacing: 4
             Text {
-                text: "Carga de la batería"
+                text: qsTr("Carga de la batería")
                 color: T.ink
                 font { family: T.sans; pixelSize: 20; weight: Font.DemiBold }
             }
             Text {
                 width: parent.width
-                text: "Se guarda en el firmware: se mantiene aunque apagues o cambies de sistema."
+                text: qsTr("Se guarda en el firmware: se mantiene aunque apagues o cambies de sistema.")
                 color: T.ink2
                 wrapMode: Text.WordWrap
                 font { family: T.sans; pixelSize: 13 }
@@ -101,10 +101,10 @@ Popup {
             spacing: 6
             RowLayout {
                 Layout.fillWidth: true
-                Text { text: "Empieza a cargar al"; color: T.ink2; font { family: T.sans; pixelSize: 13 } }
+                Text { text: qsTr("Empieza a cargar al"); color: T.ink2; font { family: T.sans; pixelSize: 13 } }
                 Text { text: range.first + " %"; color: T.ink; font { family: T.mono; pixelSize: 13 } }
                 Item { Layout.fillWidth: true }
-                Text { text: "Para al"; color: T.ink2; font { family: T.sans; pixelSize: 13 } }
+                Text { text: qsTr("Para al"); color: T.ink2; font { family: T.sans; pixelSize: 13 } }
                 Text { text: range.second + " %"; color: T.amber; font { family: T.mono; pixelSize: 13 } }
             }
             RangeFader {
@@ -121,7 +121,7 @@ Popup {
                 onSecondChanged: pop.stop = second
             }
             Text {
-                text: "Para alargar la vida de la batería: 50–80 %"
+                text: qsTr("Para alargar la vida de la batería: 50–80 %")
                 color: T.ink3
                 font { family: T.mono; pixelSize: 11 }
             }
@@ -151,8 +151,8 @@ Popup {
                 HoverHandler { id: bh; cursorShape: Qt.PointingHandCursor }
                 TapHandler { onTapped: b.clicked() }
             }
-            Btn { label: "Cancelar"; onClicked: pop.close() }
-            Btn { label: "Aplicar"; primary: true; onClicked: { pop.apply(pop.mode, pop.start, pop.stop); pop.close() } }
+            Btn { label: qsTr("Cancelar"); onClicked: pop.close() }
+            Btn { label: qsTr("Aplicar"); primary: true; onClicked: { pop.apply(pop.mode, pop.start, pop.stop); pop.close() } }
         }
     }
 }

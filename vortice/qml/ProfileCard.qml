@@ -6,7 +6,7 @@ import "Icons.js" as Icons
 // Selector de modo: filas con marca lateral ámbar en la activa. Teclas 1, 2, 3.
 Section {
     id: pc
-    label: "Modo"
+    label: qsTr("Modo")
     property string current: ""
     property bool available: true
     property string manager: ""
@@ -14,19 +14,19 @@ Section {
     signal picked(string name)
 
     readonly property var modes: [
-        { id: "power-saver", name: "Silencioso",  desc: "Ventiladores al mínimo, más autonomía" },
-        { id: "balanced",    name: "Equilibrado", desc: "Para el día a día" },
-        { id: "performance", name: "Rendimiento", desc: "Toda la potencia para jugar" }
+        { id: "power-saver", name: qsTr("Silencioso"),  desc: qsTr("Ventiladores al mínimo, más autonomía") },
+        { id: "balanced",    name: qsTr("Equilibrado"), desc: qsTr("Para el día a día") },
+        { id: "performance", name: qsTr("Rendimiento"), desc: qsTr("Toda la potencia para jugar") }
     ]
 
     Notice {
         anchors.fill: parent
         visible: !pc.available
         icon: Icons.gauge
-        title: pc.manager ? "Tu sistema usa " + pc.manager : "Modos no disponibles"
+        title: pc.manager ? qsTr("Tu sistema usa ") + pc.manager : qsTr("Modos no disponibles")
         text: pc.manager
-              ? pc.manager + " gestiona la energía de este equipo. Cambia de modo desde " + pc.manager + " para no interferir con él."
-              : "Instala power-profiles-daemon (viene por defecto en KDE y GNOME) para cambiar de modo desde aquí."
+              ? pc.manager + qsTr(" gestiona la energía de este equipo. Cambia de modo desde ") + pc.manager + qsTr(" para no interferir con él.")
+              : qsTr("Instala power-profiles-daemon (viene por defecto en KDE y GNOME) para cambiar de modo desde aquí.")
     }
 
     ColumnLayout {
@@ -103,15 +103,15 @@ Section {
         Text {
             Layout.leftMargin: T.pad
             Layout.bottomMargin: 8
-            text: "Debajo de este modo"
+            text: qsTr("Debajo de este modo")
             color: T.ink3
             font { family: T.sans; pixelSize: 11; weight: Font.Medium; letterSpacing: 0.8; capitalization: Font.AllUppercase }
         }
         Repeater {
             model: [
-                { k: "tuned", v: pc.details.tuned },
-                { k: "firmware", v: pc.details.firmware ? pc.details.firmware + "  (" + pc.details.firmwareDriver + ")" : undefined },
-                { k: "servicio", v: "power-profiles" }
+                { k: qsTr("tuned"), v: pc.details.tuned },
+                { k: qsTr("firmware"), v: pc.details.firmware ? pc.details.firmware + "  (" + pc.details.firmwareDriver + ")" : undefined },
+                { k: qsTr("servicio"), v: qsTr("power-profiles") }
             ]
             delegate: RowLayout {
                 required property var modelData

@@ -13,8 +13,8 @@ Section {
     property string noticeText: ""
     property string noticeIcon: ""
 
-    readonly property string level: asleep ? "En reposo" : noSensor ? "Sin sensor" : temp >= 92 ? "Crítica"
-                                  : temp >= 82 ? "Alta" : temp >= 55 ? "Normal" : "Fría"
+    readonly property string level: asleep ? qsTr("En reposo") : noSensor ? qsTr("Sin sensor") : temp >= 92 ? qsTr("Crítica")
+                                  : temp >= 82 ? qsTr("Alta") : temp >= 55 ? qsTr("Normal") : qsTr("Fría")
 
     Notice {
         anchors.fill: parent
@@ -60,7 +60,7 @@ Section {
                     }
                     Text {
                         visible: !tc.asleep && !tc.noSensor
-                        text: "°C"
+                        text: qsTr("°C")
                         color: T.ink2
                         y: big.height * 0.18
                         font { family: T.mono; pixelSize: 15 }

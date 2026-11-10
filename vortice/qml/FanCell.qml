@@ -7,7 +7,7 @@ import "Icons.js" as Icons
 // Un ventilador: RPM, medidor horizontal y fader de boost.
 Item {
     id: fc
-    property string label: "Ventilador"
+    property string label: qsTr("Ventilador")
     property real rpm: 0
     property real maxRpm: 5400
     property var boost: null          // 0-255 según el kernel
@@ -69,14 +69,14 @@ Item {
                 font { family: T.mono; pixelSize: 40; weight: Font.Light }
             }
             Text {
-                text: "RPM"
+                text: qsTr("RPM")
                 color: T.ink2
                 anchors.baseline: rpmText.baseline
                 font { family: T.mono; pixelSize: 12 }
             }
         }
         Text {
-            text: fc.rpm === 0 ? "parado" : Math.round(fc.frac * 100) + " % del máximo"
+            text: fc.rpm === 0 ? qsTr("parado") : Math.round(fc.frac * 100) + qsTr(" % del máximo")
             color: T.ink3
             font { family: T.mono; pixelSize: 11 }
         }
@@ -112,15 +112,15 @@ Item {
             Layout.fillWidth: true
             Text {
                 // Alienware suma sobre el firmware ("boost"); otros fijan una velocidad.
-                text: fc.onOff ? "Velocidad" : fc.kind === "boost" ? "Boost" : "Velocidad mínima"
+                text: fc.onOff ? qsTr("Velocidad") : fc.kind === "boost" ? qsTr("Boost") : qsTr("Velocidad mínima")
                 color: T.ink2
                 font { family: T.sans; pixelSize: 13; weight: Font.Medium }
             }
             Item { Layout.fillWidth: true }
             Text {
-                text: !fc.canBoost ? "requiere servicio"
-                      : fc.onOff ? (fc.boosted ? "máximo" : "auto")
-                      : fader.value === 0 ? "auto" : Math.round(fader.value) + " %"
+                text: !fc.canBoost ? qsTr("requiere servicio")
+                      : fc.onOff ? (fc.boosted ? qsTr("máximo") : qsTr("auto"))
+                      : fader.value === 0 ? qsTr("auto") : Math.round(fader.value) + " %"
                 color: (fc.onOff ? fc.boosted : fader.value > 0) && fc.canBoost ? T.amber : T.ink3
                 font { family: T.mono; pixelSize: 11 }
             }
@@ -130,7 +130,7 @@ Item {
             visible: fc.onOff
             enabled: fc.canBoost
             opacity: enabled ? 1 : 0.35
-            label: "Máximo"
+            label: qsTr("Máximo")
             checked: fc.boosted
             onToggled: on => fc.boostRequested(on ? 255 : 0)
         }

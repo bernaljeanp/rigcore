@@ -35,9 +35,9 @@ Rectangle {
                 Column {
                     Layout.fillWidth: true
                     spacing: 4
-                    Text { text: "Iluminación"; color: T.ink; font { family: T.sans; pixelSize: 22; weight: Font.DemiBold } }
+                    Text { text: qsTr("Iluminación"); color: T.ink; font { family: T.sans; pixelSize: 22; weight: Font.DemiBold } }
                     Text {
-                        text: "Color, efecto y brillo del teclado. Se guarda en Vórtice, no en una app del fabricante."
+                        text: qsTr("Color, efecto y brillo del teclado. Se guarda en Vórtice, no en una app del fabricante.")
                         color: T.ink2
                         font { family: T.sans; pixelSize: 14 }
                     }
@@ -59,13 +59,13 @@ Rectangle {
                     }
                 }
                 Cell {
-                    label: "Controlador"
-                    value: page.ls.available ? page.ls.device + " · " + (page.ls.path || "").replace("/dev/", "") : "no encontrado"
+                    label: qsTr("Controlador")
+                    value: page.ls.available ? page.ls.device + " · " + (page.ls.path || "").replace("/dev/", "") : qsTr("no encontrado")
                     tint: page.ls.available ? T.ink : T.amber
                 }
                 Cell {
-                    label: "Al reiniciar o suspender"
-                    value: page.ls.via === "service" ? "se reaplica" : page.ls.via === "direct" ? "se pierde · instala el servicio" : "—"
+                    label: qsTr("Al reiniciar o suspender")
+                    value: page.ls.via === "service" ? qsTr("se reaplica") : page.ls.via === "direct" ? qsTr("se pierde · instala el servicio") : "—"
                     tint: page.ls.via === "service" ? T.ink : T.amber
                 }
             }
@@ -80,16 +80,16 @@ Rectangle {
             Section {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                label: "Vista previa"
-                source: page.effect === "aurora" ? "aurora" : page.effect === "off" ? "apagado"
+                label: qsTr("Vista previa")
+                source: page.effect === "aurora" ? "aurora" : page.effect === "off" ? qsTr("apagado")
                         : "#" + page.color_ + " · " + page.brightness + " %"
 
                 Notice {
                     anchors.fill: parent
                     visible: !page.ls.available
                     icon: Icons.sparkles
-                    title: "No se encontró un controlador de luces compatible"
-                    text: "Vórtice controla teclados Alienware (AW-ELC), ASUS TUF/ROG, Acer de 4 zonas (con Linuwu-Sense), RGB estándar y el brillo de cualquier teclado retroiluminado."
+                    title: qsTr("No se encontró un controlador de luces compatible")
+                    text: qsTr("Vórtice controla teclados Alienware (AW-ELC), ASUS TUF/ROG, Acer de 4 zonas (con Linuwu-Sense), RGB estándar y el brillo de cualquier teclado retroiluminado.")
                 }
 
                 // Color mostrado (animado según el efecto, solo con la página visible).
@@ -171,7 +171,7 @@ Rectangle {
             Section {
                 Layout.preferredWidth: 420
                 Layout.fillHeight: true
-                label: "Ajustes"
+                label: qsTr("Ajustes")
                 enabled: page.usable
                 opacity: enabled ? 1 : 0.4
 
@@ -185,11 +185,11 @@ Rectangle {
                     Repeater {
                         // Solo los efectos que soporta este teclado.
                         model: [
-                            { id: "static",  name: page.ls.hasColor !== false ? "Fijo" : "Encendido", desc: page.ls.hasColor !== false ? "Un color constante" : "Luz a un brillo fijo" },
-                            { id: "breathe", name: "Respirar", desc: "El color se enciende y se apaga despacio" },
-                            { id: "aurora",  name: page.ls.kind === "acer4" ? "Onda" : page.ls.kind === "asus" ? "Ciclo de color" : "Aurora",
-                              desc: page.ls.kind === "awelc" ? "Recorre verdes, azules y violetas" : "Efecto de color del propio teclado" },
-                            { id: "off",     name: "Apagado",  desc: "Sin luz" }
+                            { id: "static",  name: page.ls.hasColor !== false ? qsTr("Fijo") : qsTr("Encendido"), desc: page.ls.hasColor !== false ? qsTr("Un color constante") : qsTr("Luz a un brillo fijo") },
+                            { id: "breathe", name: qsTr("Respirar"), desc: qsTr("El color se enciende y se apaga despacio") },
+                            { id: "aurora",  name: page.ls.kind === "acer4" ? qsTr("Onda") : page.ls.kind === "asus" ? qsTr("Ciclo de color") : qsTr("Aurora"),
+                              desc: page.ls.kind === "awelc" ? qsTr("Recorre verdes, azules y violetas") : qsTr("Efecto de color del propio teclado") },
+                            { id: "off",     name: qsTr("Apagado"),  desc: qsTr("Sin luz") }
                         ].filter(e => (page.ls.effects || ["static", "breathe", "aurora", "off"]).indexOf(e.id) >= 0)
                         delegate: Item {
                             id: opt
@@ -221,7 +221,7 @@ Rectangle {
                         enabled: page.effect === "static" || page.effect === "breathe"
                         opacity: enabled ? 1 : 0.35
 
-                        Text { text: "Color"; color: T.ink2
+                        Text { text: qsTr("Color"); color: T.ink2
                                font { family: T.sans; pixelSize: T.labelSize; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase } }
 
                         Grid {
@@ -316,7 +316,7 @@ Rectangle {
                         enabled: page.effect !== "off"
                         opacity: enabled ? 1 : 0.35
                         RowLayout {
-                            Text { text: "Brillo"; color: T.ink2
+                            Text { text: qsTr("Brillo"); color: T.ink2
                                    font { family: T.sans; pixelSize: T.labelSize; weight: Font.DemiBold; letterSpacing: 0.9; capitalization: Font.AllUppercase } }
                             Item { Layout.fillWidth: true }
                             Text { text: Math.round(bri.value) + " %"; color: T.ink; font { family: T.mono; pixelSize: 12 } }

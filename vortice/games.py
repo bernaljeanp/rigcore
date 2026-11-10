@@ -14,6 +14,7 @@ import subprocess
 from pathlib import Path
 
 from . import agent
+from .i18n import tr
 
 STEAM_ROOTS = ["~/.local/share/Steam", "~/.steam/steam",
                "~/.var/app/com.valvesoftware.Steam/.local/share/Steam"]
@@ -94,7 +95,7 @@ def process_games(cfg: dict) -> list[dict]:
         known = KNOWN_PROCESSES.get(proc)
         icon = _flatpak_icon(known[1]) if known else None
         out.append({"id": f"proc:{proc}", "name": label or proc, "kind": "process",
-                    "detail": f"Proceso · {proc}", **({"icon": icon} if icon else {})})
+                    "detail": tr("Proceso") + f" · {proc}", **({"icon": icon} if icon else {})})
     return out
 
 

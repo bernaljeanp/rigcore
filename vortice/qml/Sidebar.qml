@@ -20,11 +20,11 @@ Rectangle {
         anchors { left: parent.left; right: parent.right; top: logo.bottom; topMargin: 28 }
         Repeater {
             model: [
-                { icon: Icons.dashboard, name: "Panel", page: 0 },
-                { icon: Icons.gamepad,   name: "Perfiles por juego", page: 1 },
-                { icon: Icons.fan,       name: "Curvas de ventilador", page: 3 },
-                { icon: Icons.sparkles,  name: "Iluminación", page: 2 },
-                { icon: Icons.sliders,   name: "Ajustes", page: 4 }
+                { icon: Icons.dashboard, name: qsTr("Panel"), page: 0 },
+                { icon: Icons.gamepad,   name: qsTr("Perfiles por juego"), page: 1 },
+                { icon: Icons.fan,       name: qsTr("Curvas de ventilador"), page: 3 },
+                { icon: Icons.sparkles,  name: qsTr("Iluminación"), page: 2 },
+                { icon: Icons.sliders,   name: qsTr("Ajustes"), page: 4 }
             ]
             delegate: Item {
                 id: nav

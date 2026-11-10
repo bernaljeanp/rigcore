@@ -1,0 +1,49 @@
+name: Compatibility report / Informe de compatibilidad
+description: Tell us how Vórtice works on your laptop / Cuéntanos cómo funciona en tu portátil
+title: "[Compatibility] Brand and model"
+labels: ["compatibilidad"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Vórtice! Your report tells us what works on each model. — ¡Gracias por probar Vórtice! (puedes escribir en español)
+  - type: input
+    id: modelo
+    attributes:
+      label: Laptop brand and model / Marca y modelo
+      placeholder: "Ej.: ASUS TUF Gaming A15 FA507NV"
+    validations:
+      required: true
+  - type: input
+    id: distro
+    attributes:
+      label: Distro, desktop and kernel version / Distribución, escritorio y kernel
+      placeholder: "Ej.: CachyOS, KDE Plasma 6.5, kernel 7.2"
+    validations:
+      required: true
+  - type: checkboxes
+    id: funciona
+    attributes:
+      label: What works? / ¿Qué funciona?
+      options:
+        - label: CPU and GPU temperatures
+        - label: Performance modes
+        - label: Fan readings (RPM)
+        - label: Fan control or curves (with the service installed)
+        - label: Battery charge limit
+        - label: Keyboard lighting
+        - label: Game profiles
+        - label: Special keys
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Hardware detection output / Salida de la detección
+      description: Run `python -m vortice.hardware` (or `.venv/bin/python -m vortice.hardware` from source) and paste the output.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: notas
+    attributes:
+      label: What fails or is missing? / ¿Qué falla o falta?
+      description: Errors, odd behavior, or laptop features Vórtice doesn't control yet.
