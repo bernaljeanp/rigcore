@@ -170,20 +170,13 @@ _PPD = ("net.hadess.PowerProfiles", "/net/hadess/PowerProfiles", "net.hadess.Pow
 
 
 def _ppd_call(action: str, value: str = "") -> str | None:
-    """Habla con power-profiles-daemon / tuned-ppd. No toca sysfs a mano,
+    """Habla con power-profiles-daemon / tuned-ppd por D-Bus. No toca sysfs a mano,
     para no pelearse con lo que gestiona la distro (tuned en Bazzite)."""
-    cmd = ["busctl", "--system"]
+    from . import dbus
     if action == "get":
-        cmd += ["get-property", *_PPD, "ActiveProfile"]
-    else:
-        cmd += ["set-property", *_PPD, "ActiveProfile", "s", value]
-    try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if r.returncode != 0:
-        return None
-    return r.stdout.strip().split(" ", 1)[-1].strip('"') if action == "get" else value
+        v = dbus.get_property(dbus.PPD, "ActiveProfile")
+        return str(v) if v else None
+    return value if dbus.set_property(dbus.PPD, "ActiveProfile", value) else None
 
 
 def get_profile() -> str | None:
@@ -196,14 +189,10 @@ def get_profile_details(caps: "Capabilities") -> dict:
     if caps.platform_profile:
         out["firmware"] = _read(f"{caps.platform_profile}/profile") or ""
         out["firmwareDriver"] = _read(f"{caps.platform_profile}/name") or ""
-    try:
-        r = subprocess.run(["busctl", "--system", "call", "com.redhat.tuned", "/Tuned",
-                            "com.redhat.tuned.control", "active_profile"],
-                           capture_output=True, text=True, timeout=3)
-        if r.returncode == 0:
-            out["tuned"] = r.stdout.strip().split(" ", 1)[-1].strip('"')
-    except (OSError, subprocess.TimeoutExpired):
-        pass
+    from . import dbus
+    ok, val = dbus.call(dbus.TUNED, "active_profile")
+    if ok and val:
+        out["tuned"] = str(val)
     return out
 
 
@@ -298,23 +287,17 @@ _HELPER = ("io.github.vortice.Helper", "/io/github/vortice/Helper1", "io.github.
 
 
 def helper_call(method: str, signature: str = "", *args) -> tuple[bool, object]:
-    """Llama al servicio root de Vórtice. Devuelve (ok, datos | mensaje de error)."""
-    import json
-
-    cmd = ["busctl", "--system", "--json=short", "call", *_HELPER, method]
-    if signature:
-        cmd += [signature, *map(str, args)]
-    try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
-    except (OSError, subprocess.TimeoutExpired) as e:
-        return False, str(e)
-    if r.returncode != 0:
-        msg = r.stderr.strip().removeprefix("Call failed: ")
-        return False, msg or "error desconocido"
-    if not r.stdout.strip():
-        return True, None
-    data = json.loads(r.stdout).get("data", [])
-    return True, data[0] if len(data) == 1 else data
+    """Llama al servicio root de Vórtice por D-Bus. Devuelve (ok, datos | error).
+    `signature` se conserva por compatibilidad: QtDBus deduce los tipos (s / i)."""
+    from . import dbus
+    conv = [int(a) if t == "i" else str(a) for t, a in zip(signature, args)] if signature else list(args)
+    ok, val = dbus.call(dbus.HELPER, method, *conv)
+    if not ok:
+        msg = str(val)
+        if "ServiceUnknown" in msg or "was not provided" in msg or "not activatable" in msg.lower():
+            msg = "el servicio de Vórtice no está instalado"
+        return False, msg
+    return True, val
 
 
 def helper_state() -> dict | None:

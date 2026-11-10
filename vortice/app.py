@@ -151,12 +151,12 @@ class Backend(QObject):
     @Slot(int, int)
     def setFanBoost(self, index: int, value: int) -> None:
         pct = round(value / 255 * 100)
-        self._helper_write("SetFanBoost", "uu", (index, value),
+        self._helper_write("SetFanBoost", "ii", (index, value),
                            tr("Ventilador reforzado al {pct} %").format(pct=pct) if value else tr("Ventilador en automático"))
 
     @Slot(str, int, int)
     def setCharge(self, mode: str, start: int, stop: int) -> None:
-        self._helper_write("SetCharge", "suu", (mode, start, stop), tr("Configuración de carga aplicada"))
+        self._helper_write("SetCharge", "sii", (mode, start, stop), tr("Configuración de carga aplicada"))
 
     # ---- perfiles por juego -------------------------------------------------
     gamesChanged = Signal()
@@ -328,7 +328,7 @@ class Backend(QObject):
                 eff, col, bri = self._lights_pending
                 self._lights_pending = None
             if self._helper.get("available"):
-                ok, err = hardware.helper_call("SetLights", "ssu", eff, col, bri)
+                ok, err = hardware.helper_call("SetLights", "ssi", eff, col, bri)
             else:
                 try:
                     lights.apply_any(eff, col, bri, self._ctrl)
@@ -482,10 +482,67 @@ class Backend(QObject):
                   "Enabled": "Fn+Esc activado", "Disabled": "Fn+Esc desactivado"}.get(value, "Guardado en la BIOS"))
         self._helper_write("SetBiosOption", "ss", (name, value), msg)
 
+    # ---- instalar el servicio desde la app ---------------------------------------
+    serviceInstalling = Signal(bool)
+
+    @staticmethod
+    def _service_bundle() -> Path | None:
+        """Carpeta con helper/ y vortice/ (AppImage, instalador universal o código fuente)."""
+        for cand in (os.environ.get("VORTICE_BUNDLE"), str(HERE.parent)):
+            if cand and (Path(cand) / "helper" / "install.sh").exists():
+                return Path(cand)
+        return None
+
+    @Property(bool, constant=True)
+    def inFlatpak(self) -> bool:
+        return os.path.exists("/.flatpak-info")
+
+    @Property(bool, constant=True)
+    def canInstallService(self) -> bool:
+        # Desde el sandbox de Flatpak no se puede ejecutar pkexec en el sistema.
+        return not os.path.exists("/.flatpak-info") and self._service_bundle() is not None
+
+    @Slot()
+    def installService(self) -> None:
+        """Copia el servicio a una carpeta temporal (root no puede leer dentro de un
+        AppImage montado) y lo instala con pkexec, que pide la contraseña."""
+        import shutil
+        import subprocess
+        import tempfile
+
+        bundle = self._service_bundle()
+        if not bundle:
+            self.notify.emit(tr("No se encontraron los archivos del servicio"), False)
+            return
+
+        def work() -> None:
+            self.serviceInstalling.emit(True)
+            tmp = Path(tempfile.mkdtemp(prefix="vortice-servicio-"))
+            try:
+                shutil.copytree(bundle / "helper", tmp / "helper")
+                (tmp / "vortice").mkdir()
+                for m in ("lights.py", "fancurve.py", "fans.py"):
+                    shutil.copy2(bundle / "vortice" / m, tmp / "vortice" / m)
+                os.chmod(tmp, 0o755)
+                r = subprocess.run(["pkexec", str(tmp / "helper" / "install.sh")],
+                                   capture_output=True, text=True, timeout=300)
+                ok = r.returncode == 0
+                self.notify.emit(tr("Servicio instalado y activo") if ok else
+                                 tr("No se pudo instalar el servicio: {err}").format(
+                                     err=(r.stderr.strip().splitlines() or ["cancelado"])[-1]), ok)
+            except (OSError, subprocess.TimeoutExpired) as e:
+                self.notify.emit(tr("No se pudo instalar el servicio: {err}").format(err=e), False)
+            finally:
+                shutil.rmtree(tmp, ignore_errors=True)
+                self.serviceInstalling.emit(False)
+                self.refreshHelper()
+
+        threading.Thread(target=work, daemon=True).start()
+
     @Property(bool, notify=settingsChanged)
     def autostart(self) -> bool:
-        from .tray import AUTOSTART
-        return AUTOSTART.exists()
+        from .tray import autostart_enabled
+        return autostart_enabled()
 
     @Property(str, constant=True)
     def langSetting(self) -> str:
@@ -573,7 +630,7 @@ def main() -> int:
 
     app = QApplication(sys.argv)
     app.setApplicationName("Vórtice")
-    app.setDesktopFileName("vortice")
+    app.setDesktopFileName(os.environ.get("FLATPAK_ID", "vortice"))
     app.setWindowIcon(QIcon(str(HERE / "qml" / "icon.svg")))
     lang = i18n.install(app)
     backend = Backend()

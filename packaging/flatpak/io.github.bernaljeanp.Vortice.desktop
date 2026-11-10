@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Vórtice
+GenericName=Centro de control del portátil
+GenericName[en]=Laptop control center
+Comment=Temperaturas, ventiladores, modos de rendimiento, batería y luces
+Comment[en]=Temperatures, fans, performance modes, battery and lighting
+Exec=vortice
+Icon=io.github.bernaljeanp.Vortice
+Categories=Settings;HardwareSettings;
+Keywords=fan;ventilador;temperatura;rendimiento;rgb;teclado;alienware;asus;thinkpad;gaming;
+StartupWMClass=io.github.bernaljeanp.Vortice

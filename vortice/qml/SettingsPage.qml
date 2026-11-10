@@ -218,6 +218,40 @@ Rectangle {
                             Text { text: modelData.v; color: modelData.ok ? T.ink : T.warn; font { family: T.mono; pixelSize: 12 } }
                         }
                     }
+                    // Instalar o actualizar el servicio de hardware (pide la contraseña).
+                    Item {
+                        id: svcBtn
+                        visible: hw.canInstallService
+                        property bool busy: false
+                        Layout.topMargin: 14
+                        implicitWidth: svcText.implicitWidth + 32; implicitHeight: 36
+                        Connections { target: hw; function onServiceInstalling(b) { svcBtn.busy = b } }
+                        Chamfer {
+                            anchors.fill: parent
+                            fill: page.helper.available ? (sh.hovered ? T.bgRaised : "transparent")
+                                                        : (sh.hovered ? Qt.lighter(hw.accent, 1.15) : hw.accent)
+                            stroke: page.helper.available ? T.ruleHi : "transparent"
+                        }
+                        Text {
+                            id: svcText
+                            anchors.centerIn: parent
+                            text: svcBtn.busy ? qsTr("Instalando…")
+                                  : page.helper.available ? qsTr("Actualizar servicio") : qsTr("Instalar servicio")
+                            color: page.helper.available ? T.ink : T.bg
+                            font { family: T.sans; pixelSize: 13; weight: Font.DemiBold }
+                        }
+                        HoverHandler { id: sh; cursorShape: Qt.PointingHandCursor }
+                        TapHandler { enabled: !svcBtn.busy; onTapped: hw.installService() }
+                    }
+                    Text {
+                        visible: hw.inFlatpak && !page.helper.available
+                        Layout.fillWidth: true
+                        Layout.topMargin: 14
+                        wrapMode: Text.WordWrap
+                        text: qsTr("Para ventiladores, batería y luces persistentes, instala el servicio de Vórtice fuera de Flatpak: con el instalador universal (./install.sh) o el paquete de tu distro.")
+                        color: T.warn
+                        font { family: T.sans; pixelSize: 13 }
+                    }
                     Item { Layout.fillHeight: true }
                     Text {
                         Layout.fillWidth: true

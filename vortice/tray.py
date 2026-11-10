@@ -25,6 +25,10 @@ GUI_SOCKET = RUNTIME / "gui.sock"    # proceso de la ventana
 AUTOSTART = Path(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))) / "autostart" / "vortice.desktop"
 
 # Los nombres se traducen al mostrarlos (tr) para respetar el idioma elegido.
+# Dentro de Flatpak: sin acceso a ~/.config/autostart del sistema ni a kglobalaccel.
+IN_FLATPAK = os.path.exists("/.flatpak-info")
+FLATPAK_AUTOSTART_FLAG = Path(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))) / "vortice" / "autostart-portal"
+
 MODES = [("power-saver", "Silencioso"), ("balanced", "Equilibrado"), ("performance", "Rendimiento")]
 EFFECTS = [("static", "Fijo"), ("breathe", "Respirar"), ("aurora", "Aurora"), ("off", "Apagado")]
 LIGHT_LEVELS = [100, 40, 0]          # ciclo de la tecla de luces (como en Zenit)
@@ -103,6 +107,9 @@ def launcher() -> str:
     el código fuente; si no, el comando instalado."""
     import shutil
 
+    appimage = os.environ.get("APPIMAGE")          # el propio archivo .AppImage
+    if appimage:
+        return appimage
     dev = HERE.parent / "vortice.sh"
     if dev.exists():
         return str(dev.resolve())
@@ -197,7 +204,7 @@ class Tray(QObject):
             "Vórtice", msg, QSystemTrayIcon.MessageIcon.Information if ok else QSystemTrayIcon.MessageIcon.Warning, 2500))
         self.refresh()
         self.icon.show()
-        if install_key_shortcuts():
+        if not IN_FLATPAK and install_key_shortcuts():
             apply_key_shortcuts()
 
     def _on_theme_file(self) -> None:
@@ -238,7 +245,7 @@ class Tray(QObject):
             a.setChecked(ls.get("effect") == fid)
         self.stealth_action.setChecked(bool(getattr(self.b, "_stealth", None)))
         self.games_action.setChecked(bool(self.b.gamesConfig.get("enabled")))
-        self.autostart_action.setChecked(AUTOSTART.exists())
+        self.autostart_action.setChecked(autostart_enabled())
 
     # ---- acciones -----------------------------------------------------------
     def _activated(self, reason) -> None:
@@ -360,7 +367,29 @@ def send_to_running(cmd: str, timeout: float = 1.5, sock: Path = SOCKET) -> str 
         return None
 
 
+def autostart_enabled() -> bool:
+    return FLATPAK_AUTOSTART_FLAG.exists() if IN_FLATPAK else AUTOSTART.exists()
+
+
+def _portal_background(on: bool) -> bool:
+    """Flatpak: pide al portal de segundo plano que arranque Vórtice con la sesión."""
+    from PySide6.QtDBus import QDBusConnection, QDBusMessage, QDBusVariant
+
+    msg = QDBusMessage.createMethodCall("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+                                        "org.freedesktop.portal.Background", "RequestBackground")
+    msg.setArguments(["", {"reason": QDBusVariant(tr("Mostrar Vórtice en la bandeja al iniciar sesión")),
+                           "autostart": QDBusVariant(on),
+                           "commandline": QDBusVariant(["vortice", "--bandeja"])}])
+    reply = QDBusConnection.sessionBus().call(msg)
+    return reply.type() != QDBusMessage.MessageType.ErrorMessage
+
+
 def set_autostart(on: bool) -> None:
+    if IN_FLATPAK:
+        if _portal_background(on):
+            FLATPAK_AUTOSTART_FLAG.parent.mkdir(parents=True, exist_ok=True)
+            FLATPAK_AUTOSTART_FLAG.touch() if on else FLATPAK_AUTOSTART_FLAG.unlink(missing_ok=True)
+        return
     if on:
         AUTOSTART.parent.mkdir(parents=True, exist_ok=True)
         AUTOSTART.write_text(f"""[Desktop Entry]

@@ -46,13 +46,13 @@ XML = f"""
   <interface name="{IFACE}">
     <method name="GetState"><arg type="s" direction="out" name="json"/></method>
     <method name="SetFanBoost">
-      <arg type="u" direction="in" name="index"/>
-      <arg type="u" direction="in" name="value"/>
+      <arg type="i" direction="in" name="index"/>
+      <arg type="i" direction="in" name="value"/>
     </method>
     <method name="SetCharge">
       <arg type="s" direction="in" name="mode"/>
-      <arg type="u" direction="in" name="start"/>
-      <arg type="u" direction="in" name="stop"/>
+      <arg type="i" direction="in" name="start"/>
+      <arg type="i" direction="in" name="stop"/>
     </method>
     <method name="SetBiosOption">
       <arg type="s" direction="in" name="name"/>
@@ -64,13 +64,13 @@ XML = f"""
     <method name="SetLights">
       <arg type="s" direction="in" name="effect"/>
       <arg type="s" direction="in" name="color"/>
-      <arg type="u" direction="in" name="brightness"/>
+      <arg type="i" direction="in" name="brightness"/>
     </method>
     <property name="Version" type="u" access="read"/>
   </interface>
 </node>
 """
-VERSION = 5
+VERSION = 6  # v6: enteros 'i' (QtDBus de PySide no puede enviar 'u')
 STATE_DIR = os.environ.get("STATE_DIRECTORY", "/var/lib/vortice")
 LIGHTS_FILE = os.path.join(STATE_DIR, "lights.json")
 CURVE_FILE = os.path.join(STATE_DIR, "fancurve.json")
@@ -204,7 +204,7 @@ def set_fan_boost(index, value):
     """Boost manual (interfaz o perfil de juego). Con curva activa actúa como
     mínimo: el ventilador usa el mayor de los dos."""
     fl = fans()
-    if index >= len(fl):
+    if index < 0 or index >= len(fl):
         raise Refused("ventilador inexistente")
     if not 0 <= value <= 255:
         raise Refused("el valor debe estar entre 0 y 255")

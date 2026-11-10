@@ -1,0 +1,12 @@
+#!/bin/sh
+# Punto de entrada del AppImage de Vórtice.
+HERE="$(dirname "$(readlink -f "$0")")"
+PY="$HERE/usr/python/bin/python3"
+# Archivos del servicio (helper/ y vortice/) para el botón "Instalar servicio".
+export VORTICE_BUNDLE="$HERE/usr/share/vortice"
+# El agente de perfiles por juego no necesita Qt: arranca ligero.
+if [ "${1:-}" = "--agente" ]; then
+    shift
+    exec "$PY" -I -m vortice.agent "$@"
+fi
+exec "$PY" -I -m vortice.app "$@"

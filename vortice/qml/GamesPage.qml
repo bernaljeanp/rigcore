@@ -28,6 +28,20 @@ Rectangle {
             mode: cfg.defaultMode, boost: cfg.defaultBoost, kind: "default" }
         : (gameById(selectedId) || { id: selectedId, name: selectedId, detail: "", mode: "", boost: 0 })
 
+    // En Flatpak el sandbox no ve los procesos del sistema: no puede detectar juegos.
+    Rectangle {
+        anchors.fill: parent
+        visible: hw.inFlatpak
+        z: 10
+        color: T.bg
+        Notice {
+            anchors.fill: parent
+            icon: Icons.gamepad
+            title: qsTr("Perfiles por juego no disponibles en Flatpak")
+            text: qsTr("El aislamiento de Flatpak impide ver qué juegos se están ejecutando. Usa el AppImage, el paquete de tu distro o el instalador universal para tener esta función.")
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 1

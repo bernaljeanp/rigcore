@@ -392,31 +392,31 @@
     <name>GamesPage</name>
     <message>
       <location filename="../qml/GamesPage.qml" line="18" />
-      <location filename="../qml/GamesPage.qml" line="359" />
+      <location filename="../qml/GamesPage.qml" line="373" />
       <source>Silencioso</source>
       <translation>Quiet</translation>
     </message>
     <message>
       <location filename="../qml/GamesPage.qml" line="18" />
-      <location filename="../qml/GamesPage.qml" line="360" />
+      <location filename="../qml/GamesPage.qml" line="374" />
       <source>Equilibrado</source>
       <translation>Balanced</translation>
     </message>
     <message>
       <location filename="../qml/GamesPage.qml" line="19" />
-      <location filename="../qml/GamesPage.qml" line="361" />
+      <location filename="../qml/GamesPage.qml" line="375" />
       <source>Rendimiento</source>
       <translation>Performance</translation>
     </message>
     <message>
       <location filename="../qml/GamesPage.qml" line="19" />
-      <location filename="../qml/GamesPage.qml" line="362" />
+      <location filename="../qml/GamesPage.qml" line="376" />
       <source>Sin cambios</source>
       <translation>No changes</translation>
     </message>
     <message>
       <location filename="../qml/GamesPage.qml" line="27" />
-      <location filename="../qml/GamesPage.qml" line="180" />
+      <location filename="../qml/GamesPage.qml" line="194" />
       <source>Resto de juegos</source>
       <translation>Other games</translation>
     </message>
@@ -426,167 +426,177 @@
       <translation>Any game without its own profile</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="47" />
+      <location filename="../qml/GamesPage.qml" line="40" />
+      <source>Perfiles por juego no disponibles en Flatpak</source>
+      <translation>Game profiles aren't available in Flatpak</translation>
+    </message>
+    <message>
+      <location filename="../qml/GamesPage.qml" line="41" />
+      <source>El aislamiento de Flatpak impide ver qué juegos se están ejecutando. Usa el AppImage, el paquete de tu distro o el instalador universal para tener esta función.</source>
+      <translation>Flatpak's sandbox can't see which games are running. Use the AppImage, your distro's package or the universal installer to get this feature.</translation>
+    </message>
+    <message>
+      <location filename="../qml/GamesPage.qml" line="61" />
       <source>Perfiles por juego</source>
       <translation>Game profiles</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="52" />
+      <location filename="../qml/GamesPage.qml" line="66" />
       <source>Al abrir un juego, Vórtice aplica su modo; al cerrarlo, restaura el anterior.</source>
       <translation>When a game starts, Vórtice applies its mode; when it closes, the previous one is restored.</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="68" />
+      <location filename="../qml/GamesPage.qml" line="82" />
       <source>Ahora</source>
       <translation>Now</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="73" />
+      <location filename="../qml/GamesPage.qml" line="87" />
       <source> · sin cambios</source>
       <translation> · no changes</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="74" />
+      <location filename="../qml/GamesPage.qml" line="88" />
       <source>ningún juego abierto</source>
       <translation>no game running</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="83" />
+      <location filename="../qml/GamesPage.qml" line="97" />
       <source>Agente</source>
       <translation>Agent</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="86" />
+      <location filename="../qml/GamesPage.qml" line="100" />
       <source>detenido</source>
       <translation>stopped</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="86" />
+      <location filename="../qml/GamesPage.qml" line="100" />
       <source>activo</source>
       <translation>active</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="95" />
+      <location filename="../qml/GamesPage.qml" line="109" />
       <source>Automático</source>
       <translation>Automatic</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="96" />
+      <location filename="../qml/GamesPage.qml" line="110" />
       <source>Solo con cargador</source>
       <translation>Only when plugged in</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="115" />
+      <location filename="../qml/GamesPage.qml" line="129" />
       <source> también cambia el modo al jugar. Si los dos están activos, competirán.</source>
       <translation> also changes the mode while gaming. If both are active, they will conflict.</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="124" />
+      <location filename="../qml/GamesPage.qml" line="138" />
       <source>Desactivarlo</source>
       <translation>Disable it</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="154" />
+      <location filename="../qml/GamesPage.qml" line="168" />
       <source>Biblioteca</source>
       <translation>Library</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="156" />
+      <location filename="../qml/GamesPage.qml" line="170" />
       <source> juegos</source>
       <translation> games</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="163" />
+      <location filename="../qml/GamesPage.qml" line="177" />
       <source>Volver a leer la biblioteca</source>
       <translation>Reload library</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="180" />
+      <location filename="../qml/GamesPage.qml" line="194" />
       <source>juegos sin perfil propio</source>
       <translation>games without their own profile</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="224" />
+      <location filename="../qml/GamesPage.qml" line="238" />
       <source>jugando ahora</source>
       <translation>playing now</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="231" />
+      <location filename="../qml/GamesPage.qml" line="245" />
       <source>predet.</source>
       <translation>default</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="252" />
+      <location filename="../qml/GamesPage.qml" line="266" />
       <source>Proceso de otro juego (ej. sober, wine64)</source>
       <translation>Process of another game (e.g. sober, wine64)</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="264" />
+      <location filename="../qml/GamesPage.qml" line="278" />
       <source>Añadir</source>
       <translation>Add</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="350" />
+      <location filename="../qml/GamesPage.qml" line="364" />
       <source>Modo al jugar</source>
       <translation>Mode while playing</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="356" />
+      <location filename="../qml/GamesPage.qml" line="370" />
       <source>Predeterminado</source>
       <translation>Default</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="357" />
+      <location filename="../qml/GamesPage.qml" line="371" />
       <source>Lo mismo que el resto de juegos: </source>
       <translation>Same as other games: </translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="359" />
+      <location filename="../qml/GamesPage.qml" line="373" />
       <source>Para juegos ligeros o con batería</source>
       <translation>For light games or on battery</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="360" />
+      <location filename="../qml/GamesPage.qml" line="374" />
       <source>Menos ruido, rendimiento suficiente</source>
       <translation>Less noise, enough performance</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="361" />
+      <location filename="../qml/GamesPage.qml" line="375" />
       <source>Toda la potencia</source>
       <translation>Full power</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="362" />
+      <location filename="../qml/GamesPage.qml" line="376" />
       <source>Vórtice no toca nada con este juego</source>
       <translation>Vórtice doesn't change anything for this game</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="402" />
+      <location filename="../qml/GamesPage.qml" line="416" />
       <source>Boost de ventiladores</source>
       <translation>Fan boost</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="408" />
+      <location filename="../qml/GamesPage.qml" line="422" />
       <source>requiere servicio</source>
       <translation>requires service</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="409" />
+      <location filename="../qml/GamesPage.qml" line="423" />
       <source>automático</source>
       <translation>automatic</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="432" />
+      <location filename="../qml/GamesPage.qml" line="446" />
       <source>Al cerrar el juego se restaura el modo anterior y los ventiladores vuelven a automático. </source>
       <translation>When the game closes, the previous mode is restored and fans return to automatic. </translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="433" />
+      <location filename="../qml/GamesPage.qml" line="447" />
       <source>Si cambias el modo a mano durante la partida, se respeta.</source>
       <translation>If you change the mode manually during the game, it is respected.</translation>
     </message>
     <message>
-      <location filename="../qml/GamesPage.qml" line="441" />
+      <location filename="../qml/GamesPage.qml" line="455" />
       <source>Quitar de la lista</source>
       <translation>Remove from list</translation>
     </message>
@@ -1194,7 +1204,27 @@
       <translation>Platform driver</translation>
     </message>
     <message>
-      <location filename="../qml/SettingsPage.qml" line="224" />
+      <location filename="../qml/SettingsPage.qml" line="238" />
+      <source>Instalando…</source>
+      <translation>Installing…</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="239" />
+      <source>Actualizar servicio</source>
+      <translation>Update service</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="239" />
+      <source>Instalar servicio</source>
+      <translation>Install service</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="251" />
+      <source>Para ventiladores, batería y luces persistentes, instala el servicio de Vórtice fuera de Flatpak: con el instalador universal (./install.sh) o el paquete de tu distro.</source>
+      <translation>For fans, battery and persistent lighting, install the Vórtice service outside Flatpak: with the universal installer (./install.sh) or your distro's package.</translation>
+    </message>
+    <message>
+      <location filename="../qml/SettingsPage.qml" line="258" />
       <source>Vórtice · software libre (GPL-3.0)
 </source>
       <translation>Vórtice · free software (GPL-3.0)
@@ -1428,6 +1458,22 @@
     <message>
       <source>Proceso</source>
       <translation>Process</translation>
+    </message>
+    <message>
+      <source>No se encontraron los archivos del servicio</source>
+      <translation>Service files not found</translation>
+    </message>
+    <message>
+      <source>Servicio instalado y activo</source>
+      <translation>Service installed and running</translation>
+    </message>
+    <message>
+      <source>No se pudo instalar el servicio: {err}</source>
+      <translation>Couldn't install the service: {err}</translation>
+    </message>
+    <message>
+      <source>Mostrar Vórtice en la bandeja al iniciar sesión</source>
+      <translation>Show Vórtice in the tray at login</translation>
     </message>
   </context>
 </TS>

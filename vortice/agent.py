@@ -75,7 +75,7 @@ def helper_fan_count():
 def set_boost(value):
     n = helper_fan_count()
     for i in range(n):
-        busctl("call", *HELPER, "SetFanBoost", "uu", str(i), str(int(value)))
+        busctl("call", *HELPER, "SetFanBoost", "ii", str(i), str(int(value)))
     return n > 0
 
 

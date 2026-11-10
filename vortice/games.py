@@ -138,6 +138,8 @@ def agent_state() -> dict:
 # ------------------------------------------------------- servicio del agente
 
 def _systemctl(*args: str) -> tuple[bool, str]:
+    if os.path.exists("/.flatpak-info"):
+        return False, "no disponible en Flatpak"
     try:
         r = subprocess.run(["systemctl", "--user", *args], capture_output=True, text=True, timeout=10)
         return r.returncode == 0, (r.stdout + r.stderr).strip()
@@ -159,12 +161,16 @@ def install_agent() -> tuple[bool, str]:
     unit_dir = Path(os.path.expanduser("~/.config/systemd/user"))
     unit_dir.mkdir(parents=True, exist_ok=True)
     script = Path(agent.__file__).resolve()
+    appimage = os.environ.get("APPIMAGE")
+    # Desde un AppImage, la ruta de agent.py cambia en cada arranque: se lanza el
+    # propio archivo con --agente (usa el Python incluido).
+    exec_line = f"{appimage} --agente" if appimage else f"/usr/bin/python3 -I {script}"
     (unit_dir / AGENT_UNIT).write_text(f"""[Unit]
 Description=Vórtice - perfiles por juego
 After=graphical-session.target
 
 [Service]
-ExecStart=/usr/bin/python3 -I {script}
+ExecStart={exec_line}
 Restart=on-failure
 RestartSec=5
 
