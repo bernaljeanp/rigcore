@@ -33,6 +33,8 @@ ApplicationWindow {
     readonly property var profileNames: ({ "power-saver": "Silencioso", "balanced": "Equilibrado", "performance": "Rendimiento" })
 
     // Atajos 1, 2, 3 para cambiar de modo.
+    Shortcut { sequence: "Ctrl+1"; onActivated: pages.currentIndex = 0 }
+    Shortcut { sequence: "Ctrl+2"; onActivated: pages.currentIndex = 1 }
     Shortcut { sequence: "1"; enabled: hw.caps.profiles; onActivated: hw.setProfile("power-saver") }
     Shortcut { sequence: "2"; enabled: hw.caps.profiles; onActivated: hw.setProfile("balanced") }
     Shortcut { sequence: "3"; enabled: hw.caps.profiles; onActivated: hw.setProfile("performance") }
@@ -41,11 +43,19 @@ ApplicationWindow {
         anchors.fill: parent
         spacing: 1
 
-        Sidebar { Layout.fillHeight: true }
+        Sidebar {
+            Layout.fillHeight: true
+            current: pages.currentIndex
+            onNavigate: i => pages.currentIndex = i
+        }
+
+      StackLayout {
+        id: pages
+        currentIndex: startPage
+        Layout.fillWidth: true
+        Layout.fillHeight: true
 
         ColumnLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             spacing: 1
 
             // ---------- Cabecera ----------
@@ -228,6 +238,11 @@ ApplicationWindow {
                 }
             }
         }
+
+        GamesPage {
+            service: win.service
+        }
+      }
     }
 
     ChargePopup {

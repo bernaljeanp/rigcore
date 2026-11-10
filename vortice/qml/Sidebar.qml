@@ -6,6 +6,7 @@ import "Icons.js" as Icons
 Rectangle {
     id: sb
     property int current: 0
+    signal navigate(int index)
     width: 60
     color: T.bg
 
@@ -19,8 +20,8 @@ Rectangle {
         anchors { left: parent.left; right: parent.right; top: logo.bottom; topMargin: 28 }
         Repeater {
             model: [
-                { icon: Icons.dashboard, name: "Panel" },
-                { icon: Icons.gamepad,   name: "Perfiles por juego · pronto" },
+                { icon: Icons.dashboard, name: "Panel", page: 0 },
+                { icon: Icons.gamepad,   name: "Perfiles por juego", page: 1 },
                 { icon: Icons.fan,       name: "Curvas de ventilador · pronto" },
                 { icon: Icons.sparkles,  name: "Iluminación · pronto" },
                 { icon: Icons.sliders,   name: "Ajustes · pronto" }
@@ -49,6 +50,7 @@ Rectangle {
                     color: nav.active ? T.ink : hh.hovered ? T.ink2 : T.ink3
                 }
                 HoverHandler { id: hh; cursorShape: Qt.PointingHandCursor }
+                TapHandler { onTapped: if (nav.modelData.page !== undefined) sb.navigate(nav.modelData.page) }
                 ToolTip.visible: hh.hovered
                 ToolTip.delay: 400
                 ToolTip.text: nav.modelData.name

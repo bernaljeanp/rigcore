@@ -5,13 +5,14 @@ from __future__ import annotations
 import os
 import sys
 import threading
+import time
 from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QFontDatabase, QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 
-from . import hardware
+from . import games, hardware
 
 HERE = Path(__file__).resolve().parent
 HISTORY = 90  # segundos de historial para las gráficas
@@ -44,6 +45,7 @@ class Backend(QObject):
         self.ptimer.start()
         self._poll_profile()
         self._init_helper()
+        self._init_games()
 
     # ---- datos ------------------------------------------------------------
     def _tick(self) -> None:
@@ -152,6 +154,131 @@ class Backend(QObject):
     def setCharge(self, mode: str, start: int, stop: int) -> None:
         self._helper_write("SetCharge", "suu", (mode, start, stop), "Configuración de carga aplicada")
 
+    # ---- perfiles por juego -------------------------------------------------
+    gamesChanged = Signal()
+    agentChanged = Signal()
+    _gamesReady = Signal("QVariantList", "QVariantList")
+
+    def _init_games(self) -> None:
+        self._gcfg = games.load_config()
+        self._library: list = []
+        self._conflicts: list = []
+        self._agent: dict = {}
+        self._gamesReady.connect(self._apply_games)
+        self.refreshGames()
+        self.atimer = QTimer(self, interval=3000, timeout=self._poll_agent)
+        self.atimer.start()
+        self._poll_agent()
+
+    @Slot()
+    def refreshGames(self) -> None:
+        def work() -> None:
+            lib = games.steam_games() + games.process_games(self._gcfg)
+            self._gamesReady.emit(lib, games.conflicting_services())
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _apply_games(self, lib: list, conflicts: list) -> None:
+        self._library, self._conflicts = lib, conflicts
+        self.gamesChanged.emit()
+        self.agentChanged.emit()
+
+    def _poll_agent(self) -> None:
+        st = games.agent_state()
+        alive = bool(st) and time.time() - st.get("updated", 0) < 45
+        info = {"alive": alive, **st}
+        if info != self._agent:
+            self._agent = info
+            self.agentChanged.emit()
+
+    def _save_games(self) -> None:
+        games.save_config(self._gcfg)
+        self.gamesChanged.emit()
+
+    @Property("QVariantList", notify=gamesChanged)
+    def gamesList(self) -> list:
+        out = []
+        for g in self._library:
+            prof = self._gcfg["games"].get(g["id"])
+            out.append({**g, "mode": prof.get("mode") if prof else "",
+                        "boost": int(prof.get("boost") or 0) if prof else 0})
+        return out
+
+    @Property("QVariantMap", notify=gamesChanged)
+    def gamesConfig(self) -> dict:
+        d = self._gcfg["default"]
+        return {"enabled": self._gcfg["enabled"], "acOnly": self._gcfg["acOnly"],
+                "defaultMode": d.get("mode", "performance"), "defaultBoost": int(d.get("boost") or 0)}
+
+    @Property("QVariantMap", notify=agentChanged)
+    def agentInfo(self) -> dict:
+        return {**self._agent, "conflicts": self._conflicts}
+
+    @Slot(str, str)
+    def setGameMode(self, gid: str, mode: str) -> None:
+        """mode: "" = usar el predeterminado, "none" = sin cambios, o un modo."""
+        if not mode:
+            self._gcfg["games"].pop(gid, None)
+        else:
+            self._gcfg["games"].setdefault(gid, {"boost": 0})["mode"] = mode
+        self._save_games()
+
+    @Slot(str, int)
+    def setGameBoost(self, gid: str, value: int) -> None:
+        entry = self._gcfg["games"].setdefault(gid, {"mode": self._gcfg["default"].get("mode", "performance")})
+        entry["boost"] = max(0, min(255, value))
+        self._save_games()
+
+    @Slot(str, int)
+    def setDefault(self, mode: str, boost: int) -> None:
+        self._gcfg["default"] = {"mode": mode, "boost": max(0, min(255, boost))}
+        self._save_games()
+
+    @Slot(bool)
+    def setGamesEnabled(self, on: bool) -> None:
+        self._gcfg["enabled"] = on
+        self._save_games()
+        if on and not self._agent.get("alive"):
+            self.installAgent()
+
+    @Slot(bool)
+    def setAcOnly(self, on: bool) -> None:
+        self._gcfg["acOnly"] = on
+        self._save_games()
+
+    @Slot(str)
+    def addProcess(self, name: str) -> None:
+        name = name.strip()[:15]  # /proc/PID/comm se trunca a 15 caracteres
+        if name:
+            self._gcfg["processes"][name] = games.KNOWN_PROCESSES.get(name, (name,))[0]
+            self._save_games()
+            self.refreshGames()
+
+    @Slot(str)
+    def removeProcess(self, gid: str) -> None:
+        if gid.startswith("proc:"):
+            self._gcfg["processes"].pop(gid[5:], None)
+            self._gcfg["games"].pop(gid, None)
+            self._save_games()
+            self.refreshGames()
+
+    @Slot()
+    def installAgent(self) -> None:
+        def work() -> None:
+            ok, out = games.install_agent()
+            self.notify.emit("Agente de juegos activo" if ok else f"No se pudo activar el agente: {out}", ok)
+
+        threading.Thread(target=work, daemon=True).start()
+
+    @Slot(str)
+    def disableConflict(self, unit: str) -> None:
+        def work() -> None:
+            ok, out = games.disable_service(unit)
+            self.notify.emit(f"{unit} desactivado" if ok else f"No se pudo desactivar: {out}", ok)
+            self.refreshGames()
+
+        threading.Thread(target=work, daemon=True).start()
+
     @Slot(bool)
     def setVisible(self, visible: bool) -> None:
         """Minimizada: menos lecturas (cada 5 s) y nada que animar."""
@@ -183,6 +310,8 @@ def main() -> int:
     backend = Backend()
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("hw", backend)
+    engine.rootContext().setContextProperty("startPage", int(os.environ.get("VORTICE_PAGE", "0")))
+    engine.rootContext().setContextProperty("startGame", os.environ.get("VORTICE_GAME", ""))
     engine.load(QUrl.fromLocalFile(str(HERE / "qml" / "Main.qml")))
     if not engine.rootObjects():
         return 1
