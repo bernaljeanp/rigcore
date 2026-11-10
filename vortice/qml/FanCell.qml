@@ -41,13 +41,12 @@ Item {
                     rotation: glyph.angle
                 }
                 property real angle: 0
-                FrameAnimation {
-                    id: spin
+                // 30 fps bastan para un glifo de 14 px (no 240 en una pantalla de 240 Hz).
+                Timer {
+                    interval: 33
+                    repeat: true
                     running: glyph.speed > 0.5 && glyph.onScreen
-                    onTriggered: {
-                        var dt = Math.min(spin.frameTime, 0.1)
-                        if (dt > 0) glyph.angle = (glyph.angle + glyph.speed * dt) % 360
-                    }
+                    onTriggered: glyph.angle = (glyph.angle + glyph.speed * 0.033) % 360
                 }
             }
             Text {

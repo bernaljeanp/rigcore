@@ -35,6 +35,7 @@ ApplicationWindow {
     // Atajos 1, 2, 3 para cambiar de modo.
     Shortcut { sequence: "Ctrl+1"; onActivated: pages.currentIndex = 0 }
     Shortcut { sequence: "Ctrl+2"; onActivated: pages.currentIndex = 1 }
+    Shortcut { sequence: "Ctrl+3"; onActivated: pages.currentIndex = 2 }
     Shortcut { sequence: "1"; enabled: hw.caps.profiles; onActivated: hw.setProfile("power-saver") }
     Shortcut { sequence: "2"; enabled: hw.caps.profiles; onActivated: hw.setProfile("balanced") }
     Shortcut { sequence: "3"; enabled: hw.caps.profiles; onActivated: hw.setProfile("performance") }
@@ -242,6 +243,8 @@ ApplicationWindow {
         GamesPage {
             service: win.service
         }
+
+        LightsPage {}
       }
     }
 

@@ -27,6 +27,9 @@ LockPersonality=yes
 SystemCallArchitectures=native
 CapabilityBoundingSet=CAP_DAC_OVERRIDE
 UMask=0077
+StateDirectory=vortice
+# Luces: acceso al controlador USB HID.
+DeviceAllow=char-hidraw rw
 
 [Install]
 WantedBy=multi-user.target

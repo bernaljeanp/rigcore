@@ -6,6 +6,8 @@ validación estricta:
   - GetState()                        -> JSON con ventiladores y batería
   - SetFanBoost(index u, value u)     -> boost 0-255 de un ventilador
   - SetCharge(mode s, start u, stop u)-> modo/umbrales de carga de la batería
+  - SetLights(effect s, color s, brightness u) -> luces AW-ELC (se guardan y se
+    reaplican al arrancar, al reanudar tras suspender y si el USB se reconecta)
 
 Solo administradores (grupo wheel, sudo o admin, según la distro) o root pueden llamarlo: lo restringe la
 política de D-Bus y además se comprueba aquí con el UID real del llamante.
@@ -19,8 +21,14 @@ import os
 import pwd
 import signal
 import sys
+import time
 
 from gi.repository import Gio, GLib
+
+# Módulo de luces compartido con la interfaz. Se instala junto a este archivo en
+# /usr/local/libexec/vortice (propiedad de root); -I no añade esa carpeta sola.
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import lights  # noqa: E402
 
 BUS_NAME = "io.github.vortice.Helper"
 OBJ_PATH = "/io/github/vortice/Helper1"
@@ -42,11 +50,18 @@ XML = f"""
       <arg type="u" direction="in" name="start"/>
       <arg type="u" direction="in" name="stop"/>
     </method>
+    <method name="SetLights">
+      <arg type="s" direction="in" name="effect"/>
+      <arg type="s" direction="in" name="color"/>
+      <arg type="u" direction="in" name="brightness"/>
+    </method>
     <property name="Version" type="u" access="read"/>
   </interface>
 </node>
 """
-VERSION = 1
+VERSION = 2
+STATE_DIR = os.environ.get("STATE_DIRECTORY", "/var/lib/vortice")
+LIGHTS_FILE = os.path.join(STATE_DIR, "lights.json")
 
 
 class Refused(Exception):
@@ -175,6 +190,64 @@ def set_charge(mode, start, stop):
     _write(f"{bat}/charge_control_end_threshold", stop)
 
 
+class Lights:
+    """Guarda el último ajuste y lo reaplica cuando hace falta."""
+
+    def __init__(self):
+        self.saved = None
+        self.applied_to = None   # identidad del dispositivo al que se aplicó
+        try:
+            with open(LIGHTS_FILE) as f:
+                d = json.load(f)
+            lights.validate(d["effect"], d["color"], d["brightness"])
+            self.saved = d
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+
+    def state(self):
+        ctrl = lights.find_controller()
+        return {"available": bool(ctrl), "device": ctrl["name"] if ctrl else None,
+                **(self.saved or {})}
+
+    def set(self, effect, color, brightness):
+        try:
+            lights.validate(effect, color, brightness)
+        except ValueError as e:
+            raise Refused(str(e)) from e
+        ctrl = lights.find_controller()
+        if not ctrl:
+            raise Refused("no se encontró el controlador de luces")
+        try:
+            lights.apply(effect, color, brightness, ctrl)
+        except (OSError, RuntimeError) as e:
+            raise Refused(f"el controlador no aceptó el cambio ({e})") from e
+        self.saved = {"effect": effect, "color": color.upper(), "brightness": int(brightness)}
+        self.applied_to = lights.identity(ctrl)
+        os.makedirs(STATE_DIR, exist_ok=True)
+        tmp = LIGHTS_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(self.saved, f)
+        os.replace(tmp, LIGHTS_FILE)
+
+    def reapply(self, reason, force=False):
+        """Reaplica lo guardado si el dispositivo es nuevo (o si se fuerza)."""
+        if not self.saved:
+            return
+        ctrl = lights.find_controller()
+        ident = lights.identity(ctrl)
+        if not ctrl or (not force and ident == self.applied_to):
+            return
+        try:
+            lights.apply(self.saved["effect"], self.saved["color"], self.saved["brightness"], ctrl)
+            self.applied_to = ident
+            print(f"luces reaplicadas ({reason})", flush=True)
+        except (OSError, RuntimeError) as e:
+            print(f"no se pudieron reaplicar las luces: {e}", flush=True)
+
+
+LIGHTS = Lights()
+
+
 def reset_fans():
     for f in fans():
         try:
@@ -215,13 +288,16 @@ def on_call(conn, sender, path, iface, method, params, invocation):
             return
         if method == "GetState":
             state = {"fans": [{k: v for k, v in f.items() if k != "path"} for f in fans()],
-                     "battery": battery()}
+                     "battery": battery(), "lights": LIGHTS.state()}
             invocation.return_value(GLib.Variant("(s)", (json.dumps(state),)))
         elif method == "SetFanBoost":
             set_fan_boost(*params.unpack())
             invocation.return_value(None)
         elif method == "SetCharge":
             set_charge(*params.unpack())
+            invocation.return_value(None)
+        elif method == "SetLights":
+            LIGHTS.set(*params.unpack())
             invocation.return_value(None)
         else:
             invocation.return_dbus_error("org.freedesktop.DBus.Error.UnknownMethod", method)
@@ -242,6 +318,17 @@ def main():
 
     def on_bus(conn, name):
         conn.register_object(OBJ_PATH, node.interfaces[0], on_call, on_get_property, None)
+        # Al reanudar tras suspender, el controlador vuelve a su estado de fábrica.
+        conn.signal_subscribe("org.freedesktop.login1", "org.freedesktop.login1.Manager",
+                              "PrepareForSleep", "/org/freedesktop/login1", None,
+                              Gio.DBusSignalFlags.NONE,
+                              lambda c, s, p, i, sig, params: (not params.unpack()[0])
+                              and GLib.timeout_add_seconds(2, lambda: LIGHTS.reapply("reanudación", True) or False),
+                              )
+
+    # Al arrancar (el USB puede tardar) y si el dispositivo se reconecta: comprobación barata cada 10 s.
+    GLib.timeout_add_seconds(10, lambda: LIGHTS.reapply("dispositivo nuevo") or True)
+    GLib.timeout_add_seconds(3, lambda: LIGHTS.reapply("arranque") or False)
 
     Gio.bus_own_name(Gio.BusType.SYSTEM, BUS_NAME, Gio.BusNameOwnerFlags.NONE,
                      on_bus, None, lambda *a: loop.quit())

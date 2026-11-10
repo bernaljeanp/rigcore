@@ -29,6 +29,18 @@ fi
 # Copias propiedad de root: el código privilegiado no se ejecuta desde /home.
 install -d -o root -g root -m 0755 "$LIBEXEC"
 install -o root -g root -m 0755 "$SRC/vortice-helper" "$LIBEXEC/vortice-helper"
+install -o root -g root -m 0644 "$SRC/../vortice/lights.py" "$LIBEXEC/lights.py"
+
+# Zenit (instalación independiente) también controla las luces: si está, se retira
+# con la misma comprobación que usa su propio desinstalador. Sus preferencias
+# en /var/lib/zenit se conservan.
+ZUNIT=/etc/systemd/system/zenit.service
+if [ -f "$ZUNIT" ] && [ ! -L "$ZUNIT" ] && grep -qx 'ExecStart=/usr/bin/python3 /var/opt/zenit/zenit.py demonio\( --solo-luces\)\?' "$ZUNIT"; then
+    echo "Retirando el servicio de Zenit para que no compita con Vórtice por las luces..."
+    systemctl disable --now zenit.service || true
+    rm -f -- "$ZUNIT" /var/opt/zenit/zenit.py
+    rmdir /var/opt/zenit 2>/dev/null || true
+fi
 # Política D-Bus solo con los grupos de administración que existen aquí
 # (un grupo inexistente puede invalidar el archivo en algunos buses).
 BLOCKS=""

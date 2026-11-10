@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import threading
@@ -12,7 +13,7 @@ from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QFontDatabase, QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 
-from . import games, hardware
+from . import games, hardware, lights
 
 HERE = Path(__file__).resolve().parent
 HISTORY = 90  # segundos de historial para las gráficas
@@ -46,6 +47,7 @@ class Backend(QObject):
         self._poll_profile()
         self._init_helper()
         self._init_games()
+        self._init_lights()
 
     # ---- datos ------------------------------------------------------------
     def _tick(self) -> None:
@@ -278,6 +280,69 @@ class Backend(QObject):
             self.refreshGames()
 
         threading.Thread(target=work, daemon=True).start()
+
+    # ---- luces ---------------------------------------------------------------
+    lightsChanged = Signal()
+    LIGHTS_CFG = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")),
+                              "vortice", "lights.json")
+
+    def _init_lights(self) -> None:
+        self._ctrl = lights.find_controller()
+        self._lights = {"effect": "static", "color": "FFFFFF", "brightness": 100}
+        try:
+            with open(self.LIGHTS_CFG) as f:
+                d = json.load(f)
+            lights.validate(d["effect"], d["color"], d["brightness"])
+            self._lights = d
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+        self._lights_pending = None
+        self._lights_cv = threading.Condition()
+        threading.Thread(target=self._lights_worker, daemon=True).start()
+        self.helperChanged.connect(self.lightsChanged)
+
+    def _lights_worker(self) -> None:
+        """Aplica solo el ajuste más reciente: arrastrar el color no satura el USB."""
+        while True:
+            with self._lights_cv:
+                while self._lights_pending is None:
+                    self._lights_cv.wait()
+                eff, col, bri = self._lights_pending
+                self._lights_pending = None
+            if self._helper.get("available"):
+                ok, err = hardware.helper_call("SetLights", "ssu", eff, col, bri)
+            else:
+                try:
+                    lights.apply(eff, col, bri, self._ctrl)
+                    ok, err = True, None
+                except (OSError, RuntimeError, ValueError) as e:
+                    ok, err = False, str(e)
+            if not ok:
+                self.notify.emit(f"Luces: {err}", False)
+
+    @Property("QVariantMap", notify=lightsChanged)
+    def lightsState(self) -> dict:
+        via = "service" if self._helper.get("available") else (
+            "direct" if lights.writable(self._ctrl) else "none")
+        return {"available": bool(self._ctrl), "device": self._ctrl["name"] if self._ctrl else "",
+                "path": self._ctrl["path"] if self._ctrl else "", "via": via,
+                "aurora": ["%02X%02X%02X" % c for c in lights.AURORA], **self._lights}
+
+    @Slot(str, str, int)
+    def setLights(self, effect: str, color: str, brightness: int) -> None:
+        try:
+            lights.validate(effect, color, brightness)
+        except ValueError as e:
+            self.notify.emit(str(e), False)
+            return
+        self._lights = {"effect": effect, "color": color.upper(), "brightness": int(brightness)}
+        os.makedirs(os.path.dirname(self.LIGHTS_CFG), exist_ok=True)
+        with open(self.LIGHTS_CFG, "w") as f:
+            json.dump(self._lights, f)
+        self.lightsChanged.emit()
+        with self._lights_cv:
+            self._lights_pending = (effect, color.upper(), int(brightness))
+            self._lights_cv.notify()
 
     @Slot(bool)
     def setVisible(self, visible: bool) -> None:

@@ -36,6 +36,8 @@ kernel añade soporte para un portátil, Vórtice lo aprovecha sin cambios.
 | **Gráficas** | NVIDIA (NVML), AMD (`amdgpu`) e Intel (`i915` / `xe`). En portátiles híbridos no despierta la gráfica dedicada si está en reposo |
 | **Modos de rendimiento** | Silencioso · Equilibrado · Rendimiento, vía D-Bus. Respeta a `tuned` y a KDE/GNOME en lugar de pelearse con ellos |
 | **Ventiladores** | RPM en vivo y *boost* manual (Alienware / Dell G por ahora) |
+| **Iluminación** | Color fijo, respirar, aurora y brillo del teclado (Alienware AW-ELC). Con el servicio, se reaplica al arrancar y al reanudar |
+| **Perfiles por juego** | Modo y boost por juego (Steam y procesos), aplicados por un agente ligero que restaura todo al cerrar |
 | **Batería** | Modos y umbrales de carga guardados en el firmware (Dell, ThinkPad, ASUS, Framework y otros con la interfaz estándar) |
 | **Ligera** | Indicadores dibujados con shaders en la GPU: ~3 % de un núcleo con la ventana abierta, aún menos minimizada |
 
@@ -115,3 +117,4 @@ y adjunta la salida.
 
 [GPL-3.0](LICENSE). Iconos de interfaz derivados de [Lucide](https://lucide.dev) (ISC).
 Fuentes IBM Plex Sans Condensed e IBM Plex Mono (SIL Open Font License).
+Protocolo de luces AW-ELC documentado por [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT).

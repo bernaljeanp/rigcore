@@ -23,14 +23,14 @@ Rectangle {
                 { icon: Icons.dashboard, name: "Panel", page: 0 },
                 { icon: Icons.gamepad,   name: "Perfiles por juego", page: 1 },
                 { icon: Icons.fan,       name: "Curvas de ventilador · pronto" },
-                { icon: Icons.sparkles,  name: "Iluminación · pronto" },
+                { icon: Icons.sparkles,  name: "Iluminación", page: 2 },
                 { icon: Icons.sliders,   name: "Ajustes · pronto" }
             ]
             delegate: Item {
                 id: nav
                 required property var modelData
                 required property int index
-                readonly property bool active: sb.current === index
+                readonly property bool active: modelData.page !== undefined && sb.current === modelData.page
                 width: sb.width; height: 52
 
                 Rectangle {
