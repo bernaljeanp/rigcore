@@ -9,9 +9,8 @@ import threading
 import time
 from pathlib import Path
 
-from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QFontDatabase, QGuiApplication, QIcon
-from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
+from PySide6.QtGui import QFontDatabase, QIcon
 
 from . import games, hardware, lights
 
@@ -195,10 +194,12 @@ class Backend(QObject):
 
     def _save_games(self) -> None:
         games.save_config(self._gcfg)
+        self._gcfg_mtime = os.stat(games.agent.CONFIG).st_mtime
         self.gamesChanged.emit()
 
     @Property("QVariantList", notify=gamesChanged)
     def gamesList(self) -> list:
+        self._reload_games_if_changed()
         out = []
         for g in self._library:
             prof = self._gcfg["games"].get(g["id"])
@@ -206,8 +207,18 @@ class Backend(QObject):
                         "boost": int(prof.get("boost") or 0) if prof else 0})
         return out
 
+    def _reload_games_if_changed(self) -> None:
+        try:
+            m = os.stat(games.agent.CONFIG).st_mtime
+        except OSError:
+            return
+        if m != getattr(self, "_gcfg_mtime", None):
+            self._gcfg_mtime = m
+            self._gcfg = games.load_config()
+
     @Property("QVariantMap", notify=gamesChanged)
     def gamesConfig(self) -> dict:
+        self._reload_games_if_changed()
         d = self._gcfg["default"]
         return {"enabled": self._gcfg["enabled"], "acOnly": self._gcfg["acOnly"],
                 "defaultMode": d.get("mode", "performance"), "defaultBoost": int(d.get("boost") or 0)}
@@ -320,8 +331,24 @@ class Backend(QObject):
             if not ok:
                 self.notify.emit(f"Luces: {err}", False)
 
+    def _reload_lights_if_changed(self) -> None:
+        try:
+            m = os.stat(self.LIGHTS_CFG).st_mtime
+        except OSError:
+            return
+        if m != getattr(self, "_lights_mtime", None):
+            self._lights_mtime = m
+            try:
+                with open(self.LIGHTS_CFG) as f:
+                    d = json.load(f)
+                lights.validate(d["effect"], d["color"], d["brightness"])
+                self._lights = d
+            except (OSError, ValueError, KeyError, TypeError):
+                pass
+
     @Property("QVariantMap", notify=lightsChanged)
     def lightsState(self) -> dict:
+        self._reload_lights_if_changed()
         via = "service" if self._helper.get("available") else (
             "direct" if lights.writable(self._ctrl) else "none")
         return {"available": bool(self._ctrl), "device": self._ctrl["name"] if self._ctrl else "",
@@ -339,6 +366,7 @@ class Backend(QObject):
         os.makedirs(os.path.dirname(self.LIGHTS_CFG), exist_ok=True)
         with open(self.LIGHTS_CFG, "w") as f:
             json.dump(self._lights, f)
+        self._lights_mtime = os.stat(self.LIGHTS_CFG).st_mtime
         self.lightsChanged.emit()
         with self._lights_cv:
             self._lights_pending = (effect, color.upper(), int(brightness))
@@ -362,38 +390,109 @@ class Backend(QObject):
         threading.Thread(target=work, daemon=True).start()
 
 
+def _quick_action(argv: list[str]) -> int | None:
+    """--accion X: se envía a la instancia en marcha sin cargar Qt (teclas F6/F9)."""
+    if "--accion" not in argv:
+        return None
+    from .tray import send_to_running
+
+    i = argv.index("--accion")
+    cmd = argv[i + 1] if i + 1 < len(argv) else ""
+    reply = send_to_running(cmd)
+    if reply is None:
+        print("Vórtice no está en marcha. Ábrelo o actívalo en la bandeja.", file=sys.stderr)
+        return 1
+    print(reply)
+    return 0
+
+
+def _create_window(app, backend, page: int):
+    """Carga la interfaz QML (solo en el proceso de la ventana)."""
+    from PySide6.QtCore import QUrl
+    from PySide6.QtQml import QQmlApplicationEngine
+
+    engine = QQmlApplicationEngine()
+    ctx = engine.rootContext()
+    ctx.setContextProperty("hw", backend)
+    ctx.setContextProperty("startPage", page)
+    ctx.setContextProperty("startGame", os.environ.get("VORTICE_GAME", ""))
+    engine.load(QUrl.fromLocalFile(str(HERE / "qml" / "Main.qml")))
+    return engine
+
+
 def main() -> int:
+    argv = sys.argv[1:]
+    rc = _quick_action(argv)
+    if rc is not None:
+        return rc
+
+    from . import tray as T
+
+    tray_mode = "--bandeja" in argv
+    window_mode = "--ventana" in argv
+    if not tray_mode and not window_mode:
+        # Lanzado desde el menú: si ya hay bandeja o ventana, que se muestre esa.
+        if T.send_to_running("show") is not None or T.send_to_running("raise", sock=T.GUI_SOCKET) is not None:
+            return 0
+        window_mode = True
+    if tray_mode and T.send_to_running("ping") is not None:
+        return 0  # ya hay una bandeja
+
     os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
-    app = QGuiApplication(sys.argv)
+    from PySide6.QtWidgets import QApplication, QSystemTrayIcon
+
+    app = QApplication(sys.argv)
     app.setApplicationName("Vórtice")
     app.setDesktopFileName("vortice")
     app.setWindowIcon(QIcon(str(HERE / "qml" / "icon.svg")))
+    backend = Backend()
 
+    if tray_mode:
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            print("No hay bandeja del sistema disponible.", file=sys.stderr)
+            return 1
+        app.setQuitOnLastWindowClosed(False)
+        backend.setVisible(False)                       # sin ventana: lecturas espaciadas
+        windows = T.WindowController()
+        tray = T.Tray(backend, windows)                 # noqa: F841 (mantener vivo)
+        server = T.start_server(lambda c: "pong" if c == "ping"
+                                else T.run_action(backend, windows, c))  # noqa: F841
+        return app.exec()
+
+    # ---- proceso de la ventana ----
     for f in sorted((HERE / "fonts").glob("*.ttf")):
         QFontDatabase.addApplicationFont(str(f))
-
-    backend = Backend()
-    engine = QQmlApplicationEngine()
-    engine.rootContext().setContextProperty("hw", backend)
-    engine.rootContext().setContextProperty("startPage", int(os.environ.get("VORTICE_PAGE", "0")))
-    engine.rootContext().setContextProperty("startGame", os.environ.get("VORTICE_GAME", ""))
-    engine.load(QUrl.fromLocalFile(str(HERE / "qml" / "Main.qml")))
+    page = int(argv[argv.index("--pagina") + 1]) if "--pagina" in argv else int(os.environ.get("VORTICE_PAGE", "0"))
+    engine = _create_window(app, backend, page)
     if not engine.rootObjects():
         return 1
+    win = engine.rootObjects()[0]
+
+    def gui_command(cmd: str) -> str:
+        if cmd == "raise":
+            win.show()
+            win.raise_()
+            win.requestActivate()
+        elif cmd == "close":
+            win.close()
+        return "ok"
+
+    server = T.start_server(gui_command, sock=T.GUI_SOCKET)  # noqa: F841
 
     # Desarrollo: VORTICE_SHOT=ruta.png [VORTICE_SHOT_DELAY=s] captura y sale.
     shot = os.environ.get("VORTICE_SHOT")
     if shot:
         from PySide6.QtQuick import QQuickWindow  # noqa: F401  (tipa la ventana)
 
-        win = engine.rootObjects()[0]
-
         def grab() -> None:
             win.grabWindow().save(shot)
             app.quit()
 
         QTimer.singleShot(int(float(os.environ.get("VORTICE_SHOT_DELAY", "3")) * 1000), grab)
-    return app.exec()
+    rc = app.exec()
+    if T.GUI_SOCKET.exists():
+        T.GUI_SOCKET.unlink()
+    return rc
 
 
 if __name__ == "__main__":

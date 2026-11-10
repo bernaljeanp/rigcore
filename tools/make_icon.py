@@ -53,6 +53,20 @@ for i, p in enumerate(parts):
         parts[i] = p[::-1]
 silhouette = " ".join(to_d(p) for p in parts + [hub])
 
+import sys
+
+if "--symbolic" in sys.argv:
+    # Versión simbólica para la bandeja: un solo color que Plasma sustituye por el
+    # del tema (clase ColorScheme-Text). Ojo central hueco, sin anillo (no se ve a 22 px).
+    eye = circle(46)
+    eye = eye if (area(eye) > 0) != (area(hub) > 0) else eye[::-1]   # sentido opuesto = hueco
+    d = " ".join(to_d(p) for p in parts + [hub, eye])
+    print(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs><style id="current-color-scheme" type="text/css">.ColorScheme-Text {{ color:#232629; }}</style></defs>
+  <path class="ColorScheme-Text" fill="currentColor" fill-rule="nonzero" d="{d}"/>
+</svg>""")
+    sys.exit()
+
 # Estilo "Instrumento": ámbar sólido (el color de señal de la app), ojo en grafito.
 AMBER, GRAPHITE = "#FFB020", "#121315"
 print(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
