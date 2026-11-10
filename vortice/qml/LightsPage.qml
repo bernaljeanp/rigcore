@@ -187,7 +187,7 @@ Rectangle {
                         model: [
                             { id: "static",  name: page.ls.hasColor !== false ? qsTr("Fijo") : qsTr("Encendido"), desc: page.ls.hasColor !== false ? qsTr("Un color constante") : qsTr("Luz a un brillo fijo") },
                             { id: "breathe", name: qsTr("Respirar"), desc: qsTr("El color se enciende y se apaga despacio") },
-                            { id: "aurora",  name: page.ls.kind === "acer4" ? qsTr("Onda") : page.ls.kind === "asus" ? qsTr("Ciclo de color") : qsTr("Aurora"),
+                            { id: "aurora",  name: page.ls.kind === "acer4" ? qsTr("Onda") : (page.ls.kind === "asus" || page.ls.kind === "legion4") ? qsTr("Ciclo de color") : qsTr("Aurora"),
                               desc: page.ls.kind === "awelc" ? qsTr("Recorre verdes, azules y violetas") : qsTr("Efecto de color del propio teclado") },
                             { id: "off",     name: qsTr("Apagado"),  desc: qsTr("Sin luz") }
                         ].filter(e => (page.ls.effects || ["static", "breathe", "aurora", "off"]).indexOf(e.id) >= 0)

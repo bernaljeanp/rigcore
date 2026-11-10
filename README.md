@@ -67,10 +67,10 @@ a laptop, Vórtice benefits from it.
 |---|---|
 | CPU temperature | Any Intel or AMD CPU |
 | GPU | NVIDIA, AMD, Intel |
-| Fan readings | Most laptops with a kernel driver |
+| Fan readings | Most laptops with a kernel driver; MSI with msi-ec (in %) |
 | Fan control and curves | **Alienware / Dell G** (boost over the firmware curve) · **ThinkPad** (manual, with `thinkpad_acpi fan_control=1`) · **ASUS** (auto/max and a curve stored in the firmware) · **HP Omen/Victus** (auto/max; manual on Victus S) · **MSI** with msi-ec (Cooler Boost) · **Acer Predator/Nitro** with Linuwu-Sense · other Dell laptops and desktops (standard `pwmN`) |
 | Battery charge limit | Dell / Alienware (`dell-wmi-sysman`), standard `charge_control_*` interface (ThinkPad, ASUS, Framework, MSI…), **Lenovo** (conservation mode) and **Acer** (80 % limit) |
-| Keyboard lighting | **Alienware / Dell G** (AW-ELC: color, breathe, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, breathe, cycle) · **Acer Predator/Nitro** with Linuwu-Sense (4 zones: color, breathe, wave) · **standard RGB** keyboards (multicolor LED: Tuxedo/Clevo, System76…) · **brightness** of any backlit keyboard |
+| Keyboard lighting | **Alienware / Dell G** (AW-ELC: color, breathe, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, breathe, cycle) · **Lenovo Legion 5/Pro, IdeaPad Gaming, LOQ** 2020–2024 (4 zones: color, breathe, cycle) · **Acer Predator/Nitro** with Linuwu-Sense (4 zones: color, breathe, wave) · **standard RGB** keyboards (multicolor LED: Tuxedo/Clevo, System76…) · **brightness** of any backlit keyboard |
 | Special keys | Alienware 16X Aurora (other models: contribute your key codes with `tools/scan_keys.py`) |
 | Performance modes | Distros with `power-profiles-daemon` or `tuned-ppd` (if you use TLP, Vórtice tells you) |
 | Distros | systemd-based. Tested on Bazzite (Fedora) |
@@ -167,7 +167,8 @@ model, distro and what works or doesn't (there's a *compatibility report* templa
 
 [GPL-3.0](LICENSE). Interface icons derived from [Lucide](https://lucide.dev) (ISC).
 IBM Plex Sans Condensed and IBM Plex Mono fonts (SIL Open Font License).
-AW-ELC lighting protocol documented by [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT).
+AW-ELC lighting protocol documented by [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT);
+Lenovo 4-zone protocol from [L5P-Keyboard-RGB](https://github.com/4JX/L5P-Keyboard-RGB) (GPL-3.0).
 Interfaces for other brands studied from the kernel documentation and from
 [msi-ec](https://github.com/BeardOverflow/msi-ec), [Linuwu-Sense](https://github.com/0x7375646F/Linuwu-Sense),
 [LenovoLegionLinux](https://github.com/johnfanv2/LenovoLegionLinux) and [asusctl](https://gitlab.com/asus-linux/asusctl)

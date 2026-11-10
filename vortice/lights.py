@@ -5,6 +5,9 @@ Tipos de controlador (ver detect()):
               por alienfx-tools (MIT): reportes de 34 bytes, "ocupado" con HIDIOCGINPUT.
   asus        ASUS TUF/ROG (asus-wmi): asus::kbd_backlight/kbd_rgb_mode
               "cmd modo R G B velocidad" (cmd 0 = aplicar sin guardar en la BIOS).
+  legion4     Lenovo Legion 5/Pro, IdeaPad Gaming, LOQ (2020-2024): teclado de 4 zonas
+              por HID (048d:c9x5). Protocolo de L5P-Keyboard-RGB (GPL-3.0): feature
+              report de 33 bytes "CC 16 efecto velocidad brillo R G B x4".
   acer4       Acer Predator/Nitro (Linuwu-Sense): four_zoned_kb/per_zone_mode y
               four_zone_mode "modo,velocidad,brillo,dirección,R,G,B".
   multicolor  LED multicolor estándar (*::kbd_backlight con multi_intensity).
@@ -161,6 +164,7 @@ def apply(effect: str, color: str, brightness: int, ctrl: dict | None = None) ->
 
 EFFECTS_BY_KIND = {
     "awelc": ["static", "breathe", "aurora", "off"],
+    "legion4": ["static", "breathe", "aurora", "off"],   # aurora = ciclo suave del firmware
     "asus": ["static", "breathe", "aurora", "off"],       # aurora = ciclo de color del firmware
     "acer4": ["static", "breathe", "aurora", "off"],      # aurora = onda del firmware
     "multicolor": ["static", "off"],
@@ -187,11 +191,64 @@ def _kbd_leds(root):
     return sorted(glob.glob(os.path.join(root, "sys/class/leds/*kbd_backlight*")))
 
 
+LEGION_VENDOR = "0000048D"
+LEGION_PRODUCTS = {"0000C955", "0000C963", "0000C965", "0000C973", "0000C975", "0000C983",
+                   "0000C984", "0000C985", "0000C993", "0000C994", "0000C995"}
+_LEGION_USAGE_PAGE = b"\x06\x89\xff"           # Usage Page (Vendor 0xFF89)
+
+
+def find_legion(root: str = "/") -> dict | None:
+    """Interfaz HID del teclado de 4 zonas de Lenovo (la que declara la usage page 0xFF89)."""
+    for d in sorted(glob.glob(os.path.join(root, "sys/class/hidraw/hidraw*"))):
+        try:
+            with open(f"{d}/device/uevent") as f:
+                uevent = f.read().upper()
+            hid_id = next((l.split("=", 1)[1] for l in uevent.splitlines() if l.startswith("HID_ID=")), "")
+            parts = hid_id.split(":")
+            if len(parts) != 3 or parts[1] != LEGION_VENDOR or parts[2] not in LEGION_PRODUCTS:
+                continue
+            with open(f"{d}/device/report_descriptor", "rb") as f:
+                if _LEGION_USAGE_PAGE not in f.read():
+                    continue
+        except OSError:
+            continue
+        return {"path": f"/dev/{os.path.basename(d)}", "name": "Lenovo 4 zonas", "sysfs": d}
+    return None
+
+
+def legion_payload(effect: str, color: str, brightness: int) -> bytes:
+    """Feature report de 33 bytes del teclado de 4 zonas de Lenovo."""
+    validate(effect, color, brightness)
+    rgb = bytes.fromhex(color)
+    p = bytearray(33)
+    p[0], p[1] = 0xCC, 0x16
+    p[3] = 2                                            # velocidad 1-4
+    p[4] = 1 if brightness <= 50 else 2                 # brillo 1-2
+    if effect == "aurora":
+        p[2] = 0x06                                     # ciclo suave del firmware
+    else:
+        p[2] = 0x03 if effect == "breathe" else 0x01
+        p[5:17] = (b"\x00\x00\x00" if effect == "off" or brightness == 0 else rgb) * 4
+    return bytes(p)
+
+
+def _hid_set_feature(path: str, data: bytes) -> None:
+    hidiocsfeature = (3 << 30) | (len(data) << 16) | (ord("H") << 8) | 0x06
+    fd = os.open(path, os.O_RDWR)
+    try:
+        fcntl.ioctl(fd, hidiocsfeature, bytearray(data))
+    finally:
+        os.close(fd)
+
+
 def detect(root: str = "/") -> dict | None:
     """Controlador de luces del teclado más capaz que haya, o None."""
     aw = find_controller(root)
     if aw:
         return {**aw, "kind": "awelc", "effects": EFFECTS_BY_KIND["awelc"], "color": True}
+    lg = find_legion(root)
+    if lg:
+        return {**lg, "kind": "legion4", "effects": EFFECTS_BY_KIND["legion4"], "color": True}
     acer = os.path.join(root, ACER_BASE)
     if os.path.exists(f"{acer}/per_zone_mode"):
         return {"kind": "acer4", "name": "Acer 4 zonas", "path": acer, "sysfs": acer,
@@ -213,7 +270,7 @@ def detect(root: str = "/") -> dict | None:
 
 def _files_for(ctrl):
     k = ctrl["kind"]
-    if k == "awelc":
+    if k in ("awelc", "legion4"):
         return [ctrl["path"]]
     if k == "acer4":
         return [f"{ctrl['path']}/per_zone_mode", f"{ctrl['path']}/four_zone_mode"]
@@ -237,6 +294,9 @@ def apply_any(effect: str, color: str, brightness: int, ctrl: dict) -> dict:
     kind = ctrl["kind"]
     if kind == "awelc":
         return apply(effect, color, brightness, ctrl)
+    if kind == "legion4":
+        _hid_set_feature(ctrl["path"], legion_payload(effect, color, brightness))
+        return {"effect": effect, "color": color.upper(), "brightness": int(brightness), "time": time.time()}
 
     rgb = int(color, 16)
     r, g, b = rgb >> 16, (rgb >> 8) & 0xFF, rgb & 0xFF

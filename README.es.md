@@ -66,10 +66,10 @@ que el kernel añade soporte para un portátil, Vórtice lo aprovecha.
 |---|---|
 | Temperatura de CPU | Cualquier Intel o AMD |
 | Gráfica | NVIDIA, AMD, Intel |
-| Leer ventiladores | La mayoría de portátiles con driver en el kernel |
+| Leer ventiladores | La mayoría de portátiles con driver en el kernel; MSI con msi-ec (en %) |
 | Control de ventiladores y curvas | **Alienware / Dell G** (boost sobre el firmware) · **ThinkPad** (manual, con `thinkpad_acpi fan_control=1`) · **ASUS** (automático/máximo y curva guardada en el firmware) · **HP Omen/Victus** (automático/máximo; manual en Victus S) · **MSI** con msi-ec (Cooler Boost) · **Acer Predator/Nitro** con Linuwu-Sense · otros Dell y sobremesas (`pwmN` estándar) |
 | Límite de batería | Dell / Alienware (`dell-wmi-sysman`), interfaz estándar `charge_control_*` (ThinkPad, ASUS, Framework, MSI…), **Lenovo** (modo conservación) y **Acer** (límite al 80 %) |
-| Luces del teclado | **Alienware / Dell G** (AW-ELC: color, respirar, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, respirar, ciclo) · **Acer Predator/Nitro** con Linuwu-Sense (4 zonas: color, respirar, onda) · teclados **RGB estándar** (LED multicolor: Tuxedo/Clevo, System76…) · **brillo** de cualquier teclado retroiluminado |
+| Luces del teclado | **Alienware / Dell G** (AW-ELC: color, respirar, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, respirar, ciclo) · **Lenovo Legion 5/Pro, IdeaPad Gaming, LOQ** 2020–2024 (4 zonas: color, respirar, ciclo) · **Acer Predator/Nitro** con Linuwu-Sense (4 zonas: color, respirar, onda) · teclados **RGB estándar** (LED multicolor: Tuxedo/Clevo, System76…) · **brillo** de cualquier teclado retroiluminado |
 | Teclas especiales | Alienware 16X Aurora (otros modelos: aporta tus códigos con `tools/scan_keys.py`) |
 | Modos de rendimiento | Distros con `power-profiles-daemon` o `tuned-ppd` (si usas TLP, Vórtice lo indica) |
 | Distros | Con systemd. Probado en Bazzite (Fedora) |
@@ -166,7 +166,8 @@ Ejecuta `.venv/bin/python -m vortice.hardware` y adjunta la salida.
 
 [GPL-3.0](LICENSE). Iconos de interfaz derivados de [Lucide](https://lucide.dev) (ISC).
 Fuentes IBM Plex Sans Condensed e IBM Plex Mono (SIL Open Font License).
-Protocolo de luces AW-ELC documentado por [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT).
+Protocolo de luces AW-ELC documentado por [alienfx-tools](https://github.com/T-Troll/alienfx-tools) (MIT);
+protocolo de 4 zonas de Lenovo de [L5P-Keyboard-RGB](https://github.com/4JX/L5P-Keyboard-RGB) (GPL-3.0).
 Interfaces de otras marcas estudiadas en la documentación del kernel y en
 [msi-ec](https://github.com/BeardOverflow/msi-ec), [Linuwu-Sense](https://github.com/0x7375646F/Linuwu-Sense),
 [LenovoLegionLinux](https://github.com/johnfanv2/LenovoLegionLinux) y [asusctl](https://gitlab.com/asus-linux/asusctl)

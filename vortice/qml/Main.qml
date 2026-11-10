@@ -211,6 +211,7 @@ ApplicationWindow {
                                     label: (fanSlot.f.label || "").replace("CPU Fan", qsTr("Ventilador CPU")).replace("GPU Fan", qsTr("Ventilador GPU"))
                                     rpm: fanSlot.f.rpm || 0
                                     maxRpm: fanSlot.f.max || 5400
+                                    unit: fanSlot.f.unit || "RPM"
                                     boost: fanSlot.hIndex >= 0 ? win.helper.fans[fanSlot.hIndex].boost
                                                                : (fanSlot.f.boost === undefined ? null : fanSlot.f.boost)
                                     canBoost: win.service && fanSlot.hIndex >= 0

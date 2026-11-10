@@ -214,53 +214,58 @@
       <translation>Fan</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="72" />
+      <location filename="../qml/FanCell.qml" line="73" />
       <source>RPM</source>
       <translation>RPM</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="79" />
+      <location filename="../qml/FanCell.qml" line="80" />
       <source> % del máximo</source>
       <translation> % of max</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="79" />
+      <location filename="../qml/FanCell.qml" line="80" />
       <source>parado</source>
       <translation>stopped</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="115" />
+      <location filename="../qml/FanCell.qml" line="80" />
+      <source>velocidad</source>
+      <translation>speed</translation>
+    </message>
+    <message>
+      <location filename="../qml/FanCell.qml" line="116" />
       <source>Velocidad mínima</source>
       <translation>Minimum speed</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="115" />
+      <location filename="../qml/FanCell.qml" line="116" />
       <source>Velocidad</source>
       <translation>Speed</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="115" />
+      <location filename="../qml/FanCell.qml" line="116" />
       <source>Boost</source>
       <translation>Boost</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="121" />
+      <location filename="../qml/FanCell.qml" line="122" />
       <source>requiere servicio</source>
       <translation>requires service</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="122" />
       <location filename="../qml/FanCell.qml" line="123" />
+      <location filename="../qml/FanCell.qml" line="124" />
       <source>auto</source>
       <translation>auto</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="122" />
+      <location filename="../qml/FanCell.qml" line="123" />
       <source>máximo</source>
       <translation>maximum</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="133" />
+      <location filename="../qml/FanCell.qml" line="134" />
       <source>Máximo</source>
       <translation>Maximum</translation>
     </message>
@@ -892,17 +897,17 @@
       <translation>GPU fan</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="229" />
+      <location filename="../qml/Main.qml" line="230" />
       <source>Batería</source>
       <translation>Battery</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="230" />
+      <location filename="../qml/Main.qml" line="231" />
       <source>Sin batería</source>
       <translation>No battery</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="230" />
+      <location filename="../qml/Main.qml" line="231" />
       <source>Equipo de escritorio o batería no detectada.</source>
       <translation>Desktop computer or battery not detected.</translation>
     </message>

@@ -43,6 +43,14 @@ body:
     validations:
       required: true
   - type: textarea
+    id: teclas
+    attributes:
+      label: Special keys (optional) / Teclas especiales (opcional)
+      description: |
+        If your laptop has special keys (performance, lighting, stealth...) that don't work, run
+        `pkexec /usr/bin/python3 -I tools/scan_keys.py 30`, press each special key once, and paste the output.
+      render: text
+  - type: textarea
     id: notas
     attributes:
       label: What fails or is missing? / ¿Qué falla o falta?

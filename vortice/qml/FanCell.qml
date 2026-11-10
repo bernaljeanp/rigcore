@@ -10,6 +10,7 @@ Item {
     property string label: qsTr("Ventilador")
     property real rpm: 0
     property real maxRpm: 5400
+    property string unit: "RPM"       // MSI (msi-ec) informa en %
     property var boost: null          // 0-255 según el kernel
     property bool canBoost: false
     property string kind: "boost"     // boost | pwm | mode | toggle | acer (ver fans.py)
@@ -69,14 +70,14 @@ Item {
                 font { family: T.mono; pixelSize: 40; weight: Font.Light }
             }
             Text {
-                text: qsTr("RPM")
+                text: fc.unit === "%" ? "%" : qsTr("RPM")
                 color: T.ink2
                 anchors.baseline: rpmText.baseline
                 font { family: T.mono; pixelSize: 12 }
             }
         }
         Text {
-            text: fc.rpm === 0 ? qsTr("parado") : Math.round(fc.frac * 100) + qsTr(" % del máximo")
+            text: fc.rpm === 0 ? qsTr("parado") : fc.unit === "%" ? qsTr("velocidad") : Math.round(fc.frac * 100) + qsTr(" % del máximo")
             color: T.ink3
             font { family: T.mono; pixelSize: 11 }
         }

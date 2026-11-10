@@ -152,12 +152,22 @@ class MsiTests(Base):
     def test_cooler_boost(self):
         cb = "/sys/devices/platform/msi-ec/cooler_boost"
         w(self.root, cb, "off")
-        (f,) = fans.detect(self.root)
-        self.assertEqual(f["kind"], "toggle")
+        f, g = fans.detect(self.root)                     # un interruptor, en las dos tarjetas
+        self.assertEqual((f["kind"], f["label"], g["label"]), ("toggle", "CPU Fan", "GPU Fan"))
         fans.Controller().apply(0, f, 255, 70)
         self.assertEqual(r(self.root, cb), "on")
         fans.Controller.reset(f)
         self.assertEqual(r(self.root, cb), "off")
+
+
+class MsiLecturaTests(Base):
+    def test_velocidad_en_porcentaje(self):
+        from vortice import hardware
+        w(self.root, "/sys/devices/platform/msi-ec/cpu/realtime_fan_speed", "45")
+        w(self.root, "/sys/devices/platform/msi-ec/gpu/realtime_fan_speed", "60")
+        cpu, gpu = hardware.msi_fans(self.root)
+        self.assertEqual((cpu.label, cpu.unit, cpu.max_rpm), ("CPU Fan", "%", 100))
+        self.assertTrue(gpu.input_path.endswith("gpu/realtime_fan_speed"))
 
 
 class AcerTests(Base):

@@ -133,10 +133,12 @@ def detect(root: str = "/") -> list[dict]:
             break
 
     # MSI (msi-ec): un único interruptor de refuerzo para todos los ventiladores.
+    # Se asocia a los dos ventiladores para que el panel lo muestre en ambas tarjetas.
     cb = _p(root, "/sys/devices/platform/msi-ec/cooler_boost")
     if os.path.exists(cb) and not fans:
-        fans.append({"label": "Cooler Boost", "driver": "msi-ec", "input": None, "max": None,
-                     "kind": "toggle", "toggle": cb, "temp": _temp_for(root, "", "")})
+        for lbl in ("CPU Fan", "GPU Fan"):
+            fans.append({"label": lbl, "driver": "msi-ec", "input": None, "max": None,
+                         "kind": "toggle", "toggle": cb, "temp": _temp_for(root, "", "")})
     return fans
 
 

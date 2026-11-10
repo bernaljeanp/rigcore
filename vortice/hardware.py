@@ -43,6 +43,18 @@ class Fan:
     input_path: str
     max_rpm: int | None
     boost_path: str | None
+    unit: str = "RPM"           # MSI (msi-ec) informa en porcentaje
+
+
+def msi_fans(root: str = "/") -> list[Fan]:
+    """MSI con msi-ec: velocidad de los ventiladores en % (no en hwmon)."""
+    out = []
+    base = os.path.join(root, "sys/devices/platform/msi-ec")
+    for part, label in (("cpu", "CPU Fan"), ("gpu", "GPU Fan")):
+        path = f"{base}/{part}/realtime_fan_speed"
+        if os.path.exists(path):
+            out.append(Fan(label, path, 100, None, unit="%"))
+    return out
 
 
 @dataclass
@@ -109,6 +121,11 @@ def detect() -> Capabilities:
             caps.fans.append(Fan(label, fin, _read_int(f"{base}_max"), boost))
             if not caps.vendor_driver and name not in ("dell_smm", "dell_ddv"):
                 caps.vendor_driver = name
+
+    if not caps.fans:
+        caps.fans = msi_fans()
+        if caps.fans:
+            caps.vendor_driver = caps.vendor_driver or "msi-ec"
 
     pp = sorted(glob.glob(f"{SYS}/platform-profile/platform-profile-*"))
     if pp:
@@ -243,6 +260,7 @@ class Sampler:
                 "label": f.label,
                 "rpm": rpm,
                 "max": f.max_rpm or 6000,
+                "unit": f.unit,
                 "boost": _read_int(f.boost_path) if f.boost_path else None,
             })
 

@@ -121,5 +121,25 @@ class OtrasMarcasTests(unittest.TestCase):
         self.assertEqual(out["effect"], "static")
         self.assertEqual(self.r(f"{led}/brightness"), "1")
 
+    def test_lenovo_legion_4_zonas(self):
+        d = "sys/class/hidraw/hidraw2/device"
+        self.w(f"{d}/uevent", "HID_ID=0003:0000048D:0000C975\nHID_NAME=ITE Tech. Inc. ITE Device(8295)\n")
+        with open(os.path.join(self.root, d, "report_descriptor"), "wb") as f:
+            f.write(bytes([0x06, 0x89, 0xFF, 0x09, 0xCC]))          # usage page 0xFF89
+        c = lights.detect(self.root)
+        self.assertEqual((c["kind"], c["path"]), ("legion4", "/dev/hidraw2"))
+        p = lights.legion_payload("static", "FF8000", 100)
+        self.assertEqual((len(p), p[0], p[1], p[2], p[4]), (33, 0xCC, 0x16, 0x01, 2))
+        self.assertEqual(p[5:17], bytes.fromhex("FF8000") * 4)       # las 4 zonas
+        self.assertEqual(lights.legion_payload("aurora", "FF8000", 30)[2:5], bytes([0x06, 2, 1]))
+        self.assertEqual(lights.legion_payload("off", "FF8000", 100)[5:17], bytes(12))
+
+    def test_lenovo_otra_interfaz_no_se_toca(self):
+        d = "sys/class/hidraw/hidraw3/device"
+        self.w(f"{d}/uevent", "HID_ID=0003:0000048D:0000C975\n")
+        with open(os.path.join(self.root, d, "report_descriptor"), "wb") as f:
+            f.write(bytes([0x05, 0x01, 0x09, 0x06]))                 # teclado normal
+        self.assertIsNone(lights.detect(self.root))
+
     def test_sin_teclado_iluminado(self):
         self.assertIsNone(lights.detect(self.root))
