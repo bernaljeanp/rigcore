@@ -44,6 +44,7 @@ class Fan:
     max_rpm: int | None
     boost_path: str | None
     unit: str = "RPM"           # MSI (msi-ec) informa en porcentaje
+    temp_path: str | None = None  # sensor que vigila ("CPU Fan" -> sensor "CPU" del mismo driver)
 
 
 def msi_fans(root: str = "/") -> list[Fan]:
@@ -53,7 +54,7 @@ def msi_fans(root: str = "/") -> list[Fan]:
     for part, label in (("cpu", "CPU Fan"), ("gpu", "GPU Fan")):
         path = f"{base}/{part}/realtime_fan_speed"
         if os.path.exists(path):
-            out.append(Fan(label, path, 100, None, unit="%"))
+            out.append(Fan(label, path, 100, None, unit="%", temp_path=f"{base}/{part}/realtime_temperature"))
     return out
 
 
@@ -123,7 +124,13 @@ def detect() -> Capabilities:
                 continue
             if name in ("dell_smm", "dell_ddv") and caps.fans:
                 continue
-            caps.fans.append(Fan(label, fin, _read_int(f"{base}_max"), boost))
+            temp_path = None
+            word = label.split()[0].lower() if label else ""
+            for lbl in sorted(glob.glob(f"{hw}/temp*_label")):
+                if (_read(lbl) or "").lower() == word:
+                    temp_path = lbl.replace("_label", "_input")
+                    break
+            caps.fans.append(Fan(label, fin, _read_int(f"{base}_max"), boost, temp_path=temp_path))
             if not caps.vendor_driver and name not in ("dell_smm", "dell_ddv"):
                 caps.vendor_driver = name
 
@@ -202,6 +209,21 @@ def set_profile(name: str) -> bool:
 
 # --------------------------------------------------------------- lectura ---
 
+def _battery_health(bat: str) -> dict:
+    """Salud (capacidad actual frente a la de fábrica), ciclos y capacidad en Wh."""
+    full = _read_int(f"{bat}/charge_full") or _read_int(f"{bat}/energy_full")
+    design = _read_int(f"{bat}/charge_full_design") or _read_int(f"{bat}/energy_full_design")
+    out = {"cycles": _read_int(f"{bat}/cycle_count")}
+    if full and design:
+        out["health"] = round(full / design * 100)
+        if os.path.exists(f"{bat}/charge_full_design"):          # µAh -> Wh con la tensión de diseño
+            volts = (_read_int(f"{bat}/voltage_min_design") or 0) / 1e6
+            out["designWh"] = round(design / 1e6 * volts, 1) if volts else None
+        else:                                                    # energy_*: µWh
+            out["designWh"] = round(design / 1e6, 1)
+    return out
+
+
 class Sampler:
     """Toma muestras periódicas. Guarda estado para calcular uso de CPU."""
 
@@ -233,6 +255,14 @@ class Sampler:
         freqs = [f for f in freqs if f]
         return max(freqs) / 1e6 if freqs else None  # GHz, núcleo más rápido
 
+    def _fan_temp(self, f: "Fan") -> float | None:
+        """Temperatura que vigila el ventilador; si el driver no la da, la de la CPU."""
+        path = f.temp_path or (self.caps.cpu_temp_path if f.label.startswith("CPU") else None)
+        v = _read_int(path) if path else None
+        if v is None:
+            return None
+        return v / 1000 if v > 1000 else float(v)      # msi-ec da grados, hwmon milésimas
+
     def sample(self) -> dict:
         c = self.caps
         s: dict = {"t": time.time()}
@@ -255,6 +285,7 @@ class Sampler:
                 "rpm": rpm,
                 "max": f.max_rpm or 6000,
                 "unit": f.unit,
+                "temp": self._fan_temp(f),
                 "boost": _read_int(f.boost_path) if f.boost_path else None,
             })
 
@@ -264,6 +295,7 @@ class Sampler:
                 "capacity": _read_int(f"{b}/capacity"),
                 "status": _read(f"{b}/status"),
                 "limit": _read_int(c.charge_threshold) if c.charge_threshold else None,
+                **_battery_health(b),
             }
         s["ac"] = _read_int(f"{SYS}/power_supply/AC/online") == 1
         return s

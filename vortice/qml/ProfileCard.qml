@@ -11,6 +11,9 @@ Section {
     property bool available: true
     property string manager: ""
     property var details: ({})
+    property var cpuPower: null       // W (RAPL, vía servicio)
+    property var gpuPower: null       // W (NVML / hwmon)
+    readonly property bool hasPower: cpuPower !== null || gpuPower !== null
     signal picked(string name)
 
     readonly property var modes: [
@@ -98,6 +101,61 @@ Section {
             }
         }
         Item { Layout.fillHeight: true }
+
+        // Consumo real: lo que cambia de verdad al pasar de un modo a otro.
+        ColumnLayout {
+            visible: pc.hasPower
+            Layout.fillWidth: true
+            Layout.leftMargin: T.pad
+            Layout.rightMargin: T.pad
+            Layout.bottomMargin: 18
+            spacing: 6
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: qsTr("Consumo")
+                    color: T.ink3
+                    font { family: T.sans; pixelSize: 11; weight: Font.Medium; letterSpacing: 0.8; capitalization: Font.AllUppercase }
+                }
+                Item { Layout.fillWidth: true }
+                Row {
+                    spacing: 4
+                    Text {
+                        id: tw
+                        text: Math.round((pc.cpuPower || 0) + (pc.gpuPower || 0))
+                        color: T.ink
+                        font { family: T.display; pixelSize: 26; weight: Font.Medium }
+                    }
+                    Text { text: "W"; color: T.ink2; anchors.baseline: tw.baseline; font { family: T.mono; pixelSize: 12 } }
+                }
+            }
+            // Barra repartida CPU / GPU.
+            Item {
+                id: split
+                Layout.fillWidth: true
+                height: 4
+                readonly property real total: Math.max(1, (pc.cpuPower || 0) + (pc.gpuPower || 0))
+                Rectangle { anchors.fill: parent; color: T.rule }
+                Rectangle { id: cpuSeg; height: 4; width: parent.width * (pc.cpuPower || 0) / split.total; color: hw.accent
+                            Behavior on width { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } } }
+                Rectangle { x: cpuSeg.width + 2; height: 4; width: Math.max(0, parent.width * (pc.gpuPower || 0) / split.total - 2); color: T.steel
+                            Behavior on width { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } } }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: qsTr("CPU ") + (pc.cpuPower === null ? "—" : Math.round(pc.cpuPower) + " W")
+                    color: pc.cpuPower === null ? T.ink3 : T.ink2
+                    font { family: T.mono; pixelSize: 11 }
+                }
+                Item { Layout.fillWidth: true }
+                Text {
+                    text: qsTr("GPU ") + (pc.gpuPower === null ? "—" : Math.round(pc.gpuPower) + " W")
+                    color: pc.gpuPower === null ? T.ink3 : T.ink2
+                    font { family: T.mono; pixelSize: 11 }
+                }
+            }
+        }
 
         // Qué hay debajo del modo (datos reales del sistema).
         Text {

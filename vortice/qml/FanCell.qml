@@ -14,6 +14,10 @@ Item {
     property var boost: null          // 0-255 según el kernel
     property bool canBoost: false
     property string kind: "boost"     // boost | pwm | mode | toggle | acer (ver fans.py)
+    property var temp: null           // temperatura que vigila este ventilador
+    property string watches: ""       // "CPU" / "GPU"
+    property bool curveOn: false      // la curva de Vórtice lo controla
+    property var curvePct: null       // % que pide la curva ahora
     readonly property bool onOff: kind === "mode" || kind === "toggle"
     signal boostRequested(int value)
 
@@ -83,6 +87,50 @@ Item {
         }
 
         Item { Layout.fillHeight: true }
+
+        // Qué vigila y quién manda: firmware o la curva de Vórtice.
+        RowLayout {
+            visible: fc.temp !== null && fc.temp !== undefined
+            Layout.fillWidth: true
+            spacing: 0
+            Column {
+                spacing: 3
+                Text {
+                    text: qsTr("Vigila") + (fc.watches ? " · " + fc.watches : "")
+                    color: T.ink3
+                    font { family: T.sans; pixelSize: 11; weight: Font.Medium; letterSpacing: 0.8; capitalization: Font.AllUppercase }
+                }
+                Row {
+                    spacing: 3
+                    Text {
+                        id: tv
+                        text: Math.round(fc.temp || 0)
+                        color: (fc.temp || 0) >= 90 ? T.warn : T.ink
+                        font { family: T.display; pixelSize: 22; weight: Font.Medium }
+                    }
+                    Text { text: "°C"; color: T.ink2; anchors.baseline: tv.baseline; font { family: T.mono; pixelSize: 11 } }
+                }
+            }
+            Item { Layout.fillWidth: true }
+            Column {
+                spacing: 3
+                Text {
+                    anchors.right: parent.right
+                    text: qsTr("Control")
+                    color: T.ink3
+                    font { family: T.sans; pixelSize: 11; weight: Font.Medium; letterSpacing: 0.8; capitalization: Font.AllUppercase }
+                }
+                Text {
+                    anchors.right: parent.right
+                    text: fc.curveOn ? qsTr("curva") + (fc.curvePct !== null && fc.curvePct !== undefined ? " → " + Math.round(fc.curvePct) + " %" : "")
+                                     : fc.boosted ? qsTr("manual") : qsTr("firmware")
+                    color: fc.curveOn || fc.boosted ? hw.accent : T.ink2
+                    font { family: T.mono; pixelSize: 13 }
+                }
+            }
+        }
+
+        Item { Layout.preferredHeight: 16 }
 
         // Medidor horizontal de RPM.
         Item {

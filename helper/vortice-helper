@@ -70,7 +70,7 @@ XML = f"""
   </interface>
 </node>
 """
-VERSION = 6  # v6: enteros 'i' (QtDBus de PySide no puede enviar 'u')
+VERSION = 7  # v7: cpuPower (RAPL). v6: v6: enteros 'i' (QtDBus de PySide no puede enviar 'u')
 STATE_DIR = os.environ.get("STATE_DIRECTORY", "/var/lib/vortice")
 LIGHTS_FILE = os.path.join(STATE_DIR, "lights.json")
 CURVE_FILE = os.path.join(STATE_DIR, "fancurve.json")
@@ -218,6 +218,7 @@ class Curve:
         self.manual = {}            # índice -> refuerzo manual (0-255)
         self.states = {}            # índice -> FanState
         self.written = {}           # índice -> último valor pedido
+        self.curve_now = {}         # índice -> % que pide la curva ahora
         self.applied = {}           # índice -> descripción de lo aplicado
         self.ctrl = fanmod.Controller()
         self.asus = fanmod.asus_curve_paths()
@@ -287,6 +288,7 @@ class Curve:
                 print(f"{fan['label']} ({fan['driver']}): {desc}", flush=True)
             self.written[index], self.applied[index] = value, desc
         fan["curve"], fan["temp_now"] = curve, temp
+        self.curve_now[index] = round(curve / 2.55)
 
     def tick(self):
         try:
@@ -340,6 +342,33 @@ def set_charge(mode, start, stop):
             raise Refused("el inicio debe ser menor que el fin")
         _write(f"{bat}/charge_control_start_threshold", start)
     _write(f"{bat}/charge_control_end_threshold", stop)
+
+
+class CpuPower:
+    """Consumo del paquete de la CPU (RAPL): media entre dos consultas."""
+
+    def __init__(self):
+        hits = sorted(glob.glob("/sys/class/powercap/intel-rapl:*"))
+        self.path = next((h for h in hits if (_read(f"{h}/name") or "").startswith("package")), None)
+        self.last = None
+
+    def watts(self):
+        if not self.path:
+            return None
+        e = _read(f"{self.path}/energy_uj")
+        if e is None:
+            return None
+        e, now = int(e), time.monotonic()
+        prev, self.last = self.last, (now, e)
+        if not prev or now - prev[0] < 0.2:
+            return None
+        de = e - prev[1]
+        if de < 0:                                     # el contador dio la vuelta
+            de += int(_read(f"{self.path}/max_energy_range_uj") or 0)
+        return round(de / 1e6 / (now - prev[0]), 1)
+
+
+CPU_POWER = None
 
 
 class Lights:
@@ -449,10 +478,12 @@ def on_call(conn, sender, path, iface, method, params, invocation):
             state = {"fans": [{"label": f["label"], "driver": f["driver"], "kind": f["kind"],
                                "levels": fanmod.levels(f["kind"]), "rpm": f["rpm"],
                                "temp": CURVE.temp(f), "manual": CURVE.manual.get(i, 0),
+                               "curve": CURVE.curve_now.get(i, 0),
                                "boost": CURVE.written.get(i, fanmod.read_value(f) or 0)}
                               for i, f in enumerate(fl)],
                      "hardwareCurve": bool(CURVE.asus),
                      "battery": battery(), "lights": LIGHTS.state(), "curve": CURVE.cfg,
+                     "cpuPower": CPU_POWER.watts() if CPU_POWER else None,
                      "bios": bios_options()}
             invocation.return_value(GLib.Variant("(s)", (json.dumps(state),)))
         elif method == "SetFanBoost":
@@ -488,8 +519,9 @@ def on_get_property(conn, sender, path, iface, prop):
 
 
 def main():
-    global CURVE
+    global CURVE, CPU_POWER
     CURVE = Curve()
+    CPU_POWER = CpuPower()
     loop = GLib.MainLoop()
     node = Gio.DBusNodeInfo.new_for_xml(XML)
 

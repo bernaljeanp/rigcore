@@ -13,6 +13,9 @@ Section {
     property var limit: null
     property bool firmwareLimit: false
     property var service: null
+    property var health: null         // % de la capacidad de fábrica
+    property var cycles: null
+    property var designWh: null
     signal configure()
 
     source: firmwareLimit ? "dell-wmi-sysman" : (limit !== null && limit !== undefined ? "power_supply" : "")
@@ -87,6 +90,43 @@ Section {
         }
 
         Item { Layout.fillHeight: true }
+
+        // Salud: cuánto conserva la batería de su capacidad original.
+        RowLayout {
+            visible: bc.health !== null
+            Layout.fillWidth: true
+            Layout.bottomMargin: 18
+            spacing: 0
+            Repeater {
+                model: [
+                    { k: qsTr("Salud"), v: bc.health, u: "%", hl: true },
+                    { k: qsTr("Ciclos"), v: bc.cycles, u: "" },
+                    { k: qsTr("De fábrica"), v: bc.designWh, u: "Wh" }
+                ]
+                delegate: Column {
+                    required property var modelData
+                    required property int index
+                    visible: modelData.v !== null && modelData.v !== undefined
+                    Layout.fillWidth: true
+                    spacing: 3
+                    Text {
+                        text: modelData.k
+                        color: T.ink3
+                        font { family: T.sans; pixelSize: 11; weight: Font.Medium; letterSpacing: 0.8; capitalization: Font.AllUppercase }
+                    }
+                    Row {
+                        spacing: 3
+                        Text {
+                            id: hv
+                            text: modelData.v === null || modelData.v === undefined ? "" : modelData.v
+                            color: modelData.hl && modelData.v < 70 ? T.warn : T.ink
+                            font { family: T.display; pixelSize: 22; weight: Font.Medium }
+                        }
+                        Text { text: modelData.u; color: T.ink2; anchors.baseline: hv.baseline; font { family: T.mono; pixelSize: 11 } }
+                    }
+                }
+            }
+        }
 
         // Fila de configuración (abre el panel de carga).
         Item {

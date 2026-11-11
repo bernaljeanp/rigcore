@@ -10,10 +10,11 @@ Section {
     property var cpu: []
     property var gpu: []
     readonly property var series: [
-        { name: qsTr("CPU"), data: cpu, color: T.ink },
+        { name: qsTr("CPU"), data: cpu, color: hw.accent, area: true },
         { name: qsTr("GPU"), data: gpu, color: T.steel }
     ]
     onCpuChanged: chart.requestPaint()
+    Connections { target: hw; function onAccentChanged() { chart.requestPaint() } }
 
     headerRight: [
         Repeater {
@@ -76,6 +77,24 @@ Section {
                 var d = s.data
                 if (!d || d.length < 2) return
                 var off = span - d.length
+                if (s.area) {
+                    // Área bajo la curva, del acento a transparente.
+                    var c = Qt.color(s.color)
+                    var g = ctx.createLinearGradient(0, top, 0, bottom)
+                    g.addColorStop(0, Qt.rgba(c.r, c.g, c.b, 0.22))
+                    g.addColorStop(1, Qt.rgba(c.r, c.g, c.b, 0))
+                    ctx.fillStyle = g
+                    ctx.beginPath()
+                    var started = false, lastX = 0, firstX = 0
+                    for (var j = 0; j < d.length; j++) {
+                        if (d[j] === null || d[j] === undefined) continue
+                        var ax = X(off + j), ay = Y(d[j])
+                        if (!started) { ctx.moveTo(ax, bottom); ctx.lineTo(ax, ay); firstX = ax; started = true }
+                        else ctx.lineTo(ax, ay)
+                        lastX = ax
+                    }
+                    if (started) { ctx.lineTo(lastX, bottom); ctx.closePath(); ctx.fill() }
+                }
                 ctx.strokeStyle = s.color
                 ctx.lineWidth = 1.5
                 ctx.lineJoin = "round"

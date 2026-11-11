@@ -8,92 +8,107 @@
       <translation>Battery</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="20" />
+      <location filename="../qml/BatteryCard.qml" line="23" />
       <source>Cargando</source>
       <translation>Charging</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="21" />
+      <location filename="../qml/BatteryCard.qml" line="24" />
       <source>Completa</source>
       <translation>Full</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="22" />
+      <location filename="../qml/BatteryCard.qml" line="25" />
       <source>En pausa por el límite</source>
       <translation>Paused at the limit</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="23" />
+      <location filename="../qml/BatteryCard.qml" line="26" />
       <source>Usando batería</source>
       <translation>On battery</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="25" />
+      <location filename="../qml/BatteryCard.qml" line="28" />
       <source>Adaptativa</source>
       <translation>Adaptive</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="25" />
+      <location filename="../qml/BatteryCard.qml" line="28" />
       <source>Estándar</source>
       <translation>Standard</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="26" />
+      <location filename="../qml/BatteryCard.qml" line="29" />
       <source>Rápida</source>
       <translation>Express</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="26" />
+      <location filename="../qml/BatteryCard.qml" line="29" />
       <source>Siempre enchufado</source>
       <translation>Primarily AC</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="26" />
+      <location filename="../qml/BatteryCard.qml" line="29" />
       <source>Personalizada</source>
       <translation>Custom</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="27" />
+      <location filename="../qml/BatteryCard.qml" line="30" />
       <source>Conservación</source>
       <translation>Conservation</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="27" />
+      <location filename="../qml/BatteryCard.qml" line="30" />
       <source>Hasta 80 %</source>
       <translation>Up to 80 %</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="32" />
+      <location filename="../qml/BatteryCard.qml" line="35" />
       <source>hasta </source>
       <translation>up to </translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="34" />
+      <location filename="../qml/BatteryCard.qml" line="37" />
       <source>no disponible</source>
       <translation>unavailable</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="34" />
+      <location filename="../qml/BatteryCard.qml" line="37" />
       <source>en la BIOS</source>
       <translation>in the BIOS</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="60" />
+      <location filename="../qml/BatteryCard.qml" line="63" />
       <source>Enchufado · </source>
       <translation>Plugged in · </translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="83" />
+      <location filename="../qml/BatteryCard.qml" line="86" />
       <source>límite </source>
       <translation>limit </translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="108" />
+      <location filename="../qml/BatteryCard.qml" line="102" />
+      <source>Salud</source>
+      <translation>Health</translation>
+    </message>
+    <message>
+      <location filename="../qml/BatteryCard.qml" line="103" />
+      <source>Ciclos</source>
+      <translation>Cycles</translation>
+    </message>
+    <message>
+      <location filename="../qml/BatteryCard.qml" line="104" />
+      <source>De fábrica</source>
+      <translation>Design</translation>
+    </message>
+    <message>
+      <location filename="../qml/BatteryCard.qml" line="148" />
       <source>Límite de carga</source>
       <translation>Charge limit</translation>
     </message>
     <message>
-      <location filename="../qml/BatteryCard.qml" line="113" />
+      <location filename="../qml/BatteryCard.qml" line="153" />
       <source> · requiere servicio</source>
       <translation> · requires service</translation>
     </message>
@@ -214,58 +229,83 @@
       <translation>Fan</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="73" />
+      <location filename="../qml/FanCell.qml" line="77" />
       <source>RPM</source>
       <translation>RPM</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="80" />
+      <location filename="../qml/FanCell.qml" line="84" />
       <source> % del máximo</source>
       <translation> % of max</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="80" />
+      <location filename="../qml/FanCell.qml" line="84" />
       <source>parado</source>
       <translation>stopped</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="80" />
+      <location filename="../qml/FanCell.qml" line="84" />
       <source>velocidad</source>
       <translation>speed</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="116" />
+      <location filename="../qml/FanCell.qml" line="99" />
+      <source>Vigila</source>
+      <translation>Watches</translation>
+    </message>
+    <message>
+      <location filename="../qml/FanCell.qml" line="119" />
+      <source>Control</source>
+      <translation>Control</translation>
+    </message>
+    <message>
+      <location filename="../qml/FanCell.qml" line="125" />
+      <source>curva</source>
+      <translation>curve</translation>
+    </message>
+    <message>
+      <location filename="../qml/FanCell.qml" line="126" />
+      <source>manual</source>
+      <translation>manual</translation>
+    </message>
+    <message>
+      <location filename="../qml/FanCell.qml" line="126" />
+      <source>firmware</source>
+      <translation>firmware</translation>
+    </message>
+    <message>
+      <location filename="../qml/FanCell.qml" line="164" />
       <source>Velocidad mínima</source>
       <translation>Minimum speed</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="116" />
+      <location filename="../qml/FanCell.qml" line="164" />
       <source>Velocidad</source>
       <translation>Speed</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="116" />
+      <location filename="../qml/FanCell.qml" line="164" />
       <source>Boost</source>
       <translation>Boost</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="122" />
+      <location filename="../qml/FanCell.qml" line="170" />
       <source>requiere servicio</source>
       <translation>requires service</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="123" />
-      <location filename="../qml/FanCell.qml" line="124" />
+      <location filename="../qml/FanCell.qml" line="171" />
+      <location filename="../qml/FanCell.qml" line="172" />
       <source>auto</source>
       <translation>auto</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="123" />
+      <location filename="../qml/FanCell.qml" line="171" />
       <source>máximo</source>
       <translation>maximum</translation>
     </message>
     <message>
-      <location filename="../qml/FanCell.qml" line="134" />
+      <location filename="../qml/FanCell.qml" line="182" />
       <source>Máximo</source>
       <translation>Maximum</translation>
     </message>
@@ -619,17 +659,17 @@
       <translation>GPU</translation>
     </message>
     <message>
-      <location filename="../qml/HistoryCard.qml" line="68" />
+      <location filename="../qml/HistoryCard.qml" line="69" />
       <source>-90 s</source>
       <translation>-90 s</translation>
     </message>
     <message>
-      <location filename="../qml/HistoryCard.qml" line="68" />
+      <location filename="../qml/HistoryCard.qml" line="69" />
       <source>-45 s</source>
       <translation>-45 s</translation>
     </message>
     <message>
-      <location filename="../qml/HistoryCard.qml" line="68" />
+      <location filename="../qml/HistoryCard.qml" line="69" />
       <source>ahora</source>
       <translation>now</translation>
     </message>
@@ -832,6 +872,7 @@
     </message>
     <message>
       <location filename="../qml/Main.qml" line="142" />
+      <location filename="../qml/Main.qml" line="242" />
       <source>CPU</source>
       <translation>CPU</translation>
     </message>
@@ -853,6 +894,7 @@
     </message>
     <message>
       <location filename="../qml/Main.qml" line="159" />
+      <location filename="../qml/Main.qml" line="241" />
       <source>GPU</source>
       <translation>GPU</translation>
     </message>
@@ -887,37 +929,37 @@
       <translation>MHz</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="214" />
+      <location filename="../qml/Main.qml" line="216" />
       <source>Ventiladores no expuestos</source>
       <translation>Fans not exposed</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="215" />
+      <location filename="../qml/Main.qml" line="217" />
       <source>Este equipo no informa de sus ventiladores al kernel. Si tu modelo tiene un driver de la comunidad, Vórtice los mostrará al instalarlo.</source>
       <translation>This laptop doesn't report its fans to the kernel. If your model has a community driver, Vórtice will show them once it's installed.</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="230" />
+      <location filename="../qml/Main.qml" line="232" />
       <source>Ventilador CPU</source>
       <translation>CPU fan</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="230" />
+      <location filename="../qml/Main.qml" line="232" />
       <source>Ventilador GPU</source>
       <translation>GPU fan</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="249" />
+      <location filename="../qml/Main.qml" line="257" />
       <source>Batería</source>
       <translation>Battery</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="250" />
+      <location filename="../qml/Main.qml" line="258" />
       <source>Sin batería</source>
       <translation>No battery</translation>
     </message>
     <message>
-      <location filename="../qml/Main.qml" line="250" />
+      <location filename="../qml/Main.qml" line="258" />
       <source>Equipo de escritorio o batería no detectada.</source>
       <translation>Desktop computer or battery not detected.</translation>
     </message>
@@ -930,82 +972,97 @@
       <translation>Mode</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="17" />
+      <location filename="../qml/ProfileCard.qml" line="20" />
       <source>Silencioso</source>
       <translation>Quiet</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="17" />
+      <location filename="../qml/ProfileCard.qml" line="20" />
       <source>Ventiladores al mínimo, más autonomía</source>
       <translation>Fans at minimum, longer battery life</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="18" />
+      <location filename="../qml/ProfileCard.qml" line="21" />
       <source>Equilibrado</source>
       <translation>Balanced</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="18" />
+      <location filename="../qml/ProfileCard.qml" line="21" />
       <source>Para el día a día</source>
       <translation>For everyday use</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="19" />
+      <location filename="../qml/ProfileCard.qml" line="22" />
       <source>Rendimiento</source>
       <translation>Performance</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="19" />
+      <location filename="../qml/ProfileCard.qml" line="22" />
       <source>Toda la potencia para jugar</source>
       <translation>Full power for gaming</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="26" />
+      <location filename="../qml/ProfileCard.qml" line="29" />
       <source>Tu sistema usa </source>
       <translation>Your system uses </translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="26" />
+      <location filename="../qml/ProfileCard.qml" line="29" />
       <source>Modos no disponibles</source>
       <translation>Modes unavailable</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="28" />
+      <location filename="../qml/ProfileCard.qml" line="31" />
       <source> gestiona la energía de este equipo. Cambia de modo desde </source>
       <translation> manages power on this machine. Change modes from </translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="28" />
+      <location filename="../qml/ProfileCard.qml" line="31" />
       <source> para no interferir con él.</source>
       <translation> to avoid conflicting with it.</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="29" />
+      <location filename="../qml/ProfileCard.qml" line="32" />
       <source>Instala power-profiles-daemon (viene por defecto en KDE y GNOME) para cambiar de modo desde aquí.</source>
       <translation>Install power-profiles-daemon (included by default in KDE and GNOME) to change modes from here.</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="106" />
+      <location filename="../qml/ProfileCard.qml" line="116" />
+      <source>Consumo</source>
+      <translation>Power</translation>
+    </message>
+    <message>
+      <location filename="../qml/ProfileCard.qml" line="147" />
+      <source>CPU </source>
+      <translation>CPU </translation>
+    </message>
+    <message>
+      <location filename="../qml/ProfileCard.qml" line="153" />
+      <source>GPU </source>
+      <translation>GPU </translation>
+    </message>
+    <message>
+      <location filename="../qml/ProfileCard.qml" line="164" />
       <source>Debajo de este modo</source>
       <translation>Behind this mode</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="112" />
+      <location filename="../qml/ProfileCard.qml" line="170" />
       <source>tuned</source>
       <translation>tuned</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="113" />
+      <location filename="../qml/ProfileCard.qml" line="171" />
       <source>firmware</source>
       <translation>firmware</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="114" />
+      <location filename="../qml/ProfileCard.qml" line="172" />
       <source>servicio</source>
       <translation>service</translation>
     </message>
     <message>
-      <location filename="../qml/ProfileCard.qml" line="114" />
+      <location filename="../qml/ProfileCard.qml" line="172" />
       <source>power-profiles</source>
       <translation>power-profiles</translation>
     </message>

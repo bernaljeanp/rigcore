@@ -185,6 +185,8 @@ ApplicationWindow {
                     available: hw.caps.profiles
                     manager: hw.caps.profileManager
                     details: hw.profileDetails
+                    cpuPower: win.service && win.helper.cpuPower !== undefined ? win.helper.cpuPower : null
+                    gpuPower: win.gpu.power === undefined ? null : win.gpu.power
                     onPicked: name => hw.setProfile(name)
                 }
             }
@@ -235,6 +237,12 @@ ApplicationWindow {
                                                                : (fanSlot.f.boost === undefined ? null : fanSlot.f.boost)
                                     canBoost: win.service && fanSlot.hIndex >= 0
                                     kind: fanSlot.hIndex >= 0 ? (win.helper.fans[fanSlot.hIndex].kind || "boost") : "boost"
+                                    temp: fanSlot.f.temp === undefined ? null : fanSlot.f.temp
+                                    watches: (fanSlot.f.label || "").split(" ")[0] === "GPU" ? qsTr("GPU")
+                                             : (fanSlot.f.label || "").split(" ")[0] === "CPU" ? qsTr("CPU") : ""
+                                    curveOn: win.service && !!(win.helper.curve && win.helper.curve.enabled)
+                                    curvePct: fanSlot.hIndex >= 0 && win.helper.fans[fanSlot.hIndex].curve !== undefined
+                                              ? win.helper.fans[fanSlot.hIndex].curve : null
                                     onBoostRequested: v => hw.setFanBoost(fanSlot.hIndex, v)
                                 }
                             }
@@ -258,6 +266,9 @@ ApplicationWindow {
                     ac: !!win.st.ac
                     limit: win.bat.limit === undefined ? null : win.bat.limit
                     firmwareLimit: hw.caps.firmwareBattery
+                    health: win.bat.health === undefined ? null : win.bat.health
+                    cycles: win.bat.cycles === undefined ? null : win.bat.cycles
+                    designWh: win.bat.designWh === undefined ? null : win.bat.designWh
                     service: win.service ? win.helper.battery : null
                     onConfigure: chargePopup.open()
                 }

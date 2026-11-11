@@ -17,11 +17,18 @@ Rectangle {
     // Esquina superior derecha cortada: deja ver la línea divisoria del fondo.
     Shape {
         anchors { top: parent.top; right: parent.right }
-        width: 14; height: 14
+        width: 20; height: 20
         ShapePath {
             fillColor: T.rule
             strokeColor: "transparent"
-            PathSvg { path: "M0 0 L14 0 L14 14 Z" }
+            PathSvg { path: "M0 0 L20 0 L20 20 Z" }
+        }
+        // Filo de acento en el corte, como el bisel de un chasis.
+        ShapePath {
+            fillColor: "transparent"
+            strokeColor: Qt.alpha(hw.accent, 0.55)
+            strokeWidth: 1
+            PathSvg { path: "M0.5 0.5 L19.5 19.5" }
         }
     }
 
