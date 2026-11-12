@@ -3,7 +3,7 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "vortice"
+name = "rigcore"
 version = "0.1.0"
 description = "Centro de control para portátiles gaming en Linux: temperaturas, ventiladores, modos, batería, luces y perfiles por juego"
 readme = "README.md"
@@ -24,18 +24,18 @@ classifiers = [
 dependencies = ["PySide6-Essentials>=6.12"]
 
 [project.urls]
-Homepage = "https://github.com/bernaljeanp/vortice"
-Issues = "https://github.com/bernaljeanp/vortice/issues"
+Homepage = "https://github.com/bernaljeanp/rigcore"
+Issues = "https://github.com/bernaljeanp/rigcore/issues"
 
 [project.scripts]
-vortice = "vortice.app:main"
-vortice-agent = "vortice.agent:main"
+rigcore = "rigcore.app:main"
+rigcore-agent = "rigcore.agent:main"
 
 [tool.setuptools]
 # qml/, fonts/ y shaders/ son solo datos, pero setuptools quiere verlas declaradas.
-packages = ["vortice", "vortice.qml", "vortice.fonts", "vortice.shaders"]
+packages = ["rigcore", "rigcore.qml", "rigcore.fonts", "rigcore.shaders"]
 
 [tool.setuptools.package-data]
-"vortice.qml" = ["*"]
-"vortice.fonts" = ["*"]
-"vortice.shaders" = ["*"]
+"rigcore.qml" = ["*"]
+"rigcore.fonts" = ["*"]
+"rigcore.shaders" = ["*"]

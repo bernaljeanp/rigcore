@@ -7,7 +7,7 @@ import os
 import tempfile
 import unittest
 
-from vortice import gpu
+from rigcore import gpu
 
 PCI_IDS = """\
 # base mínima para las pruebas

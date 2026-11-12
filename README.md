@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/icono.svg" width="104" alt="Vórtice">
+  <img src="docs/icono.svg" width="104" alt="Rigcore">
 </p>
 
-<h1 align="center">Vórtice</h1>
+<h1 align="center">Rigcore</h1>
 
 <p align="center"><b>English</b> · <a href="README.es.md">Español</a></p>
 
@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/en/panel.png" alt="Vórtice dashboard" width="900">
+  <img src="docs/en/panel.png" alt="Rigcore dashboard" width="900">
 </p>
 
 > **Status: beta.** Thoroughly tested on an Alienware 16X Aurora running Bazzite (KDE Plasma, Wayland).
@@ -21,19 +21,19 @@
 > is tested against simulated sysfs trees, not on that hardware: your report helps the most (see *Contributing*).
 
 **Safety with manual fan control:** on fans with manual speed control (ThinkPad, Dell, HP Victus S),
-Vórtice forces maximum speed from 90 °C, hands control back to the firmware for a value of 0, and always
+Rigcore forces maximum speed from 90 °C, hands control back to the firmware for a value of 0, and always
 when the service stops.
 
-## Why Vórtice
+## Why Rigcore
 
 Laptop vendors don't ship their control apps for Linux, and the community has
 answered with dozens of separate tools: one per brand, sometimes one per model,
-many of them abandoned. Vórtice aims to be **one app for every brand**.
+many of them abandoned. Rigcore aims to be **one app for every brand**.
 
-Instead of writing a driver per model, Vórtice uses the **standard kernel interfaces**
+Instead of writing a driver per model, Rigcore uses the **standard kernel interfaces**
 (`hwmon`, `platform-profile`, `firmware-attributes`, `power_supply`, `hidraw`) and standard
 services (`power-profiles-daemon` / `tuned-ppd`, NVML). Every time the kernel adds support for
-a laptop, Vórtice benefits from it.
+a laptop, Rigcore benefits from it.
 
 ## Features
 
@@ -73,7 +73,7 @@ a laptop, Vórtice benefits from it.
 | Battery charge limit | Dell / Alienware (`dell-wmi-sysman`), standard `charge_control_*` interface (ThinkPad, ASUS, Framework, MSI…), **Lenovo** (conservation mode) and **Acer** (80 % limit) |
 | Keyboard lighting | **Alienware / Dell G** (AW-ELC: color, breathe, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, breathe, cycle) · **Lenovo Legion 5/Pro, IdeaPad Gaming, LOQ** 2020–2024 (4 zones: color, breathe, cycle) · **Acer Predator/Nitro** with Linuwu-Sense (4 zones: color, breathe, wave) · **standard RGB** keyboards (multicolor LED: Tuxedo/Clevo, System76…) · **brightness** of any backlit keyboard |
 | Special keys | Alienware 16X Aurora (other models: contribute your key codes with `tools/scan_keys.py`) |
-| Performance modes | Distros with `power-profiles-daemon` or `tuned-ppd` (if you use TLP, Vórtice tells you) |
+| Performance modes | Distros with `power-profiles-daemon` or `tuned-ppd` (if you use TLP, Rigcore tells you) |
 | Distros | systemd-based. Tested on Bazzite (Fedora) |
 
 ## Installation
@@ -82,12 +82,12 @@ a laptop, Vórtice benefits from it.
 into your user account and, if you want, it installs the hardware service asking for your password):
 
 ```sh
-git clone https://github.com/bernaljeanp/vortice.git
-cd vortice
+git clone https://github.com/bernaljeanp/rigcore.git
+cd rigcore
 ./install.sh            # ./install.sh --uninstall to remove it
 ```
 
-**Arch, CachyOS, EndeavourOS, Garuda:** `vortice-git` package (AUR, coming soon).
+**Arch, CachyOS, EndeavourOS, Garuda:** `rigcore-git` package (AUR, coming soon).
 **Fedora:** COPR repository (coming soon). Details in [packaging/](packaging/README.md).
 
 ### From source (development)
@@ -95,14 +95,14 @@ cd vortice
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-./vortice.sh               # window
-./vortice.sh --bandeja     # tray (can be enabled at login from Settings)
+./rigcore.sh               # window
+./rigcore.sh --bandeja     # tray (can be enabled at login from Settings)
 ```
 
 ### Service for fans, battery and lighting
 
 Changing fan boost, curves, the charge limit, persistent lighting or the Fn lock needs
-administrator rights. Vórtice uses a minimal service that exposes **only** those operations,
+administrator rights. Rigcore uses a minimal service that exposes **only** those operations,
 validates every value and only accepts system administrators (group `wheel`, `sudo` or `admin`):
 
 ```sh
@@ -110,7 +110,7 @@ pkexec "$PWD/helper/install.sh"              # install
 pkexec "$PWD/helper/install.sh" --uninstall  # uninstall
 ```
 
-The privileged code is copied to a root-owned directory (`/usr/local/libexec/vortice/`, or the
+The privileged code is copied to a root-owned directory (`/usr/local/libexec/rigcore/`, or the
 package's) and runs sandboxed by systemd: no network, no access to `/home`, the system read-only
 except `/sys`, and access only to `hidraw` devices. When it stops, fans go back to automatic. In the
 BIOS it can only change options from an allowlist (Fn lock). On Alienware laptops it also installs an
@@ -124,45 +124,45 @@ Requires the system's PyGObject (`python3-gobject` on Fedora, `python3-gi` on De
 ```sh
 .venv/bin/python -m unittest discover -s tests -v   # tests
 tools/measure.sh 20                                  # CPU usage of the window
-VORTICE_SHOT=shot.png ./vortice.sh --ventana         # automatic screenshot
-./vortice.sh --ventana --pagina 2                    # open on a given page
-VORTICE_LANG=en ./vortice.sh --ventana               # force a language (es, en)
+RIGCORE_SHOT=shot.png ./rigcore.sh --ventana         # automatic screenshot
+./rigcore.sh --ventana --pagina 2                    # open on a given page
+RIGCORE_LANG=en ./rigcore.sh --ventana               # force a language (es, en)
 
 # Simulate missing hardware to test the notices:
-VORTICE_SIMULATE="no-gpu,gpu-asleep,no-ppd,tlp,no-fans,no-battery,kbd-brightness" ./vortice.sh --ventana
+RIGCORE_SIMULATE="no-gpu,gpu-asleep,no-ppd,tlp,no-fans,no-battery,kbd-brightness" ./rigcore.sh --ventana
 
 tools/build_shaders.sh                          # rebuild shaders (requirements-dev.txt)
 pkexec /usr/bin/python3 -I tools/scan_keys.py   # special key codes
-.venv/bin/python tools/i18n_update.py --check   # English translation (vortice/i18n/vortice_en.ts)
+.venv/bin/python tools/i18n_update.py --check   # English translation (rigcore/i18n/rigcore_en.ts)
 ```
 
-The source strings are in Spanish; the English translation lives in `vortice/i18n/vortice_en.ts`
+The source strings are in Spanish; the English translation lives in `rigcore/i18n/rigcore_en.ts`
 (editable with Qt Linguist or by hand).
 
 Layout:
 
 ```
-vortice/hardware.py   sensor detection and readings (standard interfaces)
-vortice/gpu.py        NVIDIA / AMD / Intel
-vortice/lights.py     keyboard lighting per brand
-vortice/fans.py       fan control per brand (boost, pwm, auto/max...)
-vortice/fancurve.py   fan curves
-vortice/agent.py      game profile agent (user service)
-vortice/games.py      game library and configuration
-vortice/tray.py       tray, single instance, keys
-vortice/i18n.py       language (English translation in vortice/i18n/)
-vortice/app.py        Python ↔ QML bridge
-vortice/qml/          user interface (Qt Quick)
-vortice/shaders/      gauges in GLSL
+rigcore/hardware.py   sensor detection and readings (standard interfaces)
+rigcore/gpu.py        NVIDIA / AMD / Intel
+rigcore/lights.py     keyboard lighting per brand
+rigcore/fans.py       fan control per brand (boost, pwm, auto/max...)
+rigcore/fancurve.py   fan curves
+rigcore/agent.py      game profile agent (user service)
+rigcore/games.py      game library and configuration
+rigcore/tray.py       tray, single instance, keys
+rigcore/i18n.py       language (English translation in rigcore/i18n/)
+rigcore/app.py        Python ↔ QML bridge
+rigcore/qml/          user interface (Qt Quick)
+rigcore/shaders/      gauges in GLSL
 helper/               privileged service, key rule and installer
 tests/                tests with simulated sysfs
 ```
 
 ## Contributing
 
-The most valuable thing right now: **try Vórtice on your laptop** and open an issue with your
+The most valuable thing right now: **try Rigcore on your laptop** and open an issue with your
 model, distro and what works or doesn't (there's a *compatibility report* template). Run
-`python -m vortice.hardware` and attach the output.
+`python -m rigcore.hardware` and attach the output.
 
 ## License
 

@@ -1,11 +1,11 @@
 #!/bin/sh
-# Mide el uso de CPU de Vórtice y la temperatura del paquete durante N segundos.
+# Mide el uso de CPU de Rigcore y la temperatura del paquete durante N segundos.
 # Uso: tools/measure.sh [segundos]
 cd "$(dirname "$0")/.." || exit 1
 DUR=${1:-20}
 T=$(grep -l "^coretemp$\|^k10temp$" /sys/class/hwmon/hwmon*/name | head -1 | xargs dirname)/temp1_input
 echo "Temp antes: $(( $(cat "$T") / 1000 )) °C"
-.venv/bin/python -m vortice.app --ventana >/dev/null 2>&1 &
+.venv/bin/python -m rigcore.app --ventana >/dev/null 2>&1 &
 PID=$!
 sleep 3
 T0=$(awk '{print $14+$15}' /proc/$PID/stat); S0=$(date +%s.%N)

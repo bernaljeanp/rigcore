@@ -1,0 +1,11 @@
+[Unit]
+Description=Rigcore - perfiles por juego
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/rigcore-agent
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

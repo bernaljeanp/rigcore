@@ -2,7 +2,7 @@
 
 import unittest
 
-from vortice import fancurve as fc
+from rigcore import fancurve as fc
 
 CURVE = [[50, 0], [70, 0], [80, 40], [90, 100]]
 

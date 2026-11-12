@@ -1,11 +1,11 @@
 # Maintainer: bernaljeanp <316348178+bernaljeanp@users.noreply.github.com>
-pkgname=vortice-git
-_pkgname=vortice
+pkgname=rigcore-git
+_pkgname=rigcore
 pkgver=0.1.0.r0.g0000000
 pkgrel=1
 pkgdesc="Centro de control para portátiles gaming: temperaturas, ventiladores, modos, batería, luces y perfiles por juego"
 arch=('any')
-url="https://github.com/bernaljeanp/vortice"
+url="https://github.com/bernaljeanp/rigcore"
 license=('GPL-3.0-only')
 depends=('python' 'pyside6' 'qt6-declarative' 'qt6-svg' 'python-gobject' 'systemd')
 makedepends=('git' 'python-build' 'python-installer' 'python-setuptools' 'qt6-shadertools')
@@ -13,8 +13,8 @@ optdepends=('power-profiles-daemon: modos de rendimiento (o tuned-ppd)'
             'nvidia-utils: lecturas de la gráfica NVIDIA')
 provides=("$_pkgname")
 conflicts=("$_pkgname")
-install=vortice.install
-source=("$_pkgname::git+https://github.com/bernaljeanp/vortice.git")
+install=rigcore.install
+source=("$_pkgname::git+https://github.com/bernaljeanp/rigcore.git")
 sha256sums=('SKIP')
 
 pkgver() {
@@ -33,6 +33,6 @@ build() {
 package() {
   cd "$_pkgname"
   python -m installer --destdir="$pkgdir" dist/*.whl
-  sh packaging/install-files.sh "$pkgdir" /usr/lib/vortice
+  sh packaging/install-files.sh "$pkgdir" /usr/lib/rigcore
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

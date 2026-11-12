@@ -1,12 +1,12 @@
 name: Compatibility report / Informe de compatibilidad
-description: Tell us how Vórtice works on your laptop / Cuéntanos cómo funciona en tu portátil
+description: Tell us how Rigcore works on your laptop / Cuéntanos cómo funciona en tu portátil
 title: "[Compatibility] Brand and model"
 labels: ["compatibilidad"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for trying Vórtice! Your report tells us what works on each model. — ¡Gracias por probar Vórtice! (puedes escribir en español)
+        Thanks for trying Rigcore! Your report tells us what works on each model. — ¡Gracias por probar Rigcore! (puedes escribir en español)
   - type: input
     id: modelo
     attributes:
@@ -38,7 +38,7 @@ body:
     id: hardware
     attributes:
       label: Hardware detection output / Salida de la detección
-      description: Run `python -m vortice.hardware` (or `.venv/bin/python -m vortice.hardware` from source) and paste the output.
+      description: Run `python -m rigcore.hardware` (or `.venv/bin/python -m rigcore.hardware` from source) and paste the output.
       render: json
     validations:
       required: true
@@ -54,4 +54,4 @@ body:
     id: notas
     attributes:
       label: What fails or is missing? / ¿Qué falla o falta?
-      description: Errors, odd behavior, or laptop features Vórtice doesn't control yet.
+      description: Errors, odd behavior, or laptop features Rigcore doesn't control yet.

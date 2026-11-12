@@ -4,7 +4,7 @@ import os
 import tempfile
 import unittest
 
-from vortice import lights
+from rigcore import lights
 
 # Descriptor HID mínimo: Report Size 8 (0x75 0x08), Report Count 33 (0x95 0x21), Output (0x91 0x02).
 DESC_33 = bytes([0x75, 0x08, 0x95, 0x21, 0x91, 0x02])

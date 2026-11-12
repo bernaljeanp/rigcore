@@ -1,7 +1,7 @@
 #!/bin/sh
-# Construye Vortice-x86_64.AppImage (todas las funciones; sin dependencias del sistema
+# Construye Rigcore-x86_64.AppImage (todas las funciones; sin dependencias del sistema
 # salvo las bibliotecas gráficas habituales y, para el servicio, PyGObject).
-#   packaging/appimage/build.sh            -> build/appimage/Vortice-x86_64.AppImage
+#   packaging/appimage/build.sh            -> build/appimage/Rigcore-x86_64.AppImage
 set -eu
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 WORK=${WORK:-$ROOT/build/appimage}
@@ -36,13 +36,13 @@ find AppDir -name "__pycache__" -type d -prune -exec rm -rf {} +
 find AppDir -name "*.pyi" -delete
 
 echo ">> Archivos del servicio, entrada de menú e icono"
-mkdir -p AppDir/usr/share/vortice/vortice
-cp -r "$ROOT/helper" AppDir/usr/share/vortice/
-cp "$ROOT"/vortice/lights.py "$ROOT"/vortice/fancurve.py "$ROOT"/vortice/fans.py AppDir/usr/share/vortice/vortice/
+mkdir -p AppDir/usr/share/rigcore/rigcore
+cp -r "$ROOT/helper" AppDir/usr/share/rigcore/
+cp "$ROOT"/rigcore/lights.py "$ROOT"/rigcore/fancurve.py "$ROOT"/rigcore/fans.py AppDir/usr/share/rigcore/rigcore/
 install -m755 "$ROOT/packaging/appimage/AppRun" AppDir/AppRun
-cp "$ROOT/packaging/data/vortice.desktop" AppDir/vortice.desktop
+cp "$ROOT/packaging/data/rigcore.desktop" AppDir/rigcore.desktop
 # .DirIcon debe ser PNG (los gestores de archivos no leen SVG): se rasteriza con el Qt incluido.
-install -Dm644 "$ROOT/vortice/qml/icon.svg" AppDir/usr/share/icons/hicolor/scalable/apps/vortice.svg
+install -Dm644 "$ROOT/rigcore/qml/icon.svg" AppDir/usr/share/icons/hicolor/scalable/apps/rigcore.svg
 QT_QPA_PLATFORM=offscreen "$PY" -I -c '
 import sys
 from PySide6.QtGui import QGuiApplication, QImage, QPainter
@@ -50,9 +50,9 @@ from PySide6.QtSvg import QSvgRenderer
 app = QGuiApplication(sys.argv)
 img = QImage(256, 256, QImage.Format_ARGB32); img.fill(0)
 p = QPainter(img); QSvgRenderer(sys.argv[1]).render(p); p.end()
-sys.exit(0 if img.save(sys.argv[2]) else 1)' "$ROOT/vortice/qml/icon.svg" AppDir/vortice.png
-ln -sf vortice.png AppDir/.DirIcon
+sys.exit(0 if img.save(sys.argv[2]) else 1)' "$ROOT/rigcore/qml/icon.svg" AppDir/rigcore.png
+ln -sf rigcore.png AppDir/.DirIcon
 
 echo ">> Empaquetando"
-ARCH=x86_64 ./cache/appimagetool --appimage-extract-and-run --no-appstream AppDir Vortice-x86_64.AppImage >/dev/null
-ls -lh Vortice-x86_64.AppImage
+ARCH=x86_64 ./cache/appimagetool --appimage-extract-and-run --no-appstream AppDir Rigcore-x86_64.AppImage >/dev/null
+ls -lh Rigcore-x86_64.AppImage

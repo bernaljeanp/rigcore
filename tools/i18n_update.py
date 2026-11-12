@@ -5,10 +5,10 @@
   .venv/bin/python tools/i18n_update.py --check  además, falla si falta alguna traducción
 
 1. pyside6-lupdate extrae los qsTr() de los QML (conserva lo ya traducido).
-2. Se añaden al contexto "Vortice" los textos de Python: los tr("...") literales
+2. Se añaden al contexto "Rigcore" los textos de Python: los tr("...") literales
    y los que pasan por variables (nombres de modos, efectos y avisos de la BIOS).
-3. pyside6-lrelease compila vortice/i18n/vortice_en.qm.
-Para traducir, edita las etiquetas <translation> de vortice/i18n/vortice_en.ts
+3. pyside6-lrelease compila rigcore/i18n/rigcore_en.qm.
+Para traducir, edita las etiquetas <translation> de rigcore/i18n/rigcore_en.ts
 (o ábrelo con Qt Linguist) y vuelve a ejecutar este script.
 """
 
@@ -19,9 +19,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PKG = ROOT / "vortice"
-TS = PKG / "i18n" / "vortice_en.ts"
-QM = PKG / "i18n" / "vortice_en.qm"
+PKG = ROOT / "rigcore"
+TS = PKG / "i18n" / "rigcore_en.ts"
+QM = PKG / "i18n" / "rigcore_en.qm"
 BIN = Path(sys.executable).parent
 
 # Textos de Python que llegan a tr() a través de una variable.
@@ -49,10 +49,10 @@ def main():
 
     tree = ET.parse(TS)
     root = tree.getroot()
-    ctx = next((c for c in root.findall("context") if c.findtext("name") == "Vortice"), None)
+    ctx = next((c for c in root.findall("context") if c.findtext("name") == "Rigcore"), None)
     if ctx is None:
         ctx = ET.SubElement(root, "context")
-        ET.SubElement(ctx, "name").text = "Vortice"
+        ET.SubElement(ctx, "name").text = "Rigcore"
     existing = {m.findtext("source"): m for m in ctx.findall("message")}
     wanted = python_strings()
     for src, m in existing.items():

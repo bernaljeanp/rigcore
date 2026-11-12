@@ -1,12 +1,12 @@
 #!/bin/sh
-# Punto de entrada del AppImage de Vórtice.
+# Punto de entrada del AppImage de Rigcore.
 HERE="$(dirname "$(readlink -f "$0")")"
 PY="$HERE/usr/python/bin/python3"
-# Archivos del servicio (helper/ y vortice/) para el botón "Instalar servicio".
-export VORTICE_BUNDLE="$HERE/usr/share/vortice"
+# Archivos del servicio (helper/ y rigcore/) para el botón "Instalar servicio".
+export RIGCORE_BUNDLE="$HERE/usr/share/rigcore"
 # El agente de perfiles por juego no necesita Qt: arranca ligero.
 if [ "${1:-}" = "--agente" ]; then
     shift
-    exec "$PY" -I -m vortice.agent "$@"
+    exec "$PY" -I -m rigcore.agent "$@"
 fi
-exec "$PY" -I -m vortice.app "$@"
+exec "$PY" -I -m rigcore.app "$@"

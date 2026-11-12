@@ -1,11 +1,11 @@
-# Empaquetado de Vórtice
+# Empaquetado de Rigcore
 
 | Vía | Archivos | Para |
 |---|---|---|
-| AUR (`vortice-git`) | `arch/PKGBUILD`, `arch/vortice.install` | Arch, CachyOS, EndeavourOS, Garuda… |
-| COPR | `fedora/vortice.spec` | Fedora Workstation (y Bazzite/Silverblue por capas) |
+| AUR (`rigcore-git`) | `arch/PKGBUILD`, `arch/rigcore.install` | Arch, CachyOS, EndeavourOS, Garuda… |
+| COPR | `fedora/rigcore.spec` | Fedora Workstation (y Bazzite/Silverblue por capas) |
 | Instalador universal | `../install.sh` | Cualquier distro, incluidas las inmutables |
-| Flatpak | `flatpak/io.github.bernaljeanp.Vortice.yml` | Flathub (y con ello Bazaar en Bazzite). Edición con sandbox: sin perfiles por juego ni teclas globales; el servicio se instala aparte |
+| Flatpak | `flatpak/io.github.bernaljeanp.Rigcore.yml` | Flathub (y con ello Bazaar en Bazzite). Edición con sandbox: sin perfiles por juego ni teclas globales; el servicio se instala aparte |
 | AppImage | `appimage/build.sh` | Un archivo para cualquier distro, con todas las funciones |
 
 Los dos paquetes compilan los shaders con el Qt de la distro (`qsb`) y colocan los
@@ -15,7 +15,7 @@ regla `hwdb`, unidad de usuario del agente, entrada de menú e iconos.
 Tras instalar un paquete, el servicio de hardware se activa con:
 
 ```sh
-sudo systemctl enable --now vortice-helper
+sudo systemctl enable --now rigcore-helper
 ```
 
 ## Publicar en AUR
@@ -23,12 +23,12 @@ sudo systemctl enable --now vortice-helper
 Requisitos: cuenta en <https://aur.archlinux.org> con tu clave SSH pública añadida.
 
 ```sh
-git clone ssh://aur@aur.archlinux.org/vortice-git.git aur-vortice
-cp packaging/arch/PKGBUILD packaging/arch/vortice.install aur-vortice/
-cd aur-vortice
+git clone ssh://aur@aur.archlinux.org/rigcore-git.git aur-rigcore
+cp packaging/arch/PKGBUILD packaging/arch/rigcore.install aur-rigcore/
+cd aur-rigcore
 makepkg --printsrcinfo > .SRCINFO
-git add PKGBUILD vortice.install .SRCINFO
-git commit -m "vortice-git: primera versión"
+git add PKGBUILD rigcore.install .SRCINFO
+git commit -m "rigcore-git: primera versión"
 git push
 ```
 
@@ -38,7 +38,7 @@ Requisitos: cuenta de Fedora (FAS) y el token de <https://copr.fedorainfracloud.
 guardado en `~/.config/copr`.
 
 1. Crear una versión etiquetada en GitHub (el `.spec` descarga
-   `.../archive/v0.1.0/vortice-0.1.0.tar.gz`):
+   `.../archive/v0.1.0/rigcore-0.1.0.tar.gz`):
 
    ```sh
    git tag v0.1.0 && git push origin v0.1.0
@@ -48,28 +48,28 @@ guardado en `~/.config/copr`.
    versión de Fedora (es la vía probada; ver *Probar los paquetes localmente*):
 
    ```sh
-   rpmbuild -bs packaging/fedora/vortice.spec      # con el tarball en ~/rpmbuild/SOURCES
-   copr-cli create vortice --chroot fedora-rawhide-x86_64 --chroot fedora-45-x86_64 \
+   rpmbuild -bs packaging/fedora/rigcore.spec      # con el tarball en ~/rpmbuild/SOURCES
+   copr-cli create rigcore --chroot fedora-rawhide-x86_64 --chroot fedora-45-x86_64 \
        --description "Centro de control para portátiles gaming en Linux"
-   copr-cli build vortice ~/rpmbuild/SRPMS/vortice-0.1.0-1.*.src.rpm
+   copr-cli build rigcore ~/rpmbuild/SRPMS/rigcore-0.1.0-1.*.src.rpm
    ```
 
 3. Los usuarios lo instalan con:
 
    ```sh
-   sudo dnf copr enable bernaljeanp/vortice
-   sudo dnf install vortice
-   sudo systemctl enable --now vortice-helper
+   sudo dnf copr enable bernaljeanp/rigcore
+   sudo dnf install rigcore
+   sudo systemctl enable --now rigcore-helper
    ```
 
-   En Bazzite/Silverblue: añadir el repositorio de COPR y `rpm-ostree install vortice`,
+   En Bazzite/Silverblue: añadir el repositorio de COPR y `rpm-ostree install rigcore`,
    o usar el instalador universal (`./install.sh`), que no necesita capas.
 
 ## Probar los paquetes localmente
 
-- **Fedora:** `rpmbuild -ba packaging/fedora/vortice.spec` en un contenedor Fedora con
+- **Fedora:** `rpmbuild -ba packaging/fedora/rigcore.spec` en un contenedor Fedora con
   `rpm-build pyproject-rpm-macros python3-devel qt6-qtshadertools systemd-rpm-macros desktop-file-utils`
-  y el tarball de `git archive --prefix=vortice-0.1.0/` en `SOURCES/`.
+  y el tarball de `git archive --prefix=rigcore-0.1.0/` en `SOURCES/`.
 - **Arch:** `makepkg -f` en un contenedor Arch con las dependencias del `PKGBUILD`,
   cambiando `source` por `git+file:///ruta/al/repo#branch=main`.
 
@@ -79,8 +79,8 @@ Construir e instalar localmente (necesita `org.flatpak.Builder` de Flathub):
 
 ```sh
 flatpak run --filesystem=$PWD org.flatpak.Builder --user --install-deps-from=flathub \
-    --force-clean --install build/flatpak/build-dir packaging/flatpak/io.github.bernaljeanp.Vortice.yml
-flatpak run io.github.bernaljeanp.Vortice
+    --force-clean --install build/flatpak/build-dir packaging/flatpak/io.github.bernaljeanp.Rigcore.yml
+flatpak run io.github.bernaljeanp.Rigcore
 ```
 
 Para Flathub: abrir un *pull request* en <https://github.com/flathub/flathub> con el
@@ -90,7 +90,7 @@ y el `tag`/`commit` de la versión. El AppStream (`.metainfo.xml`) ya pasa `apps
 ## AppImage
 
 ```sh
-packaging/appimage/build.sh      # -> build/appimage/Vortice-x86_64.AppImage
+packaging/appimage/build.sh      # -> build/appimage/Rigcore-x86_64.AppImage
 ```
 
 Descarga un Python portable (python-build-standalone) y `appimagetool`. El AppImage

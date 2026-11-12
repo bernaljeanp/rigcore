@@ -3,7 +3,7 @@
 import unittest
 from unittest import mock
 
-from vortice import agent
+from rigcore import agent
 
 
 class FakeSystem:

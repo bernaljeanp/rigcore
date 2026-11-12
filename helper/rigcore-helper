@@ -1,0 +1,564 @@
+#!/usr/bin/python3 -I
+"""Servicio privilegiado de Rigcore (corre como root bajo systemd).
+
+Expone por el bus de sistema un conjunto MÍNIMO de operaciones, todas con
+validación estricta:
+  - GetState()                        -> JSON con ventiladores y batería
+  - SetFanBoost(index u, value u)     -> boost 0-255 de un ventilador
+  - SetCharge(mode s, start u, stop u)-> modo/umbrales de carga de la batería
+  - SetFanCurve(json s)               -> curvas temperatura->boost (se aplican cada 2 s)
+  - SetBiosOption(name s, value s)    -> SOLO opciones de una lista blanca (bloqueo de Fn)
+  - SetLights(effect s, color s, brightness u) -> luces AW-ELC (se guardan y se
+    reaplican al arrancar, al reanudar tras suspender y si el USB se reconecta)
+
+Solo administradores (grupo wheel, sudo o admin, según la distro) o root pueden llamarlo: lo restringe la
+política de D-Bus y además se comprueba aquí con el UID real del llamante.
+Solo usa la biblioteca estándar y GLib (python3-gobject del sistema).
+"""
+
+import glob
+import grp
+import json
+import os
+import pwd
+import signal
+import sys
+import time
+
+from gi.repository import Gio, GLib
+
+# Módulo de luces compartido con la interfaz. Se instala junto a este archivo en
+# su carpeta de instalación (propiedad de root); -I no añade esa carpeta sola.
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import fancurve  # noqa: E402
+import fans as fanmod  # noqa: E402
+import lights  # noqa: E402
+
+BUS_NAME = "io.github.bernaljeanp.Rigcore.Helper"
+OBJ_PATH = "/io/github/bernaljeanp/Rigcore/Helper1"
+IFACE = "io.github.bernaljeanp.Rigcore.Helper1"
+# Grupo de administradores según la distro: wheel (Fedora, Arch), sudo (Debian,
+# Ubuntu, Mint), admin (Ubuntu antiguo).
+ADMIN_GROUPS = ("wheel", "sudo", "admin")
+
+XML = f"""
+<node>
+  <interface name="{IFACE}">
+    <method name="GetState"><arg type="s" direction="out" name="json"/></method>
+    <method name="SetFanBoost">
+      <arg type="i" direction="in" name="index"/>
+      <arg type="i" direction="in" name="value"/>
+    </method>
+    <method name="SetCharge">
+      <arg type="s" direction="in" name="mode"/>
+      <arg type="i" direction="in" name="start"/>
+      <arg type="i" direction="in" name="stop"/>
+    </method>
+    <method name="SetBiosOption">
+      <arg type="s" direction="in" name="name"/>
+      <arg type="s" direction="in" name="value"/>
+    </method>
+    <method name="SetFanCurve">
+      <arg type="s" direction="in" name="json"/>
+    </method>
+    <method name="SetLights">
+      <arg type="s" direction="in" name="effect"/>
+      <arg type="s" direction="in" name="color"/>
+      <arg type="i" direction="in" name="brightness"/>
+    </method>
+    <property name="Version" type="u" access="read"/>
+  </interface>
+</node>
+"""
+VERSION = 7  # v7: cpuPower (RAPL). v6: v6: enteros 'i' (QtDBus de PySide no puede enviar 'u')
+STATE_DIR = os.environ.get("STATE_DIRECTORY", "/var/lib/rigcore")
+LIGHTS_FILE = os.path.join(STATE_DIR, "lights.json")
+CURVE_FILE = os.path.join(STATE_DIR, "fancurve.json")
+
+
+class Refused(Exception):
+    """Error que se devuelve tal cual al cliente."""
+
+
+# ------------------------------------------------------------------ sysfs --
+
+def _read(path):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def _write(path, value):
+    real = os.path.realpath(path)
+    if not real.startswith("/sys/"):
+        raise Refused("ruta fuera de /sys")
+    try:
+        with open(real, "w") as f:
+            f.write(str(value))
+    except OSError as e:
+        raise Refused(f"el firmware rechazó el valor ({e.strerror})") from e
+
+
+def fans():
+    """Ventiladores controlables (multimarca, ver fans.py), en orden estable."""
+    out = []
+    for f in fanmod.detect():
+        raw = _read(f["input"]) if f.get("input") else None
+        f["rpm"] = int(raw) if raw and raw.isdigit() else 0
+        out.append(f)
+    return out
+
+
+# Dos backends de batería: firmware Dell (dell-wmi-sysman) y el estándar
+# del kernel (charge_control_*_threshold, ThinkPad/ASUS/Framework...).
+def _dell_attr(name):
+    hits = glob.glob(f"/sys/class/firmware-attributes/*/attributes/{name}")
+    return hits[0] if hits else None
+
+
+def _std_battery():
+    for bat in sorted(glob.glob("/sys/class/power_supply/BAT*")):
+        if os.path.exists(f"{bat}/charge_control_end_threshold"):
+            return bat
+    return None
+
+
+def _lenovo_conservation():
+    hits = glob.glob("/sys/bus/platform/drivers/ideapad_acpi/*/conservation_mode")
+    return hits[0] if hits else None
+
+
+def _acer_limiter():
+    for sense in ("predator_sense", "nitro_sense"):
+        p = f"/sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/{sense}/battery_limiter"
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def battery():
+    cfg = _dell_attr("PrimaryBattChargeCfg")
+    if cfg:
+        start, stop = _dell_attr("CustomChargeStart"), _dell_attr("CustomChargeStop")
+        return {
+            "backend": "dell",
+            "mode": _read(f"{cfg}/current_value"),
+            "modes": [m for m in (_read(f"{cfg}/possible_values") or "").split(";") if m],
+            "start": int(_read(f"{start}/current_value") or 0) if start else None,
+            "stop": int(_read(f"{stop}/current_value") or 0) if stop else None,
+            "startRange": [int(_read(f"{start}/min_value") or 50), int(_read(f"{start}/max_value") or 95)],
+            "stopRange": [int(_read(f"{stop}/min_value") or 55), int(_read(f"{stop}/max_value") or 100)],
+        }
+    bat = _std_battery()
+    if bat:
+        has_start = os.path.exists(f"{bat}/charge_control_start_threshold")
+        return {
+            "backend": "standard",
+            "mode": "Custom",
+            "modes": ["Custom"],
+            "start": int(_read(f"{bat}/charge_control_start_threshold") or 0) if has_start else None,
+            "stop": int(_read(f"{bat}/charge_control_end_threshold") or 100),
+            "startRange": [0, 99] if has_start else None,
+            "stopRange": [1, 100],
+        }
+    # Interruptores de firmware sin umbrales: Lenovo (~60 %) y Acer (80 %).
+    for backend, path, on_mode in (("lenovo", _lenovo_conservation(), "Conservation"),
+                                   ("acer", _acer_limiter(), "Limit80")):
+        if path:
+            return {"backend": backend, "mode": on_mode if _read(path) == "1" else "Standard",
+                    "modes": ["Standard", on_mode], "start": None, "stop": None,
+                    "startRange": None, "stopRange": None}
+    return None
+
+
+# Opciones de la BIOS que Rigcore puede cambiar. Nada fuera de esta lista.
+BIOS_OPTIONS = {
+    "FnLock": ("Disabled", "Enabled"),                    # permitir Fn+Esc
+    "FnLockMode": ("DisableStandard", "EnableSecondary"),  # F1-F12 / funciones especiales primero
+}
+
+
+def bios_options():
+    out = {}
+    for name, allowed in BIOS_OPTIONS.items():
+        attr = _dell_attr(name)
+        if attr:
+            out[name] = {"value": _read(f"{attr}/current_value"), "allowed": list(allowed)}
+    return out
+
+
+def set_bios_option(name, value):
+    if name not in BIOS_OPTIONS:
+        raise Refused("opción no permitida")
+    if value not in BIOS_OPTIONS[name]:
+        raise Refused(f"valor no válido para {name}")
+    attr = _dell_attr(name)
+    if not attr:
+        raise Refused("este equipo no tiene esa opción")
+    _write(f"{attr}/current_value", value)
+
+
+def set_fan_boost(index, value):
+    """Boost manual (interfaz o perfil de juego). Con curva activa actúa como
+    mínimo: el ventilador usa el mayor de los dos."""
+    fl = fans()
+    if index < 0 or index >= len(fl):
+        raise Refused("ventilador inexistente")
+    if not 0 <= value <= 255:
+        raise Refused("el valor debe estar entre 0 y 255")
+    CURVE.manual[index] = value
+    CURVE.apply_one(fl, index)
+
+
+class Curve:
+    def __init__(self):
+        self.cfg = fancurve.default()
+        self.manual = {}            # índice -> refuerzo manual (0-255)
+        self.states = {}            # índice -> FanState
+        self.written = {}           # índice -> último valor pedido
+        self.curve_now = {}         # índice -> % que pide la curva ahora
+        self.applied = {}           # índice -> descripción de lo aplicado
+        self.ctrl = fanmod.Controller()
+        self.asus = fanmod.asus_curve_paths()
+        try:
+            with open(CURVE_FILE) as f:
+                self.cfg = fancurve.validate(json.load(f))
+        except (OSError, ValueError, TypeError, KeyError, IndexError):
+            pass
+        self.sync_hardware_curve()
+
+    def sync_hardware_curve(self):
+        """ASUS guarda la curva en el firmware: se escribe allí al guardarla."""
+        if not self.asus:
+            return
+        try:
+            if self.cfg["enabled"]:
+                curves = list(self.cfg["fans"].values())
+                fanmod.apply_asus_curve(self.asus, {n: curves[min(n - 1, len(curves) - 1)] for n in self.asus})
+            else:
+                fanmod.disable_asus_curve(self.asus)
+        except OSError as e:
+            print(f"curva ASUS: {e}", flush=True)
+
+    def save(self, cfg):
+        try:
+            self.cfg = fancurve.validate(cfg)
+        except (ValueError, TypeError, KeyError, IndexError) as e:
+            raise Refused(str(e)) from e
+        os.makedirs(STATE_DIR, exist_ok=True)
+        tmp = CURVE_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(self.cfg, f)
+        os.replace(tmp, CURVE_FILE)
+        self.sync_hardware_curve()
+        self.tick()
+
+    def temp(self, fan):
+        raw = _read(fan["temp"]) if fan.get("temp") else None
+        return int(raw) / 1000 if raw and raw.lstrip("-").isdigit() else None
+
+    def curve_value(self, fan, index, temp):
+        """Refuerzo (0-255) que pide la curva por software, o 0."""
+        if not self.cfg["enabled"] or temp is None:
+            return 0
+        if self.asus and fan["kind"] == "mode":
+            return 0   # la curva la aplica el firmware de ASUS
+        pts = self.cfg["fans"].get(fan["label"])
+        if pts is None and self.cfg["fans"]:
+            pts = next(iter(self.cfg["fans"].values()))   # curva compartida
+        if pts is None:
+            return 0
+        pct = self.states.setdefault(index, fancurve.FanState()).step(pts, temp)
+        return round(pct * 2.55)
+
+    def apply_one(self, fl, index):
+        fan = fl[index]
+        temp = self.temp(fan)
+        curve = self.curve_value(fan, index, temp)
+        value = max(curve, self.manual.get(index, 0))
+        # En pwm manual se reevalúa la seguridad por temperatura en cada ciclo.
+        if self.written.get(index) != value or (fan["kind"] == "pwm" and value > 0):
+            try:
+                desc = self.ctrl.apply(index, fan, value, temp)
+            except OSError as e:
+                raise Refused(f"el firmware rechazó el valor ({e})") from e
+            if self.applied.get(index) != desc:
+                print(f"{fan['label']} ({fan['driver']}): {desc}", flush=True)
+            self.written[index], self.applied[index] = value, desc
+        fan["curve"], fan["temp_now"] = curve, temp
+        self.curve_now[index] = round(curve / 2.55)
+
+    def tick(self):
+        try:
+            fl = fans()
+            for i in range(len(fl)):
+                self.apply_one(fl, i)
+        except Refused as e:
+            print(f"curva: {e}", flush=True)
+        return True
+
+
+CURVE = None  # se crea en main() (después de definir todo)
+
+
+def set_charge(mode, start, stop):
+    b = battery()
+    if not b:
+        raise Refused("este equipo no expone control de carga")
+    if mode not in b["modes"]:
+        raise Refused(f"modo no válido: {mode}")
+
+    if b["backend"] == "dell":
+        if mode == "Custom":
+            lo1, hi1 = b["startRange"]
+            lo2, hi2 = b["stopRange"]
+            if not (lo1 <= start <= hi1 and lo2 <= stop <= hi2):
+                raise Refused(f"rangos: inicio {lo1}-{hi1}, fin {lo2}-{hi2}")
+            if stop - start < 5:
+                raise Refused("el fin debe ser al menos 5 puntos mayor que el inicio")
+            s_attr, e_attr = _dell_attr("CustomChargeStart"), _dell_attr("CustomChargeStop")
+            # Orden de escritura que nunca deja inicio >= fin a medio camino.
+            if start < (b["stop"] or 100):
+                _write(f"{s_attr}/current_value", start)
+                _write(f"{e_attr}/current_value", stop)
+            else:
+                _write(f"{e_attr}/current_value", stop)
+                _write(f"{s_attr}/current_value", start)
+        _write(f"{_dell_attr('PrimaryBattChargeCfg')}/current_value", mode)
+        return
+
+    if b["backend"] in ("lenovo", "acer"):
+        path = _lenovo_conservation() if b["backend"] == "lenovo" else _acer_limiter()
+        _write(path, 0 if mode == "Standard" else 1)
+        return
+
+    bat = _std_battery()
+    if not 1 <= stop <= 100:
+        raise Refused("el fin debe estar entre 1 y 100")
+    if b["start"] is not None:
+        if not 0 <= start < stop:
+            raise Refused("el inicio debe ser menor que el fin")
+        _write(f"{bat}/charge_control_start_threshold", start)
+    _write(f"{bat}/charge_control_end_threshold", stop)
+
+
+class CpuPower:
+    """Consumo del paquete de la CPU (RAPL): media entre dos consultas."""
+
+    def __init__(self):
+        hits = sorted(glob.glob("/sys/class/powercap/intel-rapl:*"))
+        self.path = next((h for h in hits if (_read(f"{h}/name") or "").startswith("package")), None)
+        self.last = None
+
+    def watts(self):
+        if not self.path:
+            return None
+        e = _read(f"{self.path}/energy_uj")
+        if e is None:
+            return None
+        e, now = int(e), time.monotonic()
+        prev, self.last = self.last, (now, e)
+        if not prev or now - prev[0] < 0.2:
+            return None
+        de = e - prev[1]
+        if de < 0:                                     # el contador dio la vuelta
+            de += int(_read(f"{self.path}/max_energy_range_uj") or 0)
+        return round(de / 1e6 / (now - prev[0]), 1)
+
+
+CPU_POWER = None
+
+
+class Lights:
+    """Guarda el último ajuste y lo reaplica cuando hace falta."""
+
+    def __init__(self):
+        self.saved = None
+        self.applied_to = None   # identidad del dispositivo al que se aplicó
+        try:
+            with open(LIGHTS_FILE) as f:
+                d = json.load(f)
+            lights.validate(d["effect"], d["color"], d["brightness"])
+            self.saved = d
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+
+    def state(self):
+        ctrl = lights.detect()
+        info = {"available": bool(ctrl), "device": ctrl["name"] if ctrl else None}
+        if ctrl:
+            info.update(kind=ctrl["kind"], effects=ctrl["effects"], hasColor=ctrl["color"])
+        return {**info, **(self.saved or {})}
+
+    def set(self, effect, color, brightness):
+        try:
+            lights.validate(effect, color, brightness)
+        except ValueError as e:
+            raise Refused(str(e)) from e
+        ctrl = lights.detect()
+        if not ctrl:
+            raise Refused("no se encontró el controlador de luces")
+        try:
+            lights.apply_any(effect, color, brightness, ctrl)
+        except (OSError, RuntimeError) as e:
+            raise Refused(f"el controlador no aceptó el cambio ({e})") from e
+        self.saved = {"effect": effect, "color": color.upper(), "brightness": int(brightness)}
+        self.applied_to = lights.identity(ctrl)
+        os.makedirs(STATE_DIR, exist_ok=True)
+        tmp = LIGHTS_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(self.saved, f)
+        os.replace(tmp, LIGHTS_FILE)
+
+    def reapply(self, reason, force=False):
+        """Reaplica lo guardado si el dispositivo es nuevo (o si se fuerza)."""
+        if not self.saved:
+            return
+        ctrl = lights.detect()
+        ident = lights.identity(ctrl)
+        if not ctrl or (not force and ident == self.applied_to):
+            return
+        try:
+            lights.apply_any(self.saved["effect"], self.saved["color"], self.saved["brightness"], ctrl)
+            self.applied_to = ident
+            print(f"luces reaplicadas ({reason})", flush=True)
+        except (OSError, RuntimeError) as e:
+            print(f"no se pudieron reaplicar las luces: {e}", flush=True)
+
+
+LIGHTS = Lights()
+
+
+def reset_fans():
+    """Todo vuelve al firmware (al detener el servicio)."""
+    for f in fanmod.detect():
+        fanmod.Controller.reset(f)
+    if CURVE:
+        if CURVE.asus:
+            fanmod.disable_asus_curve(CURVE.asus)
+        CURVE.written.clear()
+
+
+# ------------------------------------------------------------------ D-Bus --
+
+def _authorized(conn, sender):
+    reply = conn.call_sync(
+        "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+        "GetConnectionUnixUser", GLib.Variant("(s)", (sender,)),
+        GLib.VariantType("(u)"), Gio.DBusCallFlags.NONE, -1, None)
+    uid = reply.unpack()[0]
+    if uid == 0:
+        return True
+    try:
+        user = pwd.getpwuid(uid)
+    except KeyError:
+        return False
+    member_of = set(os.getgrouplist(user.pw_name, user.pw_gid))
+    for name in ADMIN_GROUPS:
+        try:
+            if grp.getgrnam(name).gr_gid in member_of:
+                return True
+        except KeyError:
+            continue
+    return False
+
+
+def on_call(conn, sender, path, iface, method, params, invocation):
+    try:
+        if not _authorized(conn, sender):
+            invocation.return_dbus_error("org.freedesktop.DBus.Error.AccessDenied",
+                                         "solo administradores")
+            return
+        if method == "GetState":
+            # El driver no siempre devuelve el boost escrito al leerlo: se informa del
+            # valor que este servicio escribió (si lo hizo).
+            fl = fans()
+            state = {"fans": [{"label": f["label"], "driver": f["driver"], "kind": f["kind"],
+                               "levels": fanmod.levels(f["kind"]), "rpm": f["rpm"],
+                               "temp": CURVE.temp(f), "manual": CURVE.manual.get(i, 0),
+                               "curve": CURVE.curve_now.get(i, 0),
+                               "boost": CURVE.written.get(i, fanmod.read_value(f) or 0)}
+                              for i, f in enumerate(fl)],
+                     "hardwareCurve": bool(CURVE.asus),
+                     "battery": battery(), "lights": LIGHTS.state(), "curve": CURVE.cfg,
+                     "cpuPower": CPU_POWER.watts() if CPU_POWER else None,
+                     "bios": bios_options()}
+            invocation.return_value(GLib.Variant("(s)", (json.dumps(state),)))
+        elif method == "SetFanBoost":
+            set_fan_boost(*params.unpack())
+            invocation.return_value(None)
+        elif method == "SetCharge":
+            set_charge(*params.unpack())
+            invocation.return_value(None)
+        elif method == "SetBiosOption":
+            set_bios_option(*params.unpack())
+            invocation.return_value(None)
+        elif method == "SetFanCurve":
+            try:
+                cfg = json.loads(params.unpack()[0])
+            except ValueError as e:
+                raise Refused("JSON no válido") from e
+            CURVE.save(cfg)
+            invocation.return_value(None)
+        elif method == "SetLights":
+            LIGHTS.set(*params.unpack())
+            invocation.return_value(None)
+        else:
+            invocation.return_dbus_error("org.freedesktop.DBus.Error.UnknownMethod", method)
+    except Refused as e:
+        invocation.return_dbus_error(f"{IFACE}.Refused", str(e))
+    except Exception as e:  # nunca tumbar el servicio por una llamada
+        print(f"error en {method}: {e!r}", file=sys.stderr, flush=True)
+        invocation.return_dbus_error(f"{IFACE}.Failed", "error interno")
+
+
+def on_get_property(conn, sender, path, iface, prop):
+    return GLib.Variant("u", VERSION) if prop == "Version" else None
+
+
+def main():
+    global CURVE, CPU_POWER
+    CURVE = Curve()
+    CPU_POWER = CpuPower()
+    loop = GLib.MainLoop()
+    node = Gio.DBusNodeInfo.new_for_xml(XML)
+
+    def on_bus(conn, name):
+        conn.register_object(OBJ_PATH, node.interfaces[0], on_call, on_get_property, None)
+        # Al reanudar tras suspender, el controlador vuelve a su estado de fábrica.
+        conn.signal_subscribe("org.freedesktop.login1", "org.freedesktop.login1.Manager",
+                              "PrepareForSleep", "/org/freedesktop/login1", None,
+                              Gio.DBusSignalFlags.NONE,
+                              lambda c, s, p, i, sig, params: (not params.unpack()[0])
+                              and GLib.timeout_add_seconds(2, lambda: LIGHTS.reapply("reanudación", True) or False),
+                              )
+
+    # Al arrancar (el USB puede tardar) y si el dispositivo se reconecta: comprobación barata cada 10 s.
+    GLib.timeout_add_seconds(10, lambda: LIGHTS.reapply("dispositivo nuevo") or True)
+    # Curva de ventiladores: cada 2 s (lectura de dos sensores; no escribe si no cambia).
+    GLib.timeout_add_seconds(2, CURVE.tick)
+    GLib.timeout_add_seconds(3, lambda: LIGHTS.reapply("arranque") or False)
+
+    Gio.bus_own_name(Gio.BusType.SYSTEM, BUS_NAME, Gio.BusNameOwnerFlags.NONE,
+                     on_bus, None, lambda *a: loop.quit())
+
+    def stop(*_):
+        reset_fans()  # al parar, los ventiladores vuelven a automático
+        loop.quit()
+        return GLib.SOURCE_REMOVE
+
+    try:  # GLib >= 2.80 mueve las señales Unix a GLibUnix
+        from gi.repository import GLibUnix
+        add_signal = GLibUnix.signal_add
+    except ImportError:
+        add_signal = GLib.unix_signal_add
+    add_signal(GLib.PRIORITY_HIGH, signal.SIGTERM, stop)
+    add_signal(GLib.PRIORITY_HIGH, signal.SIGINT, stop)
+    print("rigcore-helper listo", flush=True)
+    loop.run()
+
+
+if __name__ == "__main__":
+    main()
