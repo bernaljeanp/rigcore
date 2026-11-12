@@ -2,7 +2,7 @@
 
 | Vía | Archivos | Para |
 |---|---|---|
-| AUR (`rigcore-git`) | `arch/PKGBUILD`, `arch/rigcore.install` | Arch, CachyOS, EndeavourOS, Garuda… |
+| AUR (`rigcore`, `rigcore-git`) | `arch/rigcore/`, `arch/rigcore-git/` (PKGBUILD, rigcore.install, .SRCINFO) | Arch, CachyOS, EndeavourOS, Garuda… |
 | COPR | `fedora/rigcore.spec` | Fedora Workstation (y Bazzite/Silverblue por capas) |
 | Instalador universal | `../install.sh` | Cualquier distro, incluidas las inmutables |
 | Flatpak | `flatpak/io.github.bernaljeanp.Rigcore.yml` | Flathub (y con ello Bazaar en Bazzite). Edición con sandbox: sin perfiles por juego ni teclas globales; el servicio se instala aparte |
@@ -20,17 +20,23 @@ sudo systemctl enable --now rigcore-helper
 
 ## Publicar en AUR
 
-Requisitos: cuenta en <https://aur.archlinux.org> con tu clave SSH pública añadida.
+Hay dos paquetes: `rigcore` (versión etiquetada, recomendado) y `rigcore-git`
+(último commit). Requisitos: cuenta en <https://aur.archlinux.org> con tu clave
+SSH pública añadida (el host `aur.archlinux.org` usa `~/.ssh/aur`, ver `~/.ssh/config`).
 
 ```sh
-git clone ssh://aur@aur.archlinux.org/rigcore-git.git aur-rigcore
-cp packaging/arch/PKGBUILD packaging/arch/rigcore.install aur-rigcore/
-cd aur-rigcore
-makepkg --printsrcinfo > .SRCINFO
-git add PKGBUILD rigcore.install .SRCINFO
-git commit -m "rigcore-git: primera versión"
-git push
+for p in rigcore rigcore-git; do
+  git clone ssh://aur@aur.archlinux.org/$p.git /tmp/aur-$p
+  cp packaging/arch/$p/PKGBUILD packaging/arch/$p/rigcore.install packaging/arch/$p/.SRCINFO /tmp/aur-$p/
+  git -C /tmp/aur-$p add PKGBUILD rigcore.install .SRCINFO
+  git -C /tmp/aur-$p commit -m "$p 0.1.1"
+  git -C /tmp/aur-$p push origin HEAD:master
+done
 ```
+
+Nueva versión de `rigcore`: subir `pkgver`, poner `pkgrel=1`, actualizar
+`sha256sums` (del tarball de la etiqueta) y regenerar `.SRCINFO` con
+`makepkg --printsrcinfo > .SRCINFO` (en un contenedor de Arch si no usas Arch).
 
 ## Publicar en COPR
 

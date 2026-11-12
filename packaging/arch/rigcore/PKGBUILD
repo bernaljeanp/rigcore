@@ -1,0 +1,29 @@
+# Maintainer: bernaljeanp <316348178+bernaljeanp@users.noreply.github.com>
+pkgname=rigcore
+pkgver=0.1.1
+pkgrel=1
+pkgdesc="Control center for gaming laptops: temperatures, fans, performance modes, battery, lighting and game profiles"
+arch=('any')
+url="https://github.com/bernaljeanp/rigcore"
+license=('GPL-3.0-only')
+depends=('python' 'pyside6' 'qt6-declarative' 'qt6-svg' 'python-gobject' 'systemd' 'hicolor-icon-theme')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'qt6-shadertools')
+optdepends=('power-profiles-daemon: performance modes (or tuned-ppd)'
+            'nvidia-utils: NVIDIA GPU readings')
+install=rigcore.install
+source=("$pkgname-$pkgver.tar.gz::https://github.com/bernaljeanp/rigcore/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('65353e98d234c74a21e4c2b24c13f3e411d025d6ff47b1137430860ad18c4e7f')
+
+build() {
+  cd "$pkgname-$pkgver"
+  # Shaders built with the distro Qt (a newer .qsb may not load on an older Qt).
+  QSB=/usr/lib/qt6/bin/qsb sh tools/build_shaders.sh
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  sh packaging/install-files.sh "$pkgdir" /usr/lib/rigcore
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

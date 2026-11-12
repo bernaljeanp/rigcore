@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 build/
 *.AppImage
+*.egg-info/
+dist/

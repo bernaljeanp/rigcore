@@ -1,3 +1,0 @@
-[console_scripts]
-rigcore = rigcore.app:main
-rigcore-agent = rigcore.agent:main

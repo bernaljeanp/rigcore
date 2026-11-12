@@ -1,0 +1,25 @@
+pkgbase = rigcore
+	pkgdesc = Control center for gaming laptops: temperatures, fans, performance modes, battery, lighting and game profiles
+	pkgver = 0.1.1
+	pkgrel = 1
+	url = https://github.com/bernaljeanp/rigcore
+	install = rigcore.install
+	arch = any
+	license = GPL-3.0-only
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-setuptools
+	makedepends = qt6-shadertools
+	depends = python
+	depends = pyside6
+	depends = qt6-declarative
+	depends = qt6-svg
+	depends = python-gobject
+	depends = systemd
+	depends = hicolor-icon-theme
+	optdepends = power-profiles-daemon: performance modes (or tuned-ppd)
+	optdepends = nvidia-utils: NVIDIA GPU readings
+	source = rigcore-0.1.1.tar.gz::https://github.com/bernaljeanp/rigcore/archive/v0.1.1/rigcore-0.1.1.tar.gz
+	sha256sums = 65353e98d234c74a21e4c2b24c13f3e411d025d6ff47b1137430860ad18c4e7f
+
+pkgname = rigcore
