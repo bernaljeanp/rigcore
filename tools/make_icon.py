@@ -1,7 +1,8 @@
 """Genera el icono de Rigcore: mando con una turbina en lugar de la cruceta.
 
 El mando dice "gaming"; la turbina, que la app controla el equipo (ventiladores,
-modos, luces). Placa grafito con esquinas cortadas, mando blanco, rosa de señal.
+modos, luces). Solo el mando, sin placa: blanco con un contorno grafito fino
+(para que se vea también sobre fondos claros) y rosa de señal.
 Uso:
     python tools/make_icon.py > rigcore/qml/icon.svg
     python tools/make_icon.py --symbolic > rigcore/qml/icon-symbolic.svg
@@ -12,7 +13,8 @@ import sys
 
 GRAPHITE, WHITE, PINK = "#121315", "#F4F1EC", "#FF3E8E"
 
-PLATE = "M80 16H432L496 80V432L432 496H80L16 432V80Z"
+# El mando ocupa y=152..412: el viewBox se desplaza para centrarlo en vertical.
+VIEWBOX = "0 26 512 512"
 PAD = ("M176 152H336C392 152 428 184 444 240L472 340C484 384 456 412 420 404"
        "C396 398 380 380 364 356L344 328H168L148 356C132 380 116 398 92 404"
        "C56 412 28 384 40 340L68 240C84 184 120 152 176 152Z")
@@ -52,7 +54,7 @@ if "--symbolic" in sys.argv:
     # Bandeja: un solo color que Plasma cambia por el del tema. Mando con huecos
     # (evenodd) y la turbina dentro del hueco grande.
     holes = circle_d(VX, VY, WELL) + "".join(circle_d(x, y, BTN_R) for x, y in BUTTONS + [PINK_BTN])
-    print(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    print(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="{VIEWBOX}">
   <defs><style id="current-color-scheme" type="text/css">.ColorScheme-Text {{ color:#232629; }}</style></defs>
   <path class="ColorScheme-Text" fill="currentColor" fill-rule="evenodd" d="{PAD} {holes}"/>
   <path class="ColorScheme-Text" fill="currentColor" d="{blades} {hub}"/>
@@ -60,9 +62,8 @@ if "--symbolic" in sys.argv:
     sys.exit()
 
 holes = "".join(f'<circle cx="{x}" cy="{y}" r="{BTN_R}" fill="{GRAPHITE}"/>' for x, y in BUTTONS)
-print(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <path fill="{GRAPHITE}" d="{PLATE}"/>
-  <path fill="{WHITE}" d="{PAD}"/>
+print(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="{VIEWBOX}">
+  <path fill="{WHITE}" stroke="{GRAPHITE}" stroke-width="12" stroke-linejoin="round" d="{PAD}"/>
   <circle cx="{VX}" cy="{VY}" r="{WELL}" fill="{GRAPHITE}"/>
   <path fill="{PINK}" d="{blades} {hub}"/>
   {holes}
