@@ -3,7 +3,7 @@
 %global __requires_exclude ^python3(\\.[0-9]+)?dist\\(pyside6-essentials\\)
 
 Name:           rigcore
-Version:        0.1.0
+Version:        0.1.1
 Release:        1%{?dist}
 Summary:        Centro de control para portátiles gaming en Linux
 
@@ -80,5 +80,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/rigcore.desktop
 %{_datadir}/icons/hicolor/scalable/status/rigcore-symbolic.svg
 
 %changelog
+* Wed Nov 11 2026 bernaljeanp <316348178+bernaljeanp@users.noreply.github.com> - 0.1.1-1
+- Nuevo nombre: Rigcore (antes Vórtice) e icono nuevo
+
 * Tue Nov 10 2026 bernaljeanp <316348178+bernaljeanp@users.noreply.github.com> - 0.1.0-1
 - Primera versión empaquetada

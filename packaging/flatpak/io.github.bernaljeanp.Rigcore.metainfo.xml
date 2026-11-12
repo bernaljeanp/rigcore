@@ -38,7 +38,7 @@
     </screenshot>
   </screenshots>
   <branding>
-    <color type="primary" scheme_preference="light">#FFB020</color>
+    <color type="primary" scheme_preference="light">#FFC2DA</color>
     <color type="primary" scheme_preference="dark">#121315</color>
   </branding>
   <content_rating type="oars-1.1"/>
@@ -54,6 +54,9 @@
     <keyword>gaming</keyword>
   </keywords>
   <releases>
+    <release version="0.1.1" date="2026-11-11">
+      <description><p>New name: Rigcore (formerly Vórtice), with a new icon. Settings are migrated automatically.</p></description>
+    </release>
     <release version="0.1.0" date="2026-11-10">
       <description><p>First beta release.</p></description>
     </release>
