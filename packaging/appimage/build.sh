@@ -41,8 +41,17 @@ cp -r "$ROOT/helper" AppDir/usr/share/vortice/
 cp "$ROOT"/vortice/lights.py "$ROOT"/vortice/fancurve.py "$ROOT"/vortice/fans.py AppDir/usr/share/vortice/vortice/
 install -m755 "$ROOT/packaging/appimage/AppRun" AppDir/AppRun
 cp "$ROOT/packaging/data/vortice.desktop" AppDir/vortice.desktop
-cp "$ROOT/vortice/qml/icon.svg" AppDir/vortice.svg
-ln -sf vortice.svg AppDir/.DirIcon
+# .DirIcon debe ser PNG (los gestores de archivos no leen SVG): se rasteriza con el Qt incluido.
+install -Dm644 "$ROOT/vortice/qml/icon.svg" AppDir/usr/share/icons/hicolor/scalable/apps/vortice.svg
+QT_QPA_PLATFORM=offscreen "$PY" -I -c '
+import sys
+from PySide6.QtGui import QGuiApplication, QImage, QPainter
+from PySide6.QtSvg import QSvgRenderer
+app = QGuiApplication(sys.argv)
+img = QImage(256, 256, QImage.Format_ARGB32); img.fill(0)
+p = QPainter(img); QSvgRenderer(sys.argv[1]).render(p); p.end()
+sys.exit(0 if img.save(sys.argv[2]) else 1)' "$ROOT/vortice/qml/icon.svg" AppDir/vortice.png
+ln -sf vortice.png AppDir/.DirIcon
 
 echo ">> Empaquetando"
 ARCH=x86_64 ./cache/appimagetool --appimage-extract-and-run --no-appstream AppDir Vortice-x86_64.AppImage >/dev/null
